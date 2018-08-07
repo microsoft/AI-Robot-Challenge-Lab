@@ -16,7 +16,7 @@
 1. Run the bot
   - Open the `Command Prompt` from the **Start Menu**.
   - Move to the bot directory: `cd <your-bot-repo>/bot`
-  - Execute: `py .\main.pay`
+  - Execute: `py .\main.py`
 
 1. Test your bot using the Bot Framework Emulator V4
   - Open the `Bot Framework Emulator` from the **Start Menu**.
