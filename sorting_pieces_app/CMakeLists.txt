@@ -26,4 +26,5 @@ install(PROGRAMS
 
 foreach(dir launch models)
    install(DIRECTORY ${dir}/
-      DESTINATION ${CATKIN_P
+      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
+endforeach(dir)
