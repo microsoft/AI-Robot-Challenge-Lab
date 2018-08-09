@@ -45,14 +45,6 @@ python3.6 -m pip install --user requests
 python3.6 -m pip install --user botbuilder.schema
 python3.6 -m pip install --user botbuilder.core
 
-
-# Update to lateset software lists
-echo -e '***\n***\n***\n***\nUpdate to lateset software lists\n***\n***\n***\n***'
-
-# Install some common CLI tools
-sudo apt-get update -y
-sudo apt-get install -y wget software-properties-common 
-
 #
 #
 #
@@ -62,6 +54,12 @@ echo -e '***\n***\n***\n***\nInstall ROS\n***\n***\n***\n***'
 #
 # http://sdk.rethinkrobotics.com/intera/Workstation_Setup
 
+# Update to lateset software lists
+echo -e '***\n***\n***\n***\nUpdate to lateset software lists\n***\n***\n***\n***'
+
+# Install some common CLI tools
+sudo apt-get update -y
+sudo apt-get install -y wget software-properties-common 
 
 # Configure Ubuntu repositories. Setup sources.list
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list'
