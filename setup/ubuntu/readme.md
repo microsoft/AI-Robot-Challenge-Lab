@@ -9,7 +9,6 @@
 
 ## Run the Bot Locally
 
-1. Clone the repo.
 1. Navigate to `AI-Robot-Challenge/setup/ubuntu` in a Terminal window.
 1. Run the following command `python3.6 main.py`.
 
