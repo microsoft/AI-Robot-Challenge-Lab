@@ -15,9 +15,13 @@ sudo swapon -a
 # description="Microsoft Robot Challenge 2018"
 # version="1.0"
 
-
+#
+#
+#
 # Install Bot Framework + Emulator
 echo -e '***\n***\n***\n***\nInstall bot framework + Emulator\n***\n***\n***\n***'
+#
+#
 
 # Install Emulator 
 sudo apt-get update
