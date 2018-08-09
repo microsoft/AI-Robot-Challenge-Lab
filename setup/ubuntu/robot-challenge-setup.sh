@@ -15,6 +15,33 @@ sudo swapon -a
 # description="Microsoft Robot Challenge 2018"
 # version="1.0"
 
+
+# Install bot framework + emulator
+echo -e '***\n***\n***\n***\nInstall bot framework + Emulator\n***\n***\n***\n***'
+sudo apt-get update
+sudo apt-get install libindicator7
+sudo apt-get install libappindicator1 
+sudo apt-get -f install
+
+TEMP_DEB="$(mktemp)"
+wget -O "$TEMP_DEB" 'https://github.com/Microsoft/BotFramework-Emulator/releases/download/v4.0.15-alpha/botframework-emulator_4.0.15-alpha_i386.deb'
+sudo dpkg -i "$TEMP_DEB"
+rm -f "$TEMP_DEB"
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.6
+
+sudo apt-get install python3-pip 
+python3.6 -m pip install --upgrade pip
+
+python3.6 -m pip install --user aiohttp
+python3.6 -m pip install --user requests
+python3.6 -m pip install --user botbuilder
+python3.6 -m pip install --user botbuilder.schema
+python3.6 -m pip install --user botbuilder.core
+
+
 # Update to lateset software lists
 echo -e '***\n***\n***\n***\nUpdate to lateset software lists\n***\n***\n***\n***'
 
@@ -221,7 +248,8 @@ echo -e '***\n***\n***\n***\nClean up all the temp files\n***\n***\n***\n***'
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# TODO:// install Bot framework emulator
+# Install bot framework + emulator
+echo -e '***\n***\n***\n***\nInstall bot framework + Emulator\n***\n***\n***\n***'
 sudo apt-get update
 sudo apt-get install libindicator7
 sudo apt-get install libappindicator1 
