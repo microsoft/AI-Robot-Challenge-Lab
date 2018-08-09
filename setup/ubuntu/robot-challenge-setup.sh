@@ -27,11 +27,10 @@ wget -O "$TEMP_DEB" 'https://github.com/Microsoft/BotFramework-Emulator/releases
 sudo dpkg -i "$TEMP_DEB"
 rm -f "$TEMP_DEB"
 
-sudo add-apt-repository -f ppa:deadsnakes/ppa
-sudo apt-get -f update
-sudo apt-get -f install python3.6
-
-sudo apt-get -f install python3-pip 
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.6
+sudo apt-get install python3-pip 
 python3.6 -m pip install --upgrade pip
 
 python3.6 -m pip install --user aiohttp
