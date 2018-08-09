@@ -7,6 +7,6 @@
   </include>
 
   <!-- Start the Sawyer pick and place demo -->
-  <node pkg="sorting_pieces_app" type="sorting_demo.py" name="ik_pick_and_place_demo" />
+  <node pkg="sorting_demo" type="sorting_demo.py" name="sorting_demo" />
 
 </launch>
