@@ -16,23 +16,26 @@ sudo swapon -a
 # version="1.0"
 
 
-# Install bot framework + emulator
+# Install Bot Framework + Emulator
 echo -e '***\n***\n***\n***\nInstall bot framework + Emulator\n***\n***\n***\n***'
+
+# Install Emulator 
 sudo apt-get update
 sudo apt-get -f install libindicator7
 sudo apt-get -f install libappindicator1 
-
 TEMP_DEB="$(mktemp)"
 wget -O "$TEMP_DEB" 'https://github.com/Microsoft/BotFramework-Emulator/releases/download/v4.0.15-alpha/botframework-emulator_4.0.15-alpha_i386.deb'
 sudo dpkg -i "$TEMP_DEB"
 rm -f "$TEMP_DEB"
 
+# Install Python 3.6
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
 sudo apt-get install python3.6
 sudo apt-get install python3-pip 
 python3.6 -m pip install --upgrade pip
 
+# Install Bot Framework Deps
 python3.6 -m pip install --user aiohttp
 python3.6 -m pip install --user requests
 python3.6 -m pip install --user botbuilder.schema
