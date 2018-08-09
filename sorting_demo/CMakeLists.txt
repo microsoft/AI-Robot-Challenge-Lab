@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
 )
 
+catkin_python_setup()
+
 catkin_package(
   CATKIN_DEPENDS
   rospy
