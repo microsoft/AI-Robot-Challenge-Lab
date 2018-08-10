@@ -8,7 +8,7 @@ from geometry_msgs.msg import (
 
 import intera_interface
 
-from object_detection.object_detection import EnvironmentEstimation
+from object_detection import EnvironmentEstimation
 
 
 class SortingRobot(object):
@@ -102,6 +102,8 @@ class SortingRobot(object):
                 self._limb.set_joint_positions(joint_angles)
             else:
                 rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
+
+            self.environmentEstimation.update()
             r.sleep()
         rospy.sleep(1.0)
 
