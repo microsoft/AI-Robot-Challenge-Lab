@@ -7,6 +7,6 @@
   </include>
 
   <!-- Start the Sawyer pick and place demo -->
-  <node pkg="sorting_demo" type="sorting_demo.py" name="sorting_demo" />
+  <node pkg="sorting_demo" type="program.py" name="sorting_demo" />
 
 </launch>
