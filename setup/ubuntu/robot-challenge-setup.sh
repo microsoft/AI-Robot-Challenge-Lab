@@ -28,7 +28,7 @@ sudo apt-get update
 sudo apt-get -f install libindicator7
 sudo apt-get -f install libappindicator1 
 TEMP_DEB="$(mktemp)"
-wget -O "$TEMP_DEB" 'https://github.com/Microsoft/BotFramework-Emulator/releases/download/v4.0.15-alpha/botframework-emulator_4.0.15-alpha_i386.deb'
+wget -O "$TEMP_DEB" 'https://github.com/Microsoft/BotFramework-Emulator/releases/download/v4.0.15-alpha/botframework-emulator_4.0.15-alpha_amd64.deb'
 sudo dpkg -i "$TEMP_DEB"
 rm -f "$TEMP_DEB"
 
