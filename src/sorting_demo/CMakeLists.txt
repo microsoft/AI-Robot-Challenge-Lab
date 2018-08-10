@@ -2,8 +2,16 @@ cmake_minimum_required(VERSION 2.8.3)
 project(sorting_demo)
 
 find_package(catkin REQUIRED COMPONENTS
+ cv_bridge
   rospy
+  actionlib
+  sensor_msgs
+  std_msgs
+  control_msgs
+  trajectory_msgs
+  dynamic_reconfigure
   intera_core_msgs
+  intera_motion_msgs
   gazebo_msgs
 )
 
@@ -22,7 +30,7 @@ catkin_package(
 #############
 
 install(PROGRAMS
-   scripts/ik_pick_and_place_demo.py
+   src/sorting_demo/program.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
