@@ -145,7 +145,7 @@ start=$(date +%s)
 #
 #
 #Add the path to ROS
-echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+echo "source ~/ros_ws/devel/setup.bash" >> ~/.bashrc
 
 
 # Create ROS Workspace
