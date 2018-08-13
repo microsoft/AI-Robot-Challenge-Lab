@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import copy
+import math
 from threading import Thread
 
 import rospy
@@ -14,7 +16,7 @@ class TaskPlanner:
 
         """
         limb = 'right'
-        hover_distance = 0.15  # meters
+        hover_distance = 0.2  # meters
 
         # subcomponents
         self.environment_estimation = EnvironmentEstimation()
@@ -23,6 +25,7 @@ class TaskPlanner:
         self.target_block = None
         self.target_tray = None
         self.target_block_index = 0
+        self.target_tray_index = 0
 
     def create_go_home_task(self):
         """
@@ -41,30 +44,30 @@ class TaskPlanner:
 
         return Thread(target=self.sawyer_robot.move_to_start, args=[starting_joint_angles])
 
-    def create_pick_task(self, target_pose, approach_speed):
+    def create_pick_task(self, target_pose, approach_speed, meet_time, retract_time):
         """
         :param target_pose:
         :param approach_speed:
         :return:
         """
-        return Thread(target=self.sawyer_robot.pick_loop, args=[target_pose, approach_speed])
+        return Thread(target=self.sawyer_robot.pick_loop, args=[target_pose, approach_speed, meet_time, retract_time])
 
-    def create_place_task(self, target_pose):
+    def create_place_task(self, target_pose, approach_speed, meet_time, retract_time):
         """
         :param target_pose:
         :return:
         """
         rospy.logwarn("\nPlacing task...")
-        return Thread(target=self.sawyer_robot.place_loop, args=[target_pose])
+        return Thread(target=self.sawyer_robot.place_loop, args=[target_pose, approach_speed, meet_time, retract_time])
 
-    def create_find_next_block_pose(self):
+    def create_decision_select_block_and_tray(self):
         """
         :return:
         """
         rospy.logwarn("\nPlacing task...")
-        return Thread(target=self.find_next_block_pose)
+        return Thread(target=self.decision_next_block_action)
 
-    def find_next_block_pose(self):
+    def decision_next_block_action(self):
         """
         :return:
         """
@@ -86,7 +89,7 @@ class TaskPlanner:
 
         blocks = self.environment_estimation.get_blocks()
 
-        rospy.logwarn("NEW TARGET BLOCK INDEX: %d"%self.target_block_index  )
+        rospy.logwarn("NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
         if blocks is not None and len(blocks) > 0:
             self.target_block = blocks[self.target_block_index]  # access first item , pose field
             self.target_block.final_pose.orientation = overhead_orientation
@@ -98,20 +101,21 @@ class TaskPlanner:
             # return self.target_block
         else:
             rospy.logwarn("OUPS!!")
+            return
 
-        trays = self.environment_estimation.get_trays()
+        self.target_tray = copy.deepcopy(self.environment_estimation.get_tray_by_color(self.target_block.get_color()))  # access first item , pose field
 
-        if trays is not None and len(trays) > 0:
-            self.target_tray = trays[0] # access first item , pose field
-            self.target_tray.final_pose.orientation = overhead_orientation
+        self.target_tray.final_pose.orientation = overhead_orientation
 
-            self.target_tray.final_pose.position.x += overhead_translation[0]
-            self.target_tray.final_pose.position.y += overhead_translation[1]
-            self.target_tray.final_pose.position.z += overhead_translation[2]
+        self.target_tray.final_pose.position.x += overhead_translation[0]
+        self.target_tray.final_pose.position.y += overhead_translation[1]
+        self.target_tray.final_pose.position.z += overhead_translation[2]
 
         rospy.logwarn("TRAYS: " + str(trays))
-
         rospy.logwarn("TARGET TRAY POSE: " + str(self.target_tray))
+
+    def delay_task(self, secs):
+        return Thread(target=lambda s: rospy.sleep(s), args=[secs])
 
     def async_main_task(self):
         """
@@ -120,18 +124,39 @@ class TaskPlanner:
         """
         yield self.create_go_home_task()
 
-        while True:
+        blocks_count = len(self.environment_estimation.get_blocks())
+        trays_count = len(self.environment_estimation.get_trays())
 
+        while self.target_block_index < blocks_count:
             while self.target_block is None:
-                yield self.create_find_next_block_pose()
-                rospy.sleep(0.5)
+                yield self.create_decision_select_block_and_tray()
+                yield self.delay_task(0.1)
+
+            rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
+            rospy.logwarn(" -- NEW TARGET TRAY INDEX: %d" % self.target_tray_index)
+
+            # concurrency issue, what if we lock the objectdetection update?
+
+            yield self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
+                                        approach_speed=0.0001,
+                                        meet_time=0.1,
+                                        retract_time=0.1)
+
+            yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
+                                         approach_speed=0.0001,
+                                         meet_time=0.1,
+                                         retract_time=0.1)
+
+            # concurrency issue
+            self.environment_estimation.get_tray(self.target_tray.id).notify_contains_block(self.target_block)
 
             self.target_block_index += 1
-            rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
+            self.target_tray_index = (self.target_tray_index + 1) % trays_count
 
-            yield self.create_pick_task(self.target_block.final_pose, approach_speed=1.0)
-            yield self.create_place_task(self.target_tray.final_pose)
             self.target_block = None
+            self.target_tray = None
+
+        yield self.create_go_home_task()
 
     def create_main_task(self):
         """
@@ -161,4 +186,4 @@ class TaskPlanner:
 
         while not rospy.is_shutdown():
             self.environment_estimation.update()
-            rospy.sleep(0.1)
+            rospy.sleep(2.0)

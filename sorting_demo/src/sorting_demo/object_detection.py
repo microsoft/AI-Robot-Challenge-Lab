@@ -5,40 +5,11 @@ import rospy
 import tf.transformations
 from gazebo_msgs.msg import LinkStates
 
+from concepts.block import BlockState
+from concepts.tray import TrayState
+
 from utils.mathutils import *
-
-
-class TrayState:
-    regex = re.compile(r'tray(\d+)\.*')
-
-    def __init__(self, id, pose):
-        self.id = id
-        self.pose = pose
-        self.homogeneous_transform = None
-
-        search = TrayState.regex.search(id)
-        self.num = search.group(1)
-
-    @staticmethod
-    def is_tray(id):
-        num = TrayState.regex.search(id)
-        return num is not None
-
-
-class BlockState:
-    regex = re.compile(r'block(\d+)\.*')
-
-    def __init__(self, id, pose):
-        self.id = id
-        self.pose = pose
-        self.homogeneous_transform = None
-        search = BlockState.regex.search(id)
-        self.num = search.group(1)
-
-    @staticmethod
-    def is_block(id):
-        num = BlockState.regex.search(id)
-        return num is not None
+import demo_constants
 
 
 class EnvironmentEstimation:
@@ -98,9 +69,17 @@ class EnvironmentEstimation:
             item = None
             if BlockState.is_block(name):
                 item = BlockState(id=name, pose=pose)
+                item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"]
                 blocks.append(item)
             elif TrayState.is_tray(name):
-                item = TrayState(id=name, pose=pose)
+                item = self.get_tray(name)
+
+                if item is None:
+                    item = TrayState(id=name, pose=pose)
+                    item.color = demo_constants.TRAY_COLORS [item.num]
+                else:
+                    item.pose = pose
+
                 trays.append(item)
             else:
                 continue
@@ -112,7 +91,8 @@ class EnvironmentEstimation:
 
     def update(self):
         """
-
+        this method basically double buffers the state of block and trays. It also publishes tf.
+        For the simulated case it copies from gazebo_blocks and gazebo_trays to blocks and trays
         :return:
         """
         # publish tfs
@@ -169,7 +149,28 @@ class EnvironmentEstimation:
         :param id:
         :return:
         """
-        return [tray for tray in self.trays if tray.id == id][0]
+        filtered_trays = [tray for tray in self.trays if tray.id == id]
+        if len(filtered_trays) == 0:
+            return None
+        else:
+            return filtered_trays[0]
+
+    def get_tray_by_color(self, color):
+        """
+
+        :param id:
+        :return:
+        """
+
+        color = color.replace("Gazebo/","")
+        rospy.logwarn("by color: " + str(color))
+        rospy.logwarn("by color: " + str(self.trays))
+
+        filtered_trays = [tray for tray in self.trays if tray.color == color]
+        if len(filtered_trays) == 0:
+            return None
+        else:
+            return filtered_trays[0]
 
     def get_trays(self):
         """
