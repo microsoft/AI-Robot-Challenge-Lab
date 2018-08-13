@@ -3,23 +3,23 @@
   <xacro:arg name="material" default="Gazebo/Black" />
   <link name="block">
     <inertial>
-      <origin xyz="0.025 0.025 0.025" />
-      <mass value="0.5" />
+      <origin xyz="0.02 0.02 0.02" />
+      <mass value="0.25" />
       <!-- (1/12)*mass*(h^2 + d^2)  (1/12)*mass*(w^2 + d^2) (1/12)*mass*(w^2 + h^2) -->
-      <!-- (1/12)*0.5*(0.045^2 + 0.045^2)  (1/12)*0.5*(0.045^2 + 0.045^2) (1/12)*0.5*(0.045^2 + 0.045^2) -->
+      <!-- (1/12)*0.5*(0.04^2 + 0.04^2)  (1/12)*0.5*(0.04^2 + 0.04^2) (1/12)*0.5*(0.04^2 + 0.04^2) -->
       <inertia  ixx="0.00016874999" ixy="0.0"  ixz="0.0"  iyy="0.00016874999"  iyz="0.0"  izz="0.00016874999" />
 
     </inertial>
     <visual>
-      <origin xyz="0.025 0.025 0.025"/>
+      <origin xyz="0.02 0.02 0.02"/>
       <geometry>
-        <box size="0.045 0.045 0.045" />
+        <box size="0.04 0.04 0.04" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0.025 0.025 0.025"/>
+      <origin xyz="0.02 0.02 0.02"/>
       <geometry>
-        <box size="0.045 0.045 0.045" />
+        <box size="0.04 0.04 0.04" />
       </geometry>
     </collision>
   </link>
