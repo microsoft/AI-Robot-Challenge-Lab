@@ -15,12 +15,35 @@ sudo swapon -a
 # description="Microsoft Robot Challenge 2018"
 # version="1.0"
 
-# Update to lateset software lists
-echo -e '***\n***\n***\n***\nUpdate to lateset software lists\n***\n***\n***\n***'
+#
+#
+#
+# Install Bot Framework + Emulator
+echo -e '***\n***\n***\n***\nInstall bot framework + Emulator\n***\n***\n***\n***'
+#
+#
 
-# Install some common CLI tools
-sudo apt-get update -y
-sudo apt-get install -y wget software-properties-common 
+# Install Emulator 
+sudo apt-get update
+sudo apt-get -f install libindicator7
+sudo apt-get -f install libappindicator1 
+TEMP_DEB="$(mktemp)"
+wget -O "$TEMP_DEB" 'https://github.com/Microsoft/BotFramework-Emulator/releases/download/v4.0.15-alpha/botframework-emulator_4.0.15-alpha_i386.deb'
+sudo dpkg -i "$TEMP_DEB"
+rm -f "$TEMP_DEB"
+
+# Install Python 3.6
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.6
+sudo apt-get install python3-pip 
+python3.6 -m pip install --upgrade pip
+
+# Install Bot Framework Deps
+python3.6 -m pip install --user aiohttp
+python3.6 -m pip install --user requests
+python3.6 -m pip install --user botbuilder.schema
+python3.6 -m pip install --user botbuilder.core
 
 #
 #
@@ -31,6 +54,12 @@ echo -e '***\n***\n***\n***\nInstall ROS\n***\n***\n***\n***'
 #
 # http://sdk.rethinkrobotics.com/intera/Workstation_Setup
 
+# Update to lateset software lists
+echo -e '***\n***\n***\n***\nUpdate to lateset software lists\n***\n***\n***\n***'
+
+# Install some common CLI tools
+sudo apt-get update -y
+sudo apt-get install -y wget software-properties-common 
 
 # Configure Ubuntu repositories. Setup sources.list
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -221,4 +250,3 @@ echo -e '***\n***\n***\n***\nClean up all the temp files\n***\n***\n***\n***'
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# TODO:// install VSCode

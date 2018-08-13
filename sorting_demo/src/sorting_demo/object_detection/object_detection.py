@@ -1,5 +1,5 @@
 import rospy
-import gazebo_msgs.msg._LinkStates
+from gazebo_msgs.msg import LinkStates
 
 
 class EnvironmentEstimation:
@@ -8,9 +8,9 @@ class EnvironmentEstimation:
         self.blocks = []
 
         # initial simulated implementation
-        pub = rospy.Subscriber('/gazebo/link_states', gazebo_msgs.msg._LinkStates, self.links_callback, queue_size=10)
+        pub = rospy.Subscriber('/gazebo/link_states', LinkStates, self._links_callback, queue_size=10)
 
-    def links_callback(self, links):
+    def _links_callback(self, links):
         """
         string[] name
         geometry_msgs/Pose[] pose
@@ -33,11 +33,29 @@ class EnvironmentEstimation:
             float64 y
             float64 z
 
-
         :param links: 
         :return: 
         """
-        pass
+        blocks = []
+        trays = []
+
+        for i, name in enumerate(links.name):
+            if "block" in name:
+                blocks.append(links.pose[i])
+            elif "tray" in name:
+                trays.append(links.pose[i])
+
+        self.blocks = blocks
+        self.trays = trays
 
     def get_blocks(self):
+        """
+        :return array of geometry_msgs.msg.Pose
+        """
         return self.blocks
+
+    def get_trays(self):
+        """
+        :return array of geometry_msgs.msg.Pose
+        """
+        return self.trays
