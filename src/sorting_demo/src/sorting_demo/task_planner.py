@@ -54,41 +54,42 @@ class TaskPlanner:
         overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH / 2.0,
                                 0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
+        blocks = self.sawyer_robot.environmentEstimation.get_blocks()
+        rospy.logwarn("ITERATION!!!")
+        rospy.logwarn("blocks: " + str(blocks))
 
-        blocks = None
-        found=False
-        while not found:
-            blocks = self.sawyer_robot.environmentEstimation.get_blocks()
-            rospy.logwarn("ITERATION!!!")
-            rospy.logwarn("blocks: " + str(blocks))
+        block_poses.append(original_pose_block)
 
-            block_poses.append(original_pose_block)
+        if blocks is not None and len(blocks) > 0:
+            self.target_block_pose = blocks[0][1]  # access first item , pose field
+            self.target_block_pose.orientation = overhead_orientation
 
-            if blocks is not None and len(blocks) > 0:
-                self.target_block_pose = blocks[0][1]  # access first item , pose field
-                self.target_block_pose.orientation = overhead_orientation
+            self.target_block_pose.position.x += overhead_translation[0]
+            self.target_block_pose.position.y += overhead_translation[1]
+            self.target_block_pose.position.z += overhead_translation[2]
 
-                self.target_block_pose.position.x += overhead_translation[0]
-                self.target_block_pose.position.y += overhead_translation[1]
-                self.target_block_pose.position.z += overhead_translation[2]
+            rospy.logwarn(
+                "blocks position:" + str(self.sawyer_robot.environmentEstimation.get_blocks()) + "original\n" + str(
+                    original_pose_block))
 
-                rospy.logwarn(
-                    "blocks position:" + str(self.sawyer_robot.environmentEstimation.get_blocks()) + "original\n" + str(
-                        original_pose_block))
+            print("\nPicking task...")
 
-                print("\nPicking task...")
-                found = True
-
-                #return self.target_block
-            else:
-                rospy.logwarn("OUPS!!")
-                #return None
-
-            rospy.sleep(0.5)
+            # return self.target_block
+        else:
+            rospy.logwarn("OUPS!!")
+            # return None
 
     def async_main_task(self):
+        """
+        This is the main plan of the application
+        :return:
+        """
         yield self.create_go_home_task()
-        yield self.create_find_next_block_pose()
+
+        while self.target_block_pose is None:
+            yield self.create_find_next_block_pose()
+            rospy.sleep(0.5)
+
         yield self.create_pick_task(self.target_block_pose)
         yield self.create_place_task(self.target_block_pose)
 
