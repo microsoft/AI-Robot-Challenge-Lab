@@ -8,6 +8,8 @@ import xacro
 from geometry_msgs.msg import Pose, Point, Quaternion
 from gazebo_msgs.srv import SpawnModel, DeleteModel
 
+from demo_constants import BLOCK_COLOR_MAPPINGS
+
 
 def spawn_urdf(name, description_xml, pose, reference_frame):
     rospy.wait_for_service('/gazebo/spawn_urdf_model')
@@ -95,16 +97,23 @@ def load_gazebo_models():
     # Spawn blocks
     block_path = sorting_demo_models_path + "block/block.urdf.xacro"
 
-    block_poses = [
-        Pose(position=Point(x=0.4225, y=0.1265, z=0.7725)),
-        Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
-        Pose(position=Point(x=0.4225, y=-0.1, z=0.7725))]
-    block_mappings = [
-        {"material": "Gazebo/Green"},
-        {"material": "Gazebo/Orange"},
-        {"material": "Gazebo/SkyBlue"}]
+    block_poses = []
+    for i in xrange(3):
+        for j in xrange(3):
+            block_poses.append(Pose(position=Point(x= 0.40 + j*0.15 , y= -0.15 + i * 0.15, z=0.7725)))
 
-    for (i, (pose, mappings)) in enumerate(zip(block_poses, block_mappings)):
+        """
+        Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
+        Pose(position=Point(x=0.80, y=0.12, z=0.7725)),
+        Pose(position=Point(x=0.60, y=-0.1, z=0.7725)),
+        Pose(position=Point(x=0.80, y=-0.1, z=0.7725)),
+        Pose(position=Point(x=0.4225, y=-0.1, z=0.7725)),
+        Pose(position=Point(x=0.60, y=-0.35, z=0.7725)),
+        Pose(position=Point(x=0.80, y=-0.35, z=0.7725)),
+        Pose(position=Point(x=0.4225, y=-0.35, z=0.7725))
+        """
+
+    for (i, (pose, mappings)) in enumerate(zip(block_poses, BLOCK_COLOR_MAPPINGS)):
         name = "block{}".format(i)
         spawn_xacro_model(name, block_path, pose, world_reference_frame, mappings)
         model_list.append(name)
