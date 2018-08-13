@@ -10,6 +10,8 @@ import geometry_msgs.msg
 from geometry_msgs.msg import Pose, Point,Quaternion
 from gazebo_msgs.srv import SpawnModel,DeleteModel
 
+import demo_constants
+
 def spawn_urdf(name, description_xml, pose, reference_frame):
     rospy.wait_for_service('/gazebo/spawn_urdf_model')
     try:
@@ -108,7 +110,7 @@ def main():
     can improve on this demo by adding perception and feedback to close
     the loop.
     """
-    rospy.init_node("ik_pick_and_place_demo")
+    rospy.init_node("sorting_demo")
     # Load Gazebo Models via Spawning Services
     # Note that the models reference is the /world frame
     # and the IK operates with respect to the /base frame
@@ -128,15 +130,26 @@ def main():
                              'right_j6': 1.7659649178699421}
 
     import sorting_robot
-    from sorting_robot import  SortingRobot
-    pnp = SortingRobot(limb, hover_distance)
+    from sorting_robot import SortingRobot
+    sorting_robot = SortingRobot(limb, hover_distance)
     # An orientation for gripper fingers to be overhead and parallel to the obj
     overhead_orientation = Quaternion(
         x=-0.00142460053167,
         y=0.999994209902,
         z=-0.00177030764765,
         w=0.00253311793936)
+
+    overhead_translation = [0.75*demo_constants.CUBE_EDGE_LENGHT,demo_constants.CUBE_EDGE_LENGHT/2.0,0.25*demo_constants.CUBE_EDGE_LENGHT]
+
     block_poses = list()
+
+    original_pose_block = Pose(
+        position=Point(x=0.45 , y=0.155, z=-0.129),
+        orientation=overhead_orientation)
+
+    block_poses.append(original_pose_block)
+
+    """
     # The Pose of the block in its initial location.
     # You may wish to replace these poses with estimates
     # from a perception node.
@@ -148,16 +161,34 @@ def main():
     block_poses.append(Pose(
         position=Point(x=0.6, y=-0.1, z=-0.129),
         orientation=overhead_orientation))
+    """
+
     # Move to the desired starting angles
     print("Running. Ctrl-c to quit")
-    pnp.move_to_start(starting_joint_angles)
+    sorting_robot.move_to_start(starting_joint_angles)
     idx = 0
     while not rospy.is_shutdown():
-        print("\nPicking...")
-        pnp.pick(block_poses[idx])
-        print("\nPlacing...")
-        idx = (idx + 1) % len(block_poses)
-        pnp.place(block_poses[idx])
+        blocks = sorting_robot.environmentEstimation.get_blocks()
+        rospy.loginfo("blocks: " + str(blocks))
+
+        if blocks is not None and len(blocks)>0:
+            target_block = blocks[0][1] # access first item , pose field
+            target_block.orientation = overhead_orientation
+
+            target_block.position.x += overhead_translation[0]
+            target_block.position.y += overhead_translation[1]
+            target_block.position.z += overhead_translation[2]
+
+            rospy.loginfo("blocks position:" + str(sorting_robot.environmentEstimation.get_blocks()) + "original\n" +str(original_pose_block))
+            print("\nPicking...")
+            sorting_robot.pick(target_block)
+            print("\nPlacing...")
+            #idx = (idx + 1) % len(block_poses)
+            sorting_robot.place(target_block)
+        else:
+            sorting_robot.environmentEstimation.update()
+            rospy.sleep(0.1)
+
     return 0
 
 
