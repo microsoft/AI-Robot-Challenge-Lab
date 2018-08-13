@@ -12,7 +12,7 @@ import intera_interface
 from object_detection import EnvironmentEstimation
 
 
-class SortingRobot(object):
+class SawyerRobotFacade(object):
     def __init__(self, limb="right", hover_distance=0.15, tip_name="right_gripper_tip"):
         self._limb_name = limb  # string
         self._tip_name = tip_name  # string
