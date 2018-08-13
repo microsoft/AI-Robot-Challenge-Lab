@@ -7,10 +7,11 @@ import rospy
 import xacro
 
 import geometry_msgs.msg
-from geometry_msgs.msg import Pose, Point,Quaternion
-from gazebo_msgs.srv import SpawnModel,DeleteModel
+from geometry_msgs.msg import Pose, Point, Quaternion
+from gazebo_msgs.srv import SpawnModel, DeleteModel
 
 import demo_constants
+
 
 def spawn_urdf(name, description_xml, pose, reference_frame):
     rospy.wait_for_service('/gazebo/spawn_urdf_model')
@@ -20,15 +21,18 @@ def spawn_urdf(name, description_xml, pose, reference_frame):
     except rospy.ServiceException, e:
         rospy.logerr("Spawn URDF service call failed: {0}".format(e))
 
+
 def load_xacro_file(file_path, mappings):
     urdf_doc = xacro.process_file(file_path, mappings=mappings)
     urdf_xml = urdf_doc.toprettyxml(indent='  ', encoding='utf-8')
     urdf_xml = urdf_xml.replace('\n', '')
     return urdf_xml
 
+
 def spawn_xacro_model(name, path, pose, reference_frame, mappings):
     description_xml = load_xacro_file(path, mappings)
     spawn_urdf(name, description_xml, pose, reference_frame)
+
 
 def spawn_urdf_model(name, path, pose, reference_frame):
     description_xml = ''
@@ -36,6 +40,7 @@ def spawn_urdf_model(name, path, pose, reference_frame):
         description_xml = model_file.read().replace('\n', '')
 
     spawn_urdf(name, description_xml, pose, reference_frame)
+
 
 def spawn_sdf_model(name, path, pose, reference_frame):
     # Load Model SDF
@@ -50,6 +55,7 @@ def spawn_sdf_model(name, path, pose, reference_frame):
         resp_sdf = spawn_sdf(name, description_xml, "/", pose, reference_frame)
     except rospy.ServiceException, e:
         rospy.logerr("Spawn SDF service call failed: {0}".format(e))
+
 
 def load_gazebo_models():
     model_list = []
@@ -71,9 +77,9 @@ def load_gazebo_models():
         Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
         Pose(position=Point(x=0.4225, y=-0.1, z=0.7725))]
     block_mappings = [
-        {"material" : "Gazebo/Green"},
-        {"material" : "Gazebo/Orange"},
-        {"material" : "Gazebo/SkyBlue"}]
+        {"material": "Gazebo/Green"},
+        {"material": "Gazebo/Orange"},
+        {"material": "Gazebo/SkyBlue"}]
 
     for (i, pose, mappings) in zip(range(len(block_poses)), block_poses, block_mappings):
         name = "block{}".format(i)
@@ -81,6 +87,7 @@ def load_gazebo_models():
         model_list.append(name)
 
     return model_list
+
 
 def delete_gazebo_models(model_list):
     # This will be called on ROS Exit, deleting Gazebo models
@@ -139,12 +146,13 @@ def main():
         z=-0.00177030764765,
         w=0.00253311793936)
 
-    overhead_translation = [0.75*demo_constants.CUBE_EDGE_LENGHT,demo_constants.CUBE_EDGE_LENGHT/2.0,0.25*demo_constants.CUBE_EDGE_LENGHT]
+    overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGHT, demo_constants.CUBE_EDGE_LENGHT / 2.0,
+                            0.25 * demo_constants.CUBE_EDGE_LENGHT]
 
     block_poses = list()
 
     original_pose_block = Pose(
-        position=Point(x=0.45 , y=0.155, z=-0.129),
+        position=Point(x=0.45, y=0.155, z=-0.129),
         orientation=overhead_orientation)
 
     block_poses.append(original_pose_block)
@@ -171,22 +179,25 @@ def main():
         blocks = sorting_robot.environmentEstimation.get_blocks()
         rospy.loginfo("blocks: " + str(blocks))
 
-        if blocks is not None and len(blocks)>0:
-            target_block = blocks[0][1] # access first item , pose field
+        sorting_robot.environmentEstimation.update()
+
+        if blocks is not None and len(blocks) > 0:
+            target_block = blocks[0][1]  # access first item , pose field
             target_block.orientation = overhead_orientation
 
             target_block.position.x += overhead_translation[0]
             target_block.position.y += overhead_translation[1]
             target_block.position.z += overhead_translation[2]
 
-            rospy.loginfo("blocks position:" + str(sorting_robot.environmentEstimation.get_blocks()) + "original\n" +str(original_pose_block))
+            rospy.loginfo(
+                "blocks position:" + str(sorting_robot.environmentEstimation.get_blocks()) + "original\n" + str(
+                    original_pose_block))
             print("\nPicking...")
             sorting_robot.pick(target_block)
             print("\nPlacing...")
-            #idx = (idx + 1) % len(block_poses)
+            # idx = (idx + 1) % len(block_poses)
             sorting_robot.place(target_block)
         else:
-            sorting_robot.environmentEstimation.update()
             rospy.sleep(0.1)
 
     return 0
