@@ -18,9 +18,6 @@ class SawyerRobotFacade(object):
         self._limb = intera_interface.Limb(limb)
         self._gripper = intera_interface.Gripper()
 
-        # subcomponents
-        self.environment_estimation = EnvironmentEstimation()
-
         # verify robot is enabled
         print("Getting robot state... ")
         self._rs = intera_interface.RobotEnable(intera_interface.CHECK_VERSION)
@@ -147,6 +144,5 @@ class SawyerRobotFacade(object):
             else:
                 rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
 
-            self.environment_estimation.update()
             r.sleep()
         rospy.sleep(1.0)

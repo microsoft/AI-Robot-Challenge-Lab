@@ -1,13 +1,11 @@
 #!/usr/bin/python
+import re
+
 import rospy
-import tf
 import tf.transformations
 from gazebo_msgs.msg import LinkStates
 
-import utils
-from utils import mathutils
 from utils.mathutils import *
-import re
 
 
 class TrayState:
@@ -20,7 +18,6 @@ class TrayState:
 
         search = TrayState.regex.search(id)
         self.num = search.group(1)
-
 
     @staticmethod
     def is_tray(id):
@@ -42,6 +39,7 @@ class BlockState:
     def is_block(id):
         num = BlockState.regex.search(id)
         return num is not None
+
 
 class EnvironmentEstimation:
     def __init__(self):
@@ -107,7 +105,7 @@ class EnvironmentEstimation:
             else:
                 continue
 
-            rospy.logwarn("simulated object state: " + name+ " -> " + item.num)
+            #rospy.logwarn("simulated object state: " + name + " -> " + item.num)
 
         self.gazebo_blocks = blocks
         self.gazebo_trays = trays
@@ -126,9 +124,6 @@ class EnvironmentEstimation:
 
         blocks = []
         trays = []
-
-        rospy.logwarn("-->" + str(self.gazebo_trays))
-
 
         for items in collections:
             for item in items:
@@ -156,9 +151,8 @@ class EnvironmentEstimation:
                     blocks.append(item)
                 elif isinstance(item, TrayState):
                     trays.append(item)
-                else:
-                    rospy.logwarn("DETECTED ITEM:" + str(item))
-
+                #else:
+                    #rospy.logwarn("DETECTED ITEM:" + str(item))
 
         self.blocks = blocks
         self.trays = trays
