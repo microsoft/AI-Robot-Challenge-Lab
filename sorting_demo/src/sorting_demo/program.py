@@ -53,12 +53,13 @@ def main():
         z=-0.00177030764765,
         w=0.00253311793936)
 
-    overhead_translation = [0.75*demo_constants.CUBE_EDGE_LENGHT,demo_constants.CUBE_EDGE_LENGHT/2.0,0.25*demo_constants.CUBE_EDGE_LENGHT]
+    overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGHT, demo_constants.CUBE_EDGE_LENGHT / 2.0,
+                            0.25 * demo_constants.CUBE_EDGE_LENGHT]
 
     block_poses = list()
 
     original_pose_block = Pose(
-        position=Point(x=0.45 , y=0.155, z=-0.129),
+        position=Point(x=0.45, y=0.155, z=-0.129),
         orientation=overhead_orientation)
 
     block_poses.append(original_pose_block)
@@ -85,22 +86,25 @@ def main():
         blocks = sorting_robot.environmentEstimation.get_blocks()
         rospy.loginfo("blocks: " + str(blocks))
 
-        if blocks is not None and len(blocks)>0:
-            target_block = blocks[0][1] # access first item , pose field
+        sorting_robot.environmentEstimation.update()
+
+        if blocks is not None and len(blocks) > 0:
+            target_block = blocks[0][1]  # access first item , pose field
             target_block.orientation = overhead_orientation
 
             target_block.position.x += overhead_translation[0]
             target_block.position.y += overhead_translation[1]
             target_block.position.z += overhead_translation[2]
 
-            rospy.loginfo("blocks position:" + str(sorting_robot.environmentEstimation.get_blocks()) + "original\n" +str(original_pose_block))
+            rospy.loginfo(
+                "blocks position:" + str(sorting_robot.environmentEstimation.get_blocks()) + "original\n" + str(
+                    original_pose_block))
             print("\nPicking...")
             sorting_robot.pick(target_block)
             print("\nPlacing...")
-            #idx = (idx + 1) % len(block_poses)
+            # idx = (idx + 1) % len(block_poses)
             sorting_robot.place(target_block)
         else:
-            sorting_robot.environmentEstimation.update()
             rospy.sleep(0.1)
 
     return 0
