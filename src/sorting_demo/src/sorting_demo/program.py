@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-import sys
 import functools
+import sys
 
-import rospkg
 import rospy
-
-from geometry_msgs.msg import Pose, Point,Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion
 
 import demo_constants
 import gazebo_models
+from sorting_robot import SortingRobot
+
 
 def main():
     """SDK Inverse Kinematics Pick and Place Example
@@ -43,8 +43,7 @@ def main():
                              'right_j5': 0.3968371433926965,
                              'right_j6': 1.7659649178699421}
 
-    import sorting_robot
-    from sorting_robot import SortingRobot
+
     sorting_robot = SortingRobot(limb, hover_distance)
     # An orientation for gripper fingers to be overhead and parallel to the obj
     overhead_orientation = Quaternion(
