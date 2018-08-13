@@ -12,6 +12,7 @@ class TaskPlanner:
         limb = 'right'
         hover_distance = 0.15  # meters
         self.sawyer_robot = SawyerRobotFacade(limb, hover_distance)
+        self.target_block_pose = None
 
     def create_go_home_task(self):
         # Starting Joint angles for right arm
@@ -32,6 +33,10 @@ class TaskPlanner:
         print("\nPlacing task...")
         return Thread(target=self.sawyer_robot.place_loop, args=[target_pose])
 
+    def create_find_next_block_pose(self):
+        print("\nPlacing task...")
+        return Thread(target=self.find_next_block_pose)
+
     def find_next_block_pose(self):
         block_poses = list()
 
@@ -49,45 +54,53 @@ class TaskPlanner:
         overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH / 2.0,
                                 0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
-        blocks = self.sawyer_robot.environmentEstimation.get_blocks()
-        rospy.loginfo("blocks: " + str(blocks))
 
-        block_poses.append(original_pose_block)
+        blocks = None
+        found=False
+        while not found:
+            blocks = self.sawyer_robot.environmentEstimation.get_blocks()
+            rospy.logwarn("ITERATION!!!")
+            rospy.logwarn("blocks: " + str(blocks))
 
-        if blocks is not None and len(blocks) > 0:
-            target_block = blocks[0][1]  # access first item , pose field
-            target_block.orientation = overhead_orientation
+            block_poses.append(original_pose_block)
 
-            target_block.position.x += overhead_translation[0]
-            target_block.position.y += overhead_translation[1]
-            target_block.position.z += overhead_translation[2]
+            if blocks is not None and len(blocks) > 0:
+                self.target_block_pose = blocks[0][1]  # access first item , pose field
+                self.target_block_pose.orientation = overhead_orientation
 
-            rospy.loginfo(
-                "blocks position:" + str(self.sawyer_robot.environmentEstimation.get_blocks()) + "original\n" + str(
-                    original_pose_block))
+                self.target_block_pose.position.x += overhead_translation[0]
+                self.target_block_pose.position.y += overhead_translation[1]
+                self.target_block_pose.position.z += overhead_translation[2]
 
-            print("\nPicking task...")
-            return target_block
-        else:
-            return None
+                rospy.logwarn(
+                    "blocks position:" + str(self.sawyer_robot.environmentEstimation.get_blocks()) + "original\n" + str(
+                        original_pose_block))
+
+                print("\nPicking task...")
+                found = True
+
+                #return self.target_block
+            else:
+                rospy.logwarn("OUPS!!")
+                #return None
+
+            rospy.sleep(0.5)
+
+    def async_main_task(self):
+        yield self.create_go_home_task()
+        yield self.create_find_next_block_pose()
+        yield self.create_pick_task(self.target_block_pose)
+        yield self.create_place_task(self.target_block_pose)
 
     def create_main_task(self):
         return Thread(target=self.main_task_loop)
 
     def main_task_loop(self):
-        target_block_pose = self.find_next_block_pose()
+        for current_task in self.async_main_task():
+            rospy.logwarn("TASK: " + str(self.target_block_pose))
 
-        gohome_task = self.create_go_home_task()
-        picktask = self.create_pick_task(target_block_pose)
-        placetask = self.create_place_task(target_block_pose)
-
-        task_list = [gohome_task, picktask, placetask]
-
-        while len(task_list):
-            current_task = task_list[0]
             current_task.start()
             current_task.join()
-            task_list.pop(0)
             rospy.sleep(0.1)
 
     def run(self):
