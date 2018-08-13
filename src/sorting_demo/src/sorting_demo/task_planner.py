@@ -38,8 +38,8 @@ class TaskPlanner:
 
         block_poses.append(original_pose_block)
 
-        overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGHT, demo_constants.CUBE_EDGE_LENGHT / 2.0,
-                                0.25 * demo_constants.CUBE_EDGE_LENGHT]
+        overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH / 2.0,
+                                0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
         blocks = self.sawyer_robot.environmentEstimation.get_blocks()
         rospy.loginfo("blocks: " + str(blocks))
