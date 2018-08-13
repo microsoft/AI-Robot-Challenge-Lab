@@ -19,7 +19,7 @@ class SawyerRobotFacade(object):
         self._gripper = intera_interface.Gripper()
 
         # subcomponents
-        self.environmentEstimation = EnvironmentEstimation()
+        self.environment_estimation = EnvironmentEstimation()
 
         # verify robot is enabled
         print("Getting robot state... ")
@@ -35,7 +35,7 @@ class SawyerRobotFacade(object):
         self._guarded_move_to_joint_position(start_angles)
         self.gripper_open()
 
-    def pick_loop(self, pose):
+    def pick_loop(self, pose, approach_speed = 0.001):
         """
         Internal state machine for picking
         :param pose:
@@ -46,14 +46,18 @@ class SawyerRobotFacade(object):
 
         # open the gripper
         self.gripper_open()
+
         # servo above pose
-        self._approach(pose)
+        self._approach(pose,approach_speed= approach_speed)
+
         # servo to pose
-        self._servo_to_pose(pose)
+        self._servo_to_pose(pose,time=1.0)
         if rospy.is_shutdown():
             return
+
         # close gripper
         self.gripper_close()
+
         # retract to clear object
         self._retract()
 
@@ -92,12 +96,12 @@ class SawyerRobotFacade(object):
         else:
             rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
 
-    def _approach(self, pose):
+    def _approach(self, pose, approach_speed = 0.001):
         approach = copy.deepcopy(pose)
         # approach with a pose the hover-distance above the requested pose
         approach.position.z = approach.position.z + self._hover_distance
         joint_angles = self._limb.ik_request(approach, self._tip_name)
-        self._limb.set_joint_position_speed(0.001)
+        self._limb.set_joint_position_speed(approach_speed)
         self._guarded_move_to_joint_position(joint_angles)
         self._limb.set_joint_position_speed(0.1)
 
@@ -143,6 +147,6 @@ class SawyerRobotFacade(object):
             else:
                 rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
 
-            self.environmentEstimation.update()
+            self.environment_estimation.update()
             r.sleep()
         rospy.sleep(1.0)
