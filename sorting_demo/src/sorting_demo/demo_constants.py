@@ -1,5 +1,5 @@
 #!/usr/bin/python
-CUBE_EDGE_LENGTH = 0.045
+CUBE_EDGE_LENGTH = 0.04
 
 BLOCK_COLOR_MAPPINGS = [
     {"material": "Gazebo/Green"},

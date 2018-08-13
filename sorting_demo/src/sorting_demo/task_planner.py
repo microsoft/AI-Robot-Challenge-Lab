@@ -44,21 +44,21 @@ class TaskPlanner:
 
         return Thread(target=self.sawyer_robot.move_to_start, args=[starting_joint_angles])
 
-    def create_pick_task(self, target_pose, approach_speed, meet_time, retract_time):
+    def create_pick_task(self, target_pose, approach_speed, approach_time, meet_time, retract_time):
         """
         :param target_pose:
         :param approach_speed:
         :return:
         """
-        return Thread(target=self.sawyer_robot.pick_loop, args=[target_pose, approach_speed, meet_time, retract_time])
+        return Thread(target=self.sawyer_robot.pick_loop, args=[target_pose, approach_speed, approach_time, meet_time, retract_time])
 
-    def create_place_task(self, target_pose, approach_speed, meet_time, retract_time):
+    def create_place_task(self, target_pose, approach_speed, approach_time, meet_time, retract_time):
         """
         :param target_pose:
         :return:
         """
         rospy.logwarn("\nPlacing task...")
-        return Thread(target=self.sawyer_robot.place_loop, args=[target_pose, approach_speed, meet_time, retract_time])
+        return Thread(target=self.sawyer_robot.place_loop, args=[target_pose, approach_speed, approach_time, meet_time, retract_time])
 
     def create_decision_select_block_and_tray(self):
         """
@@ -79,13 +79,9 @@ class TaskPlanner:
             z=-0.00177030764765,
             w=0.00253311793936)
 
-        original_pose_block = Pose(
-            position=Point(x=0.45, y=0.155, z=-0.129),
-            orientation=overhead_orientation)
-
-        overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGTH,
+        overhead_translation = [0.5 * demo_constants.CUBE_EDGE_LENGTH,
                                 demo_constants.CUBE_EDGE_LENGTH / 2.0,
-                                0.25 * demo_constants.CUBE_EDGE_LENGTH]
+                                0.5 * demo_constants.CUBE_EDGE_LENGTH]
 
         blocks = self.environment_estimation.get_blocks()
 
@@ -111,7 +107,6 @@ class TaskPlanner:
         self.target_tray.final_pose.position.y += overhead_translation[1]
         self.target_tray.final_pose.position.z += overhead_translation[2]
 
-        rospy.logwarn("TRAYS: " + str(trays))
         rospy.logwarn("TARGET TRAY POSE: " + str(self.target_tray))
 
     def delay_task(self, secs):
@@ -139,11 +134,13 @@ class TaskPlanner:
 
             yield self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
                                         approach_speed=0.0001,
+                                        approach_time=1.0,
                                         meet_time=0.1,
                                         retract_time=0.1)
 
             yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
                                          approach_speed=0.0001,
+                                         approach_time = 1.0,
                                          meet_time=0.1,
                                          retract_time=0.1)
 

@@ -27,7 +27,7 @@ class TrayState:
         #return self.final_pose
         copyfinalpose = copy.deepcopy(self.final_pose)
 
-        yoffset = -0.04 + 0.08 * len(self.blocks)
+        yoffset = -0.05 + 0.075 * len(self.blocks)
         copyfinalpose.position.y -= yoffset
         copyfinalpose.position.z += 0.03
 
