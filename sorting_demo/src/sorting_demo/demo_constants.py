@@ -1,1 +1,2 @@
-CUBE_EDGE_LENGHT = 0.045
+#!/usr/bin/python
+CUBE_EDGE_LENGTH = 0.045

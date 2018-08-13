@@ -48,11 +48,20 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>rospy</build_depend>
   <build_depend>intera_core_msgs</build_depend>
   <build_depend>gazebo_msgs</build_depend>
+  <build_depend>joint_state_controller</build_depend>
+  <build_depend>position_controllers</build_depend>
+  <build_depend>velocity_controllers</build_depend>
+  <build_depend>force_torque_sensor_controller</build_depend>
+  <build_depend>imu_sensor_controller</build_depend>
+  <build_depend>ros_control</build_depend>
+  <build_depend>joint_trajectory_controller</build_depend>
+  <build_depend>gripper_action_controller</build_depend>
+  <build_depend>gazebo_ros_control</build_depend>
+  <build_depend>gazebo_plugins</build_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>rospack</exec_depend>
@@ -61,6 +70,18 @@
   <exec_depend>sawyer_gazebo</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>joint_state_controller</exec_depend>
+
+  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>velocity_controllers</exec_depend>
+  <exec_depend>force_torque_sensor_controller</exec_depend>
+  <exec_depend>imu_sensor_controller</exec_depend>
+  <exec_depend>ros_control</exec_depend>
+  <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>gripper_action_controller</exec_depend>
+  <build_depend>gazebo_ros_control</build_depend>
+  <build_depend>gazebo_plugins</build_depend>
+
 
 
   <!-- The export tag contains other, unspecified, tags -->
