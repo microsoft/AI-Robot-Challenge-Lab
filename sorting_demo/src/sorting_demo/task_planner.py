@@ -72,22 +72,23 @@ class TaskPlanner:
             return None
 
     def create_main_task(self):
-        return Thread(target=self.main_task)
+        return Thread(target=self.main_task_loop)
 
-    def main_task(self):
-        gohome_task = self.create_go_home_task()
-        gohome_task.start()
-        gohome_task.join()
-
+    def main_task_loop(self):
         target_block_pose = self.find_next_block_pose()
 
+        gohome_task = self.create_go_home_task()
         picktask = self.create_pick_task(target_block_pose)
-        picktask.start()
-        picktask.join()
-
         placetask = self.create_place_task(target_block_pose)
-        placetask.start()
-        placetask.join()
+
+        task_list = [gohome_task, picktask, placetask]
+
+        while len(task_list):
+            current_task = task_list[0]
+            current_task.start()
+            current_task.join()
+            task_list.pop(0)
+            rospy.sleep(0.1)
 
     def run(self):
         """
