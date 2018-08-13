@@ -56,17 +56,44 @@ def spawn_sdf_model(name, path, pose, reference_frame):
 def load_gazebo_models():
     model_list = []
 
-    # Spawn Table
-    table_name = "cafe_table"
-    table_path = rospkg.RosPack().get_path('sawyer_sim_examples') + "/models/cafe_table/model.sdf"
-    table_pose = Pose(position=Point(x=0.75, y=0.0, z=0.0))
-    table_reference_frame = "world"
-    spawn_sdf_model(table_name, table_path, table_pose, table_reference_frame)
-    model_list.append(table_name)
+    world_reference_frame = "world"
+
+    # Sawyer sim examples model path
+    sawyer_sim_models_path = rospkg.RosPack().get_path('sawyer_sim_examples') + "/models/"
+
+    # Spawn Blocks Table
+    blocks_table_name = "cafe_table"
+    blocks_table_path = sawyer_sim_models_path + "cafe_table/model.sdf"
+    blocks_table_pose = Pose(position=Point(x=0.75, y=0.0, z=0.0))
+
+    spawn_sdf_model(blocks_table_name, blocks_table_path, blocks_table_pose, world_reference_frame)
+    model_list.append(blocks_table_name)
+
+    # Spawn Trays Table
+    trays_table_name = "trays_table"
+    trays_table_path = sawyer_sim_models_path + "cafe_table/model.sdf"
+    trays_table_pose = Pose(position=Point(x=0.0, y=0.95, z=0.0))
+
+    spawn_sdf_model(trays_table_name, trays_table_path, trays_table_pose, world_reference_frame)
+    model_list.append(trays_table_name)
+
+    # sorting_demo model path
+    sorting_demo_models_path = rospkg.RosPack().get_path('sorting_demo') + "/models/"
+
+    # Spawn trays
+    tray_path = sorting_demo_models_path + "tray/tray.urdf.xacro"
+
+    tray_poses = [Pose(position=Point(x=-0.2, y=0.7, z=0.9)),
+                  Pose(position=Point(x=0.05, y=0.7, z=0.9)),
+                  Pose(position=Point(x=0.3, y=0.7, z=0.9))]
+
+    for (i, pose) in enumerate(tray_poses):
+        name = "tray{}".format(i)
+        spawn_xacro_model(name, tray_path, pose, world_reference_frame, {})
+        model_list.append(name)
 
     # Spawn blocks
-    block_path = rospkg.RosPack().get_path('sorting_demo') + "/models/block/block.urdf.xacro"
-    block_reference_frame = "world"
+    block_path = sorting_demo_models_path + "block/block.urdf.xacro"
 
     block_poses = [
         Pose(position=Point(x=0.4225, y=0.1265, z=0.7725)),
@@ -77,9 +104,9 @@ def load_gazebo_models():
         {"material": "Gazebo/Orange"},
         {"material": "Gazebo/SkyBlue"}]
 
-    for (i, pose, mappings) in zip(range(len(block_poses)), block_poses, block_mappings):
+    for (i, (pose, mappings)) in enumerate(zip(block_poses, block_mappings)):
         name = "block{}".format(i)
-        spawn_xacro_model(name, block_path, pose, block_reference_frame, mappings)
+        spawn_xacro_model(name, block_path, pose, world_reference_frame, mappings)
         model_list.append(name)
 
     return model_list
