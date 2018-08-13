@@ -4,8 +4,9 @@ import rospkg
 import rospy
 import xacro
 
-from geometry_msgs.msg import Pose, Point,Quaternion
-from gazebo_msgs.srv import SpawnModel,DeleteModel
+from geometry_msgs.msg import Pose, Point, Quaternion
+from gazebo_msgs.srv import SpawnModel, DeleteModel
+
 
 def spawn_urdf(name, description_xml, pose, reference_frame):
     rospy.wait_for_service('/gazebo/spawn_urdf_model')
@@ -15,15 +16,18 @@ def spawn_urdf(name, description_xml, pose, reference_frame):
     except rospy.ServiceException, e:
         rospy.logerr("Spawn URDF service call failed: {0}".format(e))
 
+
 def load_xacro_file(file_path, mappings):
     urdf_doc = xacro.process_file(file_path, mappings=mappings)
     urdf_xml = urdf_doc.toprettyxml(indent='  ', encoding='utf-8')
     urdf_xml = urdf_xml.replace('\n', '')
     return urdf_xml
 
+
 def spawn_xacro_model(name, path, pose, reference_frame, mappings):
     description_xml = load_xacro_file(path, mappings)
     spawn_urdf(name, description_xml, pose, reference_frame)
+
 
 def spawn_urdf_model(name, path, pose, reference_frame):
     description_xml = ''
@@ -31,6 +35,7 @@ def spawn_urdf_model(name, path, pose, reference_frame):
         description_xml = model_file.read().replace('\n', '')
 
     spawn_urdf(name, description_xml, pose, reference_frame)
+
 
 def spawn_sdf_model(name, path, pose, reference_frame):
     # Load Model SDF
@@ -45,6 +50,7 @@ def spawn_sdf_model(name, path, pose, reference_frame):
         resp_sdf = spawn_sdf(name, description_xml, "/", pose, reference_frame)
     except rospy.ServiceException, e:
         rospy.logerr("Spawn SDF service call failed: {0}".format(e))
+
 
 def load_gazebo_models():
     model_list = []
@@ -66,9 +72,9 @@ def load_gazebo_models():
         Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
         Pose(position=Point(x=0.4225, y=-0.1, z=0.7725))]
     block_mappings = [
-        {"material" : "Gazebo/Green"},
-        {"material" : "Gazebo/Orange"},
-        {"material" : "Gazebo/SkyBlue"}]
+        {"material": "Gazebo/Green"},
+        {"material": "Gazebo/Orange"},
+        {"material": "Gazebo/SkyBlue"}]
 
     for (i, pose, mappings) in zip(range(len(block_poses)), block_poses, block_mappings):
         name = "block{}".format(i)
@@ -76,6 +82,7 @@ def load_gazebo_models():
         model_list.append(name)
 
     return model_list
+
 
 def delete_gazebo_models(model_list):
     # This will be called on ROS Exit, deleting Gazebo models
