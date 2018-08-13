@@ -1,13 +1,11 @@
+#!/usr/bin/python
 import copy
 
+import intera_interface
 import rospy
-import rospkg
-
 from geometry_msgs.msg import (
     Pose,
 )
-
-import intera_interface
 
 from object_detection import EnvironmentEstimation
 
@@ -20,7 +18,7 @@ class SawyerRobotFacade(object):
         self._limb = intera_interface.Limb(limb)
         self._gripper = intera_interface.Gripper()
 
-        #subcomponents
+        # subcomponents
         self.environmentEstimation = EnvironmentEstimation()
 
         # verify robot is enabled
@@ -37,13 +35,46 @@ class SawyerRobotFacade(object):
         self._guarded_move_to_joint_position(start_angles)
         self.gripper_open()
 
-    def _guarded_move_to_joint_position(self, joint_angles, timeout=5.0):
+    def pick_loop(self, pose):
+        """
+        Internal state machine for picking
+        :param pose:
+        :return:
+        """
         if rospy.is_shutdown():
             return
-        if joint_angles:
-            self._limb.move_to_joint_positions(joint_angles, timeout=timeout)
-        else:
-            rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
+
+        # open the gripper
+        self.gripper_open()
+        # servo above pose
+        self._approach(pose)
+        # servo to pose
+        self._servo_to_pose(pose)
+        if rospy.is_shutdown():
+            return
+        # close gripper
+        self.gripper_close()
+        # retract to clear object
+        self._retract()
+
+    def place_loop(self, pose):
+        """
+        Internal state machine for placing
+        :param pose:
+        :return:
+        """
+        if rospy.is_shutdown():
+            return
+        # servo above pose
+        self._approach(pose)
+        # servo to pose
+        self._servo_to_pose(pose)
+        if rospy.is_shutdown():
+            return
+        # open the gripper
+        self.gripper_open()
+        # retract to clear object
+        self._retract()
 
     def gripper_open(self):
         self._gripper.open()
@@ -52,6 +83,14 @@ class SawyerRobotFacade(object):
     def gripper_close(self):
         self._gripper.close()
         rospy.sleep(1.0)
+
+    def _guarded_move_to_joint_position(self, joint_angles, timeout=5.0):
+        if rospy.is_shutdown():
+            return
+        if joint_angles:
+            self._limb.move_to_joint_positions(joint_angles, timeout=timeout)
+        else:
+            rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
 
     def _approach(self, pose):
         approach = copy.deepcopy(pose)
@@ -76,7 +115,7 @@ class SawyerRobotFacade(object):
         self._servo_to_pose(ik_pose)
 
     def _servo_to_pose(self, pose, time=4.0, steps=400.0):
-        ''' An *incredibly simple* linearly-interpolated Cartesian move '''
+        """ An *incredibly simple* linearly-interpolated Cartesian move """
         r = rospy.Rate(1 / (time / steps))  # Defaults to 100Hz command rate
         current_pose = self._limb.endpoint_pose()
         ik_delta = Pose()
@@ -107,33 +146,3 @@ class SawyerRobotFacade(object):
             self.environmentEstimation.update()
             r.sleep()
         rospy.sleep(1.0)
-
-    def pick(self, pose):
-        if rospy.is_shutdown():
-            return
-        # open the gripper
-        self.gripper_open()
-        # servo above pose
-        self._approach(pose)
-        # servo to pose
-        self._servo_to_pose(pose)
-        if rospy.is_shutdown():
-            return
-        # close gripper
-        self.gripper_close()
-        # retract to clear object
-        self._retract()
-
-    def place(self, pose):
-        if rospy.is_shutdown():
-            return
-        # servo above pose
-        self._approach(pose)
-        # servo to pose
-        self._servo_to_pose(pose)
-        if rospy.is_shutdown():
-            return
-        # open the gripper
-        self.gripper_open()
-        # retract to clear object
-        self._retract()

@@ -1,3 +1,6 @@
+#!/usr/bin/python
+from threading import Thread
+
 import rospy
 from geometry_msgs.msg import Pose, Point, Quaternion
 import demo_constants
@@ -20,9 +23,18 @@ class TaskPlanner:
                                  'right_j5': 0.3968371433926965,
                                  'right_j6': 1.7659649178699421}
 
-        self.sawyer_robot.move_to_start(starting_joint_angles)
+        return Thread(target=self.sawyer_robot.move_to_start, args=[starting_joint_angles])
 
-    def create_pick_task(self):
+    def create_pick_task(self, target_pose):
+        return Thread(target=self.sawyer_robot.pick_loop, args=[target_pose])
+
+    def create_place_task(self, target_pose):
+        print("\nPlacing task...")
+        return Thread(target=self.sawyer_robot.place_loop, args=[target_pose])
+
+    def find_next_block_pose(self):
+        block_poses = list()
+
         # An orientation for gripper fingers to be overhead and parallel to the obj
         overhead_orientation = Quaternion(
             x=-0.00142460053167,
@@ -34,15 +46,13 @@ class TaskPlanner:
             position=Point(x=0.45, y=0.155, z=-0.129),
             orientation=overhead_orientation)
 
-        block_poses = list()
-
-        block_poses.append(original_pose_block)
-
         overhead_translation = [0.75 * demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH / 2.0,
                                 0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
         blocks = self.sawyer_robot.environmentEstimation.get_blocks()
         rospy.loginfo("blocks: " + str(blocks))
+
+        block_poses.append(original_pose_block)
 
         if blocks is not None and len(blocks) > 0:
             target_block = blocks[0][1]  # access first item , pose field
@@ -57,12 +67,27 @@ class TaskPlanner:
                     original_pose_block))
 
             print("\nPicking task...")
-            self.sawyer_robot.pick(target_block)
+            return target_block
+        else:
+            return None
 
-    def create_place_task(self, target_pose):
-        print("\nPlacing task...")
-        # idx = (idx + 1) % len(block_poses)
-        self.sawyer_robot.place(target_pose)
+    def create_main_task(self):
+        return Thread(target=self.main_task)
+
+    def main_task(self):
+        gohome_task = self.create_go_home_task()
+        gohome_task.start()
+        gohome_task.join()
+
+        target_block_pose = self.find_next_block_pose()
+
+        picktask = self.create_pick_task(target_block_pose)
+        picktask.start()
+        picktask.join()
+
+        placetask = self.create_place_task(target_block_pose)
+        placetask.start()
+        placetask.join()
 
     def run(self):
         """
@@ -71,14 +96,10 @@ class TaskPlanner:
         """
 
         # Move to the desired starting angles
-        self.create_go_home_task()
+
+        t = self.create_main_task()
+        t.start()
 
         while not rospy.is_shutdown():
             self.sawyer_robot.environmentEstimation.update()
-
-            if self.create_pick_task():
-                self.create_place_task()
-            else:
-                rospy.sleep(0.1)
-
-        return 0
+            rospy.sleep(0.1)

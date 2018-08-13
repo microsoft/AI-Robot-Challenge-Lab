@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys
 
 import rospkg
@@ -13,7 +14,7 @@ def spawn_urdf(name, description_xml, pose, reference_frame):
     try:
         spawn_urdf = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
         resp_urdf = spawn_urdf(name, description_xml, "/", pose, reference_frame)
-    except rospy.ServiceException, e:
+    except rospy.ServiceException as e:
         rospy.logerr("Spawn URDF service call failed: {0}".format(e))
 
 
@@ -48,7 +49,7 @@ def spawn_sdf_model(name, path, pose, reference_frame):
     try:
         spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
         resp_sdf = spawn_sdf(name, description_xml, "/", pose, reference_frame)
-    except rospy.ServiceException, e:
+    except rospy.ServiceException as e:
         rospy.logerr("Spawn SDF service call failed: {0}".format(e))
 
 
@@ -94,5 +95,5 @@ def delete_gazebo_models(model_list):
 
         for model in model_list:
             resp_delete = delete_model(model)
-    except rospy.ServiceException, e:
+    except rospy.ServiceException as e:
         print("Delete Model service call failed: {0}".format(e))
