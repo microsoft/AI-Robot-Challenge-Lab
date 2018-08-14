@@ -212,12 +212,13 @@ class TaskPlanner:
         self.environment_estimation.update()
         blocks = self.environment_estimation.get_blocks()
         blocks_count = len(blocks)
-        original_block_poses = [b.final_pose for b in blocks]
 
         trays_count = len(self.environment_estimation.get_trays())
+        original_block_poses = []
 
         while True:
             rospy.logwarn("starting cycle: "+ str(self.target_block_index))
+
             while self.target_block_index < blocks_count:
                 while self.target_block is None:
                     rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
@@ -231,12 +232,15 @@ class TaskPlanner:
                 # concurrency issue, what if we lock the objectdetection update?
 
                 # break
-                yield self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
+                original_block_pose = copy.deepcopy(self.target_block.final_pose)
+                yield self.create_pick_task(original_block_pose,
                                             approach_speed=0.0001,
                                             approach_time=2.0,
                                             meet_time=3.0,
                                             retract_time=1.0,
                                             hover_distance=None)
+
+                original_block_poses.append(original_block_pose)
 
                 yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
                                              approach_speed=0.0001,
@@ -256,14 +260,38 @@ class TaskPlanner:
 
 
             # yield self.create_go_home_task()
-            yield self.delay_task(10)
-            rospy.logwarn("------- CYCLE END ----")
-            self.target_block_index = 0
-            self.target_tray = None
-            self.target_block = None
+            self.reset_cycle()
 
-            for tray in self.environment_estimation.get_trays():
-                tray.reset()
+            while self.target_block_index < blocks_count:
+                while self.target_block is None:
+                    rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
+
+                    self.environment_estimation.update()
+                    yield self.create_decision_select_block_and_tray()
+                    yield self.delay_task(0.1)
+
+                yield self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
+                                            approach_speed=0.0001,
+                                            approach_time=2.0,
+                                            meet_time=3.0,
+                                            retract_time=1.0,
+                                            hover_distance=None)
+
+
+                #yield self.create_go_home_task()
+
+                yield self.create_place_task(copy.deepcopy(original_block_poses[self.target_block_index]),
+                                             approach_speed=0.0001,
+                                             approach_time=2.0,
+                                             meet_time=3.0,
+                                             retract_time=1.0)
+
+                self.target_block_index += 1
+                self.target_block = None
+
+            self.reset_cycle()
+            yield self.delay_task(10)
+
 
             """
             yield self.create_pick_tray_task(self.environment_estimation.get_trays()[0],
@@ -272,6 +300,15 @@ class TaskPlanner:
                                              meet_time=0.1,
                                              retract_time=0.1)
             """
+
+    def reset_cycle(self):
+
+        self.target_block_index = 0
+        self.target_tray = None
+        self.target_block = None
+
+        for tray in self.environment_estimation.get_trays():
+            tray.reset()
 
     def create_main_task(self):
         """

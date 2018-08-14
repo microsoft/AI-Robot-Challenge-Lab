@@ -99,8 +99,9 @@ def load_gazebo_models():
     block_path = sorting_demo_models_path + "block/block.urdf.xacro"
 
     block_poses = []
-    for i in xrange(3):
-        for j in xrange(3):
+    size = 3
+    for i in xrange(size):
+        for j in xrange(size):
             block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(0, 1)*0.04 , y= -0.15 + i * 0.15 +random.uniform(0, 1)*0.04, z=0.7725)))
 
     """
