@@ -9,7 +9,7 @@ import xacro
 from geometry_msgs.msg import Pose, Point, Quaternion
 from gazebo_msgs.srv import SpawnModel, DeleteModel
 
-from demo_constants import BLOCK_COLOR_MAPPINGS
+from demo_constants import BLOCK_COLOR_MAPPINGS, CUBE_EDGE_LENGTH
 
 
 def spawn_urdf(name, description_xml, pose, reference_frame):
@@ -101,7 +101,7 @@ def load_gazebo_models():
     block_poses = []
     for i in xrange(3):
         for j in xrange(3):
-            block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(0, 1)*0.04 , y= -0.15 + i * 0.15 +random.uniform(0, 1)*0.04, z=0.7725)))
+            block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(-1, 1)*0.03 , y= -0.15 + i * 0.15 +random.uniform(-1, 1)*0.03, z=0.7725)))
 
         """
         Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
@@ -114,8 +114,12 @@ def load_gazebo_models():
         Pose(position=Point(x=0.4225, y=-0.35, z=0.7725))
         """
 
-    for (i, (pose, mappings)) in enumerate(zip(block_poses, BLOCK_COLOR_MAPPINGS)):
+    for (i, (pose, color_mappings)) in enumerate(zip(block_poses, BLOCK_COLOR_MAPPINGS)):
         name = "block{}".format(i)
+
+        mappings = {"edge_length" : str(CUBE_EDGE_LENGTH)}
+        mappings.update(color_mappings)
+
         spawn_xacro_model(name, block_path, pose, world_reference_frame, mappings)
         model_list.append(name)
 
