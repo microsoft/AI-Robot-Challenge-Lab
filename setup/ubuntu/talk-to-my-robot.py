@@ -1,6 +1,7 @@
 import json
 import requests
 
+
 # Used to call Python 2.7 from 3.6
 import subprocess
 
@@ -101,14 +102,28 @@ class BotRequestHandler:
 
 class BotCommandHandler:
     def move_arm():
-      print('Moving arm... do something')
-      python3_command = "python2.7 talk-to-my-robot-node.py arg1"  # launch your python2 script using bash
+      print('Moving arm... do something cool')
+      # launch your python2 script using bash
+      python3_command = "python2.7 talk-to-my-robot-node.py"  
 
       process = subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
       output, error = process.communicate()  # receive output from the python2 script
+      
+      print('done moving . . .')
+      print('returncode:'  + str(process.returncode))
+      print('output:' + output.decode("utf-8"))
 
     def show_stats():
       print('Showing stats... do something')
+      # launch your python2 script using bash
+      python3_command = "python2.7 bot-stats-node.py"  
+
+      process = subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
+      output, error = process.communicate()  # receive output from the python2 script
+      
+      print('done getting state . . .')
+      print('returncode:'  + str(process.returncode))
+      print('output:' + output.decode("utf-8"))
 
 
 app = web.Application()
