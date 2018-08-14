@@ -103,16 +103,16 @@ def load_gazebo_models():
         for j in xrange(3):
             block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(-1, 1)*0.03 , y= -0.15 + i * 0.15 +random.uniform(-1, 1)*0.03, z=0.7725)))
 
-        """
-        Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
-        Pose(position=Point(x=0.80, y=0.12, z=0.7725)),
-        Pose(position=Point(x=0.60, y=-0.1, z=0.7725)),
-        Pose(position=Point(x=0.80, y=-0.1, z=0.7725)),
-        Pose(position=Point(x=0.4225, y=-0.1, z=0.7725)),
-        Pose(position=Point(x=0.60, y=-0.35, z=0.7725)),
-        Pose(position=Point(x=0.80, y=-0.35, z=0.7725)),
-        Pose(position=Point(x=0.4225, y=-0.35, z=0.7725))
-        """
+    """
+    Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
+    Pose(position=Point(x=0.80, y=0.12, z=0.7725)),
+    Pose(position=Point(x=0.60, y=-0.1, z=0.7725)),
+    Pose(position=Point(x=0.80, y=-0.1, z=0.7725)),
+    Pose(position=Point(x=0.4225, y=-0.1, z=0.7725)),
+    Pose(position=Point(x=0.60, y=-0.35, z=0.7725)),
+    Pose(position=Point(x=0.80, y=-0.35, z=0.7725)),
+    Pose(position=Point(x=0.4225, y=-0.35, z=0.7725))
+    """
 
     for (i, (pose, color_mappings)) in enumerate(zip(block_poses, BLOCK_COLOR_MAPPINGS)):
         name = "block{}".format(i)
