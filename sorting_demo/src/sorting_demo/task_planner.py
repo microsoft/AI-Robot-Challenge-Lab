@@ -167,9 +167,9 @@ class TaskPlanner:
                 self.target_block = None
                 #self.target_tray = None
 
-            yield self.create_go_home_task()
+            #yield self.create_go_home_task()
 
-            yield self.create_pick_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
+            yield self.create_pick_task(copy.deepcopy(self.target_tray.get_tray_pick_location()),
                                          approach_speed=0.0001,
                                          approach_time=1.0,
                                          meet_time=0.1,
