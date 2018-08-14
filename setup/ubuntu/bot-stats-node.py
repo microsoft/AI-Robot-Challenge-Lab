@@ -8,16 +8,20 @@ import json
 
 print 'bot-stats-node starting'
 
+sub_once = None
 
 def callback(data):
     print 'demostats callback'
     #rospy.loginfo("I heard %s",data.data)
-    print json.dumps(data)
+    print json.dumps(data.enabled)
+    sub_once.unregister()
+ 
     
 def main():
     print 'demostats listener'
     rospy.init_node('Demo_Stats')
-    rospy.Subscriber("/robot/state", AssemblyState, callback)
+    global sub_once
+    sub_once = rospy.Subscriber("/robot/state", AssemblyState, callback )
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 
