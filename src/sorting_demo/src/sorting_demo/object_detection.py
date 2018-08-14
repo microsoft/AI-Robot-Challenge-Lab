@@ -1,14 +1,22 @@
+#!/usr/bin/python
+import re
+
 import rospy
-import tf
 import tf.transformations
 from gazebo_msgs.msg import LinkStates
 
-import utils
-from utils import mathutils
+from concepts.block import BlockState
+from concepts.tray import TrayState
+
 from utils.mathutils import *
+import demo_constants
+
 
 class EnvironmentEstimation:
     def __init__(self):
+        """
+
+        """
         self.gazebo_trays = []
         self.gazebo_blocks = []
 
@@ -58,21 +66,39 @@ class EnvironmentEstimation:
             pose = links.pose[i]
             broadcast = False
 
-            if "block" in name:
-                blocks.append((name, pose))
-                broadcast = True
-            elif "tray" in name:
-                trays.append((name, pose))
-                broadcast = True
+            item = None
+            if BlockState.is_block(name):
+                item = BlockState(id=name, pose=pose)
+                item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"]
+                blocks.append(item)
+            elif TrayState.is_tray(name):
+                item = self.get_tray(name)
+                #item = None
+                if item is None:
+                    item = TrayState(id=name, pose=pose)
+                    item.color = demo_constants.TRAY_COLORS [item.num]
+                else:
+                    item.pose = pose
+
+                trays.append(item)
+            else:
+                continue
+
+            #rospy.logwarn("simulated object state: " + name + " -> " + item.num)
 
         self.gazebo_blocks = blocks
         self.gazebo_trays = trays
 
     def update(self):
+        """
+        this method basically double buffers the state of block and trays. It also publishes tf.
+        For the simulated case it copies from gazebo_blocks and gazebo_trays to blocks and trays
+        :return:
+        """
         # publish tfs
         basehomopose = get_homo_matrix_from_pose_msg(self.gazebo_world_to_ros_transform, tag="base")
 
-        rospy.loginfo("basehomo: " + str(basehomopose))
+        # rospy.logwarn("basehomo: " + str(basehomopose))
 
         collections = [self.gazebo_blocks, self.gazebo_trays]
 
@@ -80,30 +106,71 @@ class EnvironmentEstimation:
         trays = []
 
         for items in collections:
-            for (name, pose) in items:
+            for item in items:
+
                 # block homogeneous transform
-                homopose = get_homo_matrix_from_pose_msg(pose, tag="block")
+                homo_pose = get_homo_matrix_from_pose_msg(item.pose, tag="block")
 
-                transfhomopose = inverse_compose(basehomopose, homopose)
+                # rospy.logwarn("TF PUBLISH..." +  str(homo_pose))
+                # rospy.logwarn("item state: " + str(item))
 
-                trans = tf.transformations.translation_from_matrix(transfhomopose)
-                quat = tf.transformations.quaternion_from_matrix(transfhomopose)
+                transf_homopose = inverse_compose(basehomopose, homo_pose)
+
+                trans = tf.transformations.translation_from_matrix(transf_homopose)
+                quat = tf.transformations.quaternion_from_matrix(transf_homopose)
 
                 self.tf_broacaster.sendTransform(trans,
                                                  quat,
                                                  rospy.Time.now(),
-                                                 name,
+                                                 item.id,
                                                  "world")
 
-                blocks.append((name, homotransform_to_pose_msg(transfhomopose)))
+                item.final_pose = homotransform_to_pose_msg(transf_homopose)
+
+                if isinstance(item, BlockState):
+                    blocks.append(item)
+                elif isinstance(item, TrayState):
+                    trays.append(item)
+                #else:
+                    #rospy.logwarn("DETECTED ITEM:" + str(item))
 
         self.blocks = blocks
+        self.trays = trays
 
     def get_blocks(self):
         """
         :return array of (name, geometry_msgs.msg.Pose)
         """
         return self.blocks
+
+    def get_tray(self, id):
+        """
+
+        :param id:
+        :return:
+        """
+        filtered_trays = [tray for tray in self.trays if tray.id == id]
+        if len(filtered_trays) == 0:
+            return None
+        else:
+            return filtered_trays[0]
+
+    def get_tray_by_color(self, color):
+        """
+
+        :param id:
+        :return:
+        """
+
+        color = color.replace("Gazebo/","")
+        rospy.logwarn("by color: " + str(color))
+        rospy.logwarn("by color: " + str(self.trays))
+
+        filtered_trays = [tray for tray in self.trays if tray.color == color]
+        if len(filtered_trays) == 0:
+            return None
+        else:
+            return filtered_trays[0]
 
     def get_trays(self):
         """

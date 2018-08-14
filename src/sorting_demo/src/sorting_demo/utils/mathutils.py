@@ -45,3 +45,8 @@ def homotransform_to_pose_msg(homotransform):
     return Pose(
         position=Point(x=trans[0], y=trans[1], z=trans[2]),
         orientation=Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3]))
+
+
+def rot_y(pitch):
+    return [[numpy.cos(pitch), 0, numpy.sin(pitch), 0], [0, 1, 0, 0], [-numpy.sin(pitch), 0, numpy.cos(pitch), 0], [0, 0, 0, 1]]
+
