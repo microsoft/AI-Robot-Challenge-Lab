@@ -22,19 +22,23 @@ Instructions to launch the simulated demonstration:
 
 First creating a catkin workspace with the source code. 
 
->   mkdir catkin_workspace
->   cd catkin_workspace
->   git clone git@github.com:Microsoft/AI-Robot-Challenge.git src
+ >   mkdir catkin_workspace
+ 
+ >   cd catkin_workspace
+ 
+ >   git clone git@github.com:Microsoft/AI-Robot-Challenge.git src
+
 
 Then install the system dependencies and ros dependencies
 
->   rosdep install --from-paths src --ignore-src -r -y
-   
+ >   rosdep install --from-paths src --ignore-src -r -y
+
+
 Build the code
 
->   catkin build
+ >   catkin build
    
 Launch de demonstration
 
->   source devel/setup.bash
->   roslaunch roslaunch sorting_demo sorting_demo.launch
+ >   source devel/setup.bash
+ >   roslaunch roslaunch sorting_demo sorting_demo.launch
