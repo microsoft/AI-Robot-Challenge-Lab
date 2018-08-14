@@ -1,29 +1,30 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro"
        name="block">
+
   <xacro:arg name="material" default="Gazebo/Black" />
+  <xacro:arg name="edge_length" default="0.04" />
+
+  <xacro:property name="block_density" value="3900" />
+
   <link name="block">
     <inertial>
-      <origin xyz="0.02 0.02 0.02" />
-      <mass value="0.25" />
-      <!-- (1/12)*mass*(h^2 + d^2)  (1/12)*mass*(w^2 + d^2) (1/12)*mass*(w^2 + h^2) -->
-      <!-- (1/12)*0.5*(0.04^2 + 0.04^2)  (1/12)*0.5*(0.04^2 + 0.04^2) (1/12)*0.5*(0.04^2 + 0.04^2) -->
-      <inertia  ixx="0.000066667" ixy="0.0"  ixz="0.0"  iyy="0.000066667"  iyz="0.0"  izz="0.000066667" />
-
+      <mass value="${block_density * $(arg edge_length)**3}" />
+      <inertia  ixx="${(1/12) * block_density * $(arg edge_length)**3 * (2 * $(arg edge_length)**2)}" ixy="0.0" ixz="0.0"
+                iyy="${(1/12) * block_density * $(arg edge_length)**3 * (2 * $(arg edge_length)**2)}" iyz="0.0"
+                izz="${(1/12) * block_density * $(arg edge_length)**3 * (2 * $(arg edge_length)**2)}" />
     </inertial>
     <visual>
-      <origin xyz="0.02 0.02 0.02"/>
       <geometry>
-        <box size="0.04 0.04 0.04" />
+        <box size="$(arg edge_length) $(arg edge_length) $(arg edge_length)" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0.02 0.02 0.02"/>
       <geometry>
-        <box size="0.04 0.04 0.04" />
+        <box size="$(arg edge_length) $(arg edge_length) $(arg edge_length)" />
       </geometry>
-
     </collision>
   </link>
+
   <gazebo reference="block">
      <material>$(arg material)</material>
      <mu1>10000</mu1>
