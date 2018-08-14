@@ -163,9 +163,9 @@ class TaskPlanner:
             z=-0.00177030764765,
             w=0.00253311793936)
 
-        overhead_translation = [0.5 * demo_constants.CUBE_EDGE_LENGTH,
-                                0.45 * demo_constants.CUBE_EDGE_LENGTH,
-                                0.25 * demo_constants.CUBE_EDGE_LENGTH]
+        overhead_translation = [0,
+                                0,
+                                -0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
         blocks = self.environment_estimation.get_blocks()
 
@@ -173,6 +173,7 @@ class TaskPlanner:
 
         if blocks is not None and len(blocks) > 0:
             self.target_block = blocks[self.target_block_index]  # access first item , pose field
+
             self.target_block.final_pose.orientation = overhead_orientation
 
             self.target_block.final_pose.position.x += overhead_translation[0]
