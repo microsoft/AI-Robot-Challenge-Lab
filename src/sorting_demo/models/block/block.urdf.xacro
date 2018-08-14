@@ -7,7 +7,7 @@
       <mass value="0.25" />
       <!-- (1/12)*mass*(h^2 + d^2)  (1/12)*mass*(w^2 + d^2) (1/12)*mass*(w^2 + h^2) -->
       <!-- (1/12)*0.5*(0.04^2 + 0.04^2)  (1/12)*0.5*(0.04^2 + 0.04^2) (1/12)*0.5*(0.04^2 + 0.04^2) -->
-      <inertia  ixx="0.00016874999" ixy="0.0"  ixz="0.0"  iyy="0.00016874999"  iyz="0.0"  izz="0.00016874999" />
+      <inertia  ixx="0.000066667" ixy="0.0"  ixz="0.0"  iyy="0.000066667"  iyz="0.0"  izz="0.000066667" />
 
     </inertial>
     <visual>
@@ -21,11 +21,26 @@
       <geometry>
         <box size="0.04 0.04 0.04" />
       </geometry>
+
     </collision>
   </link>
   <gazebo reference="block">
      <material>$(arg material)</material>
-     <mu1>1000</mu1>
-     <mu2>1000</mu2>
+     <mu1>10000</mu1>
+     <mu2>10000</mu2>
+
+  <collision>
+      <surface>
+        <friction>
+          <torsional>
+            <coefficient>0.456</coefficient>
+            <use_patch_radius>true</use_patch_radius>
+            <patch_radius>0.05</patch_radius>
+          </torsional>
+        </friction>
+      </surface>
+    </collision>
   </gazebo>
+
+
 </robot>
