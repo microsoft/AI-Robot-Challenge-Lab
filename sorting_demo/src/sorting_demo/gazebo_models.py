@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import random
 import sys
 
 import rospkg
@@ -100,7 +101,7 @@ def load_gazebo_models():
     block_poses = []
     for i in xrange(3):
         for j in xrange(3):
-            block_poses.append(Pose(position=Point(x= 0.40 + j*0.15 , y= -0.15 + i * 0.15, z=0.7725)))
+            block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(0, 1)*0.04 , y= -0.15 + i * 0.15 +random.uniform(0, 1)*0.04, z=0.7725)))
 
         """
         Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
