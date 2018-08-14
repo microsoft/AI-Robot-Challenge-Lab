@@ -40,3 +40,6 @@ class TrayState:
         rospy.logwarn("Tray Place location (objects %d, %lf): " % (len(self.blocks), yoffset) + str(copyfinalpose))
 
         return copyfinalpose
+
+    def reset(self):
+        self.blocks = []

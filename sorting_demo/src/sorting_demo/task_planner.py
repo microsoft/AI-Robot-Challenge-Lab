@@ -25,7 +25,6 @@ class TaskPlanner:
         self.target_block = None
         self.target_tray = None
         self.target_block_index = 0
-        self.target_tray_index = 0
 
     def create_pick_tray_task(self, tray, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -58,6 +57,39 @@ class TaskPlanner:
                                  'right_j6': 1.7659649178699421}
 
         return Thread(target=self.sawyer_robot.move_to_start, args=[starting_joint_angles])
+
+    def async_create_complete_turn_over_tray(self, homepose):
+        """
+
+        :return:
+        """
+        yield self.create_pick_task(copy.deepcopy(self.target_tray.get_tray_pick_location()),
+                                    approach_speed=0.0001,
+                                    approach_time=1.0,
+                                    meet_time=0.1,
+                                    retract_time=0.1,
+                                    hover_distance=0.45)
+
+        # move tray on table top
+        yield self.create_approach_task(homepose,
+                                        approach_speed=0.0001,
+                                        approach_time=1.0,
+                                        hover_distance=0.15)
+
+        yield self.create_turn_tray_task(homepose)
+
+        yield self.delay_task(3)
+
+        yield self.create_approach_task(homepose,
+                                        approach_speed=0.0001,
+                                        approach_time=1.0,
+                                        hover_distance=0.15)
+
+        yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_pick_location()),
+                                     approach_speed=0.0001,
+                                     approach_time=2.0,
+                                     meet_time=3.0,
+                                     retract_time=1.0)
 
     def create_turn_tray_task(self, homepose):
         """
@@ -178,18 +210,23 @@ class TaskPlanner:
         rospy.logwarn("home pose:" + str(homepose))
 
         self.environment_estimation.update()
-        blocks_count = len(self.environment_estimation.get_blocks())
+        blocks = self.environment_estimation.get_blocks()
+        blocks_count = len(blocks)
+        original_block_poses = [b.final_pose for b in blocks]
+
         trays_count = len(self.environment_estimation.get_trays())
 
         while True:
+            rospy.logwarn("starting cycle: "+ str(self.target_block_index))
             while self.target_block_index < blocks_count:
                 while self.target_block is None:
+                    rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
+
                     self.environment_estimation.update()
                     yield self.create_decision_select_block_and_tray()
                     yield self.delay_task(0.1)
 
                 rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
-                rospy.logwarn(" -- NEW TARGET TRAY INDEX: %d" % self.target_tray_index)
 
                 # concurrency issue, what if we lock the objectdetection update?
 
@@ -209,47 +246,25 @@ class TaskPlanner:
 
                 # concurrency issue
                 self.environment_estimation.get_tray(self.target_tray.id).notify_contains_block(self.target_block)
-
                 self.target_block_index += 1
-                self.target_tray_index = (self.target_tray_index + 1) % trays_count
-
                 self.target_block = None
 
                 # self.target_tray = None
 
             # yield self.create_go_home_task()
+            #self.await_async_task(self.async_create_complete_turn_over_tray, {"homepose" : homepose})
 
-            yield self.create_pick_task(copy.deepcopy(self.target_tray.get_tray_pick_location()),
-                                        approach_speed=0.0001,
-                                        approach_time=1.0,
-                                        meet_time=0.1,
-                                        retract_time=0.1,
-                                        hover_distance=0.45)
-
-            # move tray on table top
-            yield self.create_approach_task(homepose,
-                                            approach_speed=0.0001,
-                                            approach_time=1.0,
-                                            hover_distance=0.15)
-
-            yield self.create_turn_tray_task(homepose)
-
-            yield self.delay_task(3)
-
-            yield self.create_approach_task(homepose,
-                                            approach_speed=0.0001,
-                                            approach_time=1.0,
-                                            hover_distance=0.15)
-
-            yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_pick_location()),
-                                         approach_speed=0.0001,
-                                         approach_time=2.0,
-                                         meet_time=3.0,
-                                         retract_time=1.0)
 
             # yield self.create_go_home_task()
             yield self.delay_task(10)
             rospy.logwarn("------- CYCLE END ----")
+            self.target_block_index = 0
+            self.target_tray = None
+            self.target_block = None
+
+            for tray in self.environment_estimation.get_trays():
+                tray.reset()
+
             """
             yield self.create_pick_tray_task(self.environment_estimation.get_trays()[0],
                                              approach_speed=0.0001,
@@ -270,12 +285,12 @@ class TaskPlanner:
         """
         self.await_async_task(self.async_main_task)
 
-    def await_async_task(self, task):
+    def await_async_task(self, task, args=dict()):
         """
         :param task:
         :return:
         """
-        for current_task in task():
+        for current_task in task(**args):
             current_task.start()
             current_task.join()
             rospy.sleep(0.1)
