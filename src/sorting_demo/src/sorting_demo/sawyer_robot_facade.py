@@ -53,17 +53,20 @@ class SawyerRobotFacade(object):
 
         # open the gripper
         self.gripper_open()
-        rospy.sleep(1.0)
+        #rospy.sleep(1.0)
 
         # servo above pose
         self._approach(pose, time = approach_time, approach_speed=approach_speed)
+        rospy.sleep(1.0)
 
         # servo to pose
         self._servo_to_pose(pose, time=meet_time)
+        #rospy.sleep(1.0)
+
         if rospy.is_shutdown():
             return
 
-        rospy.sleep(1.0)
+        #rospy.sleep(1.0)
         # close gripper
         self.gripper_close()
 
@@ -80,8 +83,12 @@ class SawyerRobotFacade(object):
             return
         # servo above pose
         self._approach(pose, time = approach_time, approach_speed=approach_speed)
+        #rospy.sleep(1.0)
+
         # servo to pose
         self._servo_to_pose(pose, time=meet_time)
+        #rospy.sleep(1.0)
+
         if rospy.is_shutdown():
             return
         # open the gripper
@@ -128,10 +135,10 @@ class SawyerRobotFacade(object):
         approach.position.z = approach.position.z + self._hover_distance
         joint_angles = self._limb.ik_request(approach, self._tip_name)
 
-        self._limb.set_joint_position_speed(0.0001)
+        #self._limb.set_joint_position_speed(0.0001)
         #self._guarded_move_to_joint_position(joint_angles)
         self._servo_to_pose(approach,time=time)
-        self._limb.set_joint_position_speed(0.0001)
+        #self._limb.set_joint_position_speed(0.0001)
 
     def _retract(self, time=2):
         # retrieve current pose from endpoint

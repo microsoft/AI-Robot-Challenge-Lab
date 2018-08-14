@@ -13,7 +13,6 @@ from object_detection import EnvironmentEstimation
 class TaskPlanner:
     def __init__(self):
         """
-
         """
         limb = 'right'
         hover_distance = 0.2  # meters
@@ -26,6 +25,21 @@ class TaskPlanner:
         self.target_tray = None
         self.target_block_index = 0
         self.target_tray_index = 0
+
+    def create_pick_tray_task(self,tray,approach_speed, approach_time, meet_time, retract_time):
+        """
+        """
+        tray = copy.deepcopy(tray)
+
+        p = copy.deepcopy(tray.get_tray_place_block_location())
+
+        rospy.logwarn("PICK TRAY FINAL POSE: " + str(p))
+
+        return self.create_pick_task(p,
+                                     approach_speed,
+                                     approach_time,
+                                     meet_time,
+                                     retract_time)
 
     def create_go_home_task(self):
         """
@@ -57,7 +71,7 @@ class TaskPlanner:
         :param target_pose:
         :return:
         """
-        rospy.logwarn("\nPlacing task...")
+        rospy.logwarn("\nPlacing task..." + str(target_pose))
         return Thread(target=self.sawyer_robot.place_loop, args=[target_pose, approach_speed, approach_time, meet_time, retract_time])
 
     def create_decision_select_block_and_tray(self):
@@ -80,12 +94,13 @@ class TaskPlanner:
             w=0.00253311793936)
 
         overhead_translation = [0.5 * demo_constants.CUBE_EDGE_LENGTH,
-                                demo_constants.CUBE_EDGE_LENGTH / 2.0,
+                                0.45 * demo_constants.CUBE_EDGE_LENGTH,
                                 0.5 * demo_constants.CUBE_EDGE_LENGTH]
 
         blocks = self.environment_estimation.get_blocks()
 
         rospy.logwarn("NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
+
         if blocks is not None and len(blocks) > 0:
             self.target_block = blocks[self.target_block_index]  # access first item , pose field
             self.target_block.final_pose.orientation = overhead_orientation
@@ -93,13 +108,11 @@ class TaskPlanner:
             self.target_block.final_pose.position.x += overhead_translation[0]
             self.target_block.final_pose.position.y += overhead_translation[1]
             self.target_block.final_pose.position.z += overhead_translation[2]
-
-            # return self.target_block
         else:
             rospy.logwarn("OUPS!!")
             return
 
-        self.target_tray = copy.deepcopy(self.environment_estimation.get_tray_by_color(self.target_block.get_color()))  # access first item , pose field
+        self.target_tray = copy.deepcopy(self.environment_estimation.get_tray_by_color(self.target_block.get_color()))
 
         self.target_tray.final_pose.orientation = overhead_orientation
 
@@ -122,38 +135,53 @@ class TaskPlanner:
         blocks_count = len(self.environment_estimation.get_blocks())
         trays_count = len(self.environment_estimation.get_trays())
 
-        while self.target_block_index < blocks_count:
-            while self.target_block is None:
-                yield self.create_decision_select_block_and_tray()
-                yield self.delay_task(0.1)
+        while True:
+            while self.target_block_index < blocks_count:
+                while self.target_block is None:
+                    yield self.create_decision_select_block_and_tray()
+                    yield self.delay_task(0.1)
 
-            rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
-            rospy.logwarn(" -- NEW TARGET TRAY INDEX: %d" % self.target_tray_index)
+                rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
+                rospy.logwarn(" -- NEW TARGET TRAY INDEX: %d" % self.target_tray_index)
 
-            # concurrency issue, what if we lock the objectdetection update?
+                # concurrency issue, what if we lock the objectdetection update?
 
-            yield self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
-                                        approach_speed=0.0001,
-                                        approach_time=1.0,
-                                        meet_time=0.1,
-                                        retract_time=0.1)
+                yield self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
+                                            approach_speed=0.0001,
+                                            approach_time=2.0,
+                                            meet_time=3.0,
+                                            retract_time=1.0)
 
-            yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
+                yield self.create_place_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
+                                             approach_speed=0.0001,
+                                             approach_time = 2.0,
+                                             meet_time=3.0,
+                                             retract_time=1.0)
+
+                # concurrency issue
+                self.environment_estimation.get_tray(self.target_tray.id).notify_contains_block(self.target_block)
+
+                self.target_block_index += 1
+                self.target_tray_index = (self.target_tray_index + 1) % trays_count
+
+                self.target_block = None
+                #self.target_tray = None
+
+            yield self.create_go_home_task()
+
+            yield self.create_pick_task(copy.deepcopy(self.target_tray.get_tray_place_block_location()),
                                          approach_speed=0.0001,
-                                         approach_time = 1.0,
+                                         approach_time=1.0,
                                          meet_time=0.1,
                                          retract_time=0.1)
 
-            # concurrency issue
-            self.environment_estimation.get_tray(self.target_tray.id).notify_contains_block(self.target_block)
-
-            self.target_block_index += 1
-            self.target_tray_index = (self.target_tray_index + 1) % trays_count
-
-            self.target_block = None
-            self.target_tray = None
-
-        yield self.create_go_home_task()
+            """
+            yield self.create_pick_tray_task(self.environment_estimation.get_trays()[0],
+                                             approach_speed=0.0001,
+                                             approach_time=1.0,
+                                             meet_time=0.1,
+                                             retract_time=0.1)
+            """
 
     def create_main_task(self):
         """

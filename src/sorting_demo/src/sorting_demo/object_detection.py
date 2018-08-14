@@ -73,7 +73,7 @@ class EnvironmentEstimation:
                 blocks.append(item)
             elif TrayState.is_tray(name):
                 item = self.get_tray(name)
-
+                #item = None
                 if item is None:
                     item = TrayState(id=name, pose=pose)
                     item.color = demo_constants.TRAY_COLORS [item.num]
