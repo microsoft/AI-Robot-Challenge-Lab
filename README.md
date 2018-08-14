@@ -16,25 +16,25 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 # Delivery 1 - Initial Sawyer-Gazebo Simulation
 The initial simulated sawyer demo has been evaluate in a Ubuntu 16.04 machine with ros kinetic installed. In order to execute the demonstration it is required first to install all the dependencies of the catkin workspace.
 
-   rosdep install --from-paths src --ignore-src -r -y
+ >  rosdep install --from-paths src --ignore-src -r -y
    
 Instructions to launch the simulated demonstration:
 
 First creating a catkin workspace with the source code. 
 
-   mkdir catkin_workspace
-   cd catkin_workspace
-   git clone git@github.com:Microsoft/AI-Robot-Challenge.git src
+>   mkdir catkin_workspace
+>   cd catkin_workspace
+>   git clone git@github.com:Microsoft/AI-Robot-Challenge.git src
 
 Then install the system dependencies and ros dependencies
 
-   rosdep install --from-paths src --ignore-src -r -y
+>   rosdep install --from-paths src --ignore-src -r -y
    
 Build the code
 
-   catkin build
+>   catkin build
    
 Launch de demonstration
 
-   source devel/setup.bash
-   roslaunch roslaunch sorting_demo sorting_demo.launch
+>   source devel/setup.bash
+>   roslaunch roslaunch sorting_demo sorting_demo.launch
