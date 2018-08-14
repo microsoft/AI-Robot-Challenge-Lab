@@ -3,7 +3,7 @@
   <xacro:property name="tray_width" value="0.2" />
   <xacro:property name="tray_length" value="0.3" />
   <xacro:property name="tray_height" value="0.05" />
-  <xacro:property name="tray_thickness" value="0.01" />
+  <xacro:property name="tray_thickness" value="0.015" />
   <xacro:property name="tray_density" value="950" />
   <xacro:property name="tray_base_name" value="tray_base" />
 

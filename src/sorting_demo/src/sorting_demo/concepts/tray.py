@@ -25,7 +25,7 @@ class TrayState:
 
     def get_tray_pick_location(self):
         copyfinalpose = copy.deepcopy(self.final_pose)
-        copyfinalpose.position.y -= 0.19
+        copyfinalpose.position.y -= 0.0
         copyfinalpose.position.z -= 0.02
         return copyfinalpose
 
@@ -33,7 +33,7 @@ class TrayState:
         #return self.final_pose
         copyfinalpose = copy.deepcopy(self.final_pose)
 
-        yoffset = -0.1 + 0.075 * len(self.blocks)
+        yoffset = -0.08 + 0.075 * len(self.blocks)
         copyfinalpose.position.y -= yoffset
         copyfinalpose.position.z += 0.03
 
