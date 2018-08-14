@@ -42,7 +42,7 @@ class SawyerRobotFacade(object):
         self._guarded_move_to_joint_position(start_angles)
         self.gripper_open()
 
-    def pick_loop(self, pose, approach_speed=0.001, approach_time = 3.0, meet_time=2.0, retract_time=2.0):
+    def pick_loop(self, pose, approach_speed=0.001, approach_time = 3.0, meet_time=2.0, retract_time=2.0, hover_distance = None):
         """
         Internal state machine for picking
         :param pose:
@@ -56,8 +56,11 @@ class SawyerRobotFacade(object):
         self.gripper_open()
         rospy.sleep(0.1)
 
+        if hover_distance is None:
+            hover_distance = self._hover_distance
+
         # servo above pose
-        self._approach(pose, time = approach_time, approach_speed=approach_speed)
+        self._approach(pose, time = approach_time, approach_speed=approach_speed, hover_distance= hover_distance)
         rospy.sleep(1.0)
 
         # servo to pose
@@ -76,7 +79,7 @@ class SawyerRobotFacade(object):
         rospy.sleep(0.1)
 
         # retract to clear object
-        self._retract(time=retract_time)
+        self._retract(time=retract_time, hover_distance= hover_distance)
 
     def place_loop(self, pose, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -87,7 +90,7 @@ class SawyerRobotFacade(object):
         if rospy.is_shutdown():
             return
         # servo above pose
-        self._approach(pose, time = approach_time, approach_speed=approach_speed)
+        self._approach(pose, time = approach_time, approach_speed=approach_speed, hover_distance=self._hover_distance)
         rospy.sleep(0.1)
 
         # servo to pose
@@ -111,6 +114,7 @@ class SawyerRobotFacade(object):
         """
         :return:
         """
+        rospy.logwarn("OPENING GRIPPER")
         self._gripper.open()
         while self._gripper.is_moving() and not rospy.is_shutdown():
             rospy.sleep(0.1)
@@ -119,6 +123,7 @@ class SawyerRobotFacade(object):
         """
         :return:
         """
+        rospy.logwarn("CLOSING GRIPPER")
         self._gripper.close()
 
         while self._gripper.is_moving() and not rospy.is_shutdown():
@@ -137,7 +142,7 @@ class SawyerRobotFacade(object):
         else:
             rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
 
-    def _approach(self, pose, time, approach_speed=0.001):
+    def _approach(self, pose, time, hover_distance, approach_speed=0.001):
         """
         :param pose:
         :param time:
@@ -145,8 +150,11 @@ class SawyerRobotFacade(object):
         :return:
         """
         approach = copy.deepcopy(pose)
+        rospy.logwarn("approach pose:" + str(approach))
+        rospy.logwarn("hover distance:" +  str(hover_distance))
         # approach with a pose the hover-distance above the requested pose
-        approach.position.z = approach.position.z + self._hover_distance
+
+        approach.position.z = approach.position.z + hover_distance
         joint_angles = self._limb.ik_request(approach, self._tip_name)
 
         #self._limb.set_joint_position_speed(0.0001)
@@ -155,13 +163,17 @@ class SawyerRobotFacade(object):
         rospy.sleep(0.1)
         #self._limb.set_joint_position_speed(0.0001)
 
-    def _retract(self, time=2):
+    def _retract(self, time=2, hover_distance= None):
+
+        if hover_distance is None:
+            hover_distance = self._hover_distance
+
         # retrieve current pose from endpoint
         current_pose = self._limb.endpoint_pose()
         ik_pose = Pose()
         ik_pose.position.x = current_pose['position'].x
         ik_pose.position.y = current_pose['position'].y
-        ik_pose.position.z = current_pose['position'].z + self._hover_distance
+        ik_pose.position.z = current_pose['position'].z + hover_distance
         ik_pose.orientation.x = current_pose['orientation'].x
         ik_pose.orientation.y = current_pose['orientation'].y
         ik_pose.orientation.z = current_pose['orientation'].z
