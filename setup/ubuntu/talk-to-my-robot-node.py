@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import json
+
 # rospy - ROS Python API
 import rospy
 
@@ -15,8 +17,8 @@ limb = intera_interface.Limb('right')
 # get the right limb's current joint angles
 angles = limb.joint_angles()
 
-# print the current joint angles
-print angles
+# print the current joint angles as valid json
+print json.dumps(angles)
 
 # move to neutral pose
 limb.move_to_neutral()
@@ -24,8 +26,9 @@ limb.move_to_neutral()
 # get the right limb's current joint angles now that it is in neutral
 angles = limb.joint_angles()
 
-# print the current joint angles again
-print angles
+# print the current joint angles again as valid json
+print json.dumps(angles)
+
 
 # reassign new joint angles (all zeros) which we will later command to the limb
 angles['right_j0']=0.0
@@ -36,8 +39,8 @@ angles['right_j4']=0.0
 angles['right_j5']=0.0
 angles['right_j6']=0.0
 
-# print the joint angle command
-print angles
+# print the joint angle command as valid json
+print json.dumps(angles)
 
 # move the right arm to those joint angles
 limb.move_to_joint_positions(angles)
