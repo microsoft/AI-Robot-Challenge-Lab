@@ -95,7 +95,7 @@ class TaskPlanner:
 
         overhead_translation = [0.5 * demo_constants.CUBE_EDGE_LENGTH,
                                 0.45 * demo_constants.CUBE_EDGE_LENGTH,
-                                0.5 * demo_constants.CUBE_EDGE_LENGTH]
+                                0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
         blocks = self.environment_estimation.get_blocks()
 
@@ -116,9 +116,9 @@ class TaskPlanner:
 
         self.target_tray.final_pose.orientation = overhead_orientation
 
-        self.target_tray.final_pose.position.x += overhead_translation[0]
-        self.target_tray.final_pose.position.y += overhead_translation[1]
-        self.target_tray.final_pose.position.z += overhead_translation[2]
+        #self.target_tray.final_pose.position.x += overhead_translation[0]
+        #self.target_tray.final_pose.position.y += overhead_translation[1]
+        #self.target_tray.final_pose.position.z += overhead_translation[2]
 
         rospy.logwarn("TARGET TRAY POSE: " + str(self.target_tray))
 
