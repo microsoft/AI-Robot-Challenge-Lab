@@ -61,12 +61,12 @@ def load_gazebo_models():
 
     world_reference_frame = "world"
 
-    # Sawyer sim examples model path
-    sawyer_sim_models_path = rospkg.RosPack().get_path('sawyer_sim_examples') + "/models/"
+    # sorting_demo model path
+    sorting_demo_models_path = rospkg.RosPack().get_path('sorting_demo') + "/models/"
 
     # Spawn Blocks Table
-    blocks_table_name = "cafe_table"
-    blocks_table_path = sawyer_sim_models_path + "cafe_table/model.sdf"
+    blocks_table_name = "blocks_table"
+    blocks_table_path = sorting_demo_models_path + "table/model.sdf"
     blocks_table_pose = Pose(position=Point(x=0.75, y=0.0, z=0.0))
 
     spawn_sdf_model(blocks_table_name, blocks_table_path, blocks_table_pose, world_reference_frame)
@@ -74,14 +74,11 @@ def load_gazebo_models():
 
     # Spawn Trays Table
     trays_table_name = "trays_table"
-    trays_table_path = sawyer_sim_models_path + "cafe_table/model.sdf"
+    trays_table_path = sorting_demo_models_path + "table/model.sdf"
     trays_table_pose = Pose(position=Point(x=0.0, y=0.95, z=0.0))
 
     spawn_sdf_model(trays_table_name, trays_table_path, trays_table_pose, world_reference_frame)
     model_list.append(trays_table_name)
-
-    # sorting_demo model path
-    sorting_demo_models_path = rospkg.RosPack().get_path('sorting_demo') + "/models/"
 
     # Spawn trays
     tray_path = sorting_demo_models_path + "tray/tray.urdf.xacro"
