@@ -24,6 +24,11 @@ class TrayState:
         self.blocks.append(block)
 
     def get_tray_pick_location(self):
+        """
+        provides the grasping pose for the tray
+        
+        :return: geometry_msg/Pose  
+        """
         copyfinalpose = copy.deepcopy(self.final_pose)
         copyfinalpose.position.y -= 0.15
         copyfinalpose.position.z -= 0.02
