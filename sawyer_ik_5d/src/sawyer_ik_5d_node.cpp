@@ -25,9 +25,11 @@ Matrix<float, Dynamic, 1> 	Y[NUM_SERVOS];
 Matrix<float, 3, 1> 		A[NUM_SERVOS];
 
 ros::ServiceServer ikservice;
+bool initialized= false;
 
-void getParameters(NodeHandle &nh)
+void getParameters()
 {
+    NodeHandle nh;
 	////////////////////////////////////////////////////////////
 	// Get robot description
 	////////////////////////////////////////////////////////////
@@ -115,8 +117,22 @@ void getParameters(NodeHandle &nh)
 	}
 }
 
+void initialize_ik()
+{
+    getParameters();
+    
+    // Create KDL solvers
+	L(0) = 1; L(1) = 1; L(2) = 1; L(3) = 1; L(4) = 1; L(5) = 1; L(6) = 0;
+	ikSolverPos = new KDL::ChainIkSolverPos_LMA(chain, L);
+	fkSolverPos = new KDL::ChainFkSolverPos_recursive(chain);
+}
+
 bool ik(moveit_msgs::GetPositionIK::Request& request, moveit_msgs::GetPositionIK::Response& response)
 {
+    if(!initialized)
+    {
+        initialize_ik();
+    }
 
     for(int i=0;i<7;i++)
         q_current(i) = request.ik_request.robot_state.joint_state.position[i];
@@ -145,13 +161,8 @@ int main(int argc, char** argv)
     // Init ROS node
 	ros::init(argc, argv, "sawyer_ik_5d");
 
-	// Get node handle
+    // Get node handle
 	NodeHandle nh("~");
- 
-    // Create KDL solvers
-	L(0) = 1; L(1) = 1; L(2) = 1; L(3) = 1; L(4) = 1; L(5) = 1; L(6) = 0;
-	ikSolverPos = new KDL::ChainIkSolverPos_LMA(chain, L);
-	fkSolverPos = new KDL::ChainFkSolverPos_recursive(chain);
 
     ikservice = nh.advertiseService("ik", ik);
 
