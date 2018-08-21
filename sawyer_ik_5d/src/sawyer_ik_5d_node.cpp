@@ -10,19 +10,15 @@ using namespace Eigen;
 using namespace ros;
 using namespace std;
 
-#define NUM_SERVOS 7
+#define SAWYER_JOINT_COUNT 6
 
 ChainIkSolverPos_LMA *ikSolverPos;
 ChainFkSolverPos_recursive *fkSolverPos;
 Tree tree;
 Chain chain;
-Eigen::Matrix<double,6,1> L;
+Eigen::Matrix<double,6/*pose params*/,1> L;
 vector<string> joint_names;
-JntArray q_current(NUM_SERVOS);
-
-Matrix<float, Dynamic, 3> 	X;
-Matrix<float, Dynamic, 1> 	Y[NUM_SERVOS];
-Matrix<float, 3, 1> 		A[NUM_SERVOS];
+JntArray q_current(SAWYER_JOINT_COUNT);
 
 ros::ServiceServer ikservice;
 bool initialized= false;
@@ -56,8 +52,9 @@ void getParameters()
 	string tip_link_name;
 	if(!nh.getParam("tip_link_name", tip_link_name))
 	{
-		ROS_ERROR("Parameter not set: %s/tip_link_name", nh.getNamespace().c_str());
-		exit(-1);
+    tip_link_name = "right_l5";
+		ROS_WARN("Parameter not set: %s/tip_link_name, default value -> %s", nh.getNamespace().c_str(), tip_link_name.c_str());
+		//exit(-1);
 	}
 	if(model.links_.find(tip_link_name) == model.links_.end())
 	{
@@ -78,16 +75,16 @@ void getParameters()
 		}
 	}
 
-	if(model_joints.size() != NUM_SERVOS)
+	if(model_joints.size() != SAWYER_JOINT_COUNT)
 	{
-		ROS_ERROR("The robot model must have %d revolute joints, found %d", NUM_SERVOS, (int)model_joints.size());
+		ROS_ERROR("The robot model must have %d revolute joints, found %d", SAWYER_JOINT_COUNT, (int)model_joints.size());
 		exit(-1);
 	}
 
 	////////////////////////////////////////////////////////////
 	// Configure servo limits
 	////////////////////////////////////////////////////////////
-	// for(int joint_i = 0; joint_i < NUM_SERVOS; joint_i++)
+	// for(int joint_i = 0; joint_i < SAWYER_JOINT_COUNT; joint_i++)
 	// {
 	// 	float lowerLimit = model_joints[joint_i]->limits->lower;
 	// 	float upperLimit = model_joints[joint_i]->limits->upper;
@@ -96,7 +93,7 @@ void getParameters()
 	////////////////////////////////////////////////////////////
 	// Store joint names
 	////////////////////////////////////////////////////////////
-	for(int joint_i = 0; joint_i < NUM_SERVOS; joint_i++)
+	for(int joint_i = 0; joint_i < SAWYER_JOINT_COUNT; joint_i++)
 	{
 		joint_names.push_back(model_joints[joint_i]->name);
 	}
@@ -121,20 +118,25 @@ void initialize_ik()
 {
     getParameters();
     
+    ROS_INFO("creating solvers");
     // Create KDL solvers
-	L(0) = 1; L(1) = 1; L(2) = 1; L(3) = 1; L(4) = 1; L(5) = 1; L(6) = 0;
+	L(0) = 1; L(1) = 1; L(2) = 1; L(3) = 1; L(4) = 1; L(5) = 0 ;
 	ikSolverPos = new KDL::ChainIkSolverPos_LMA(chain, L);
 	fkSolverPos = new KDL::ChainFkSolverPos_recursive(chain);
 }
 
 bool ik(moveit_msgs::GetPositionIK::Request& request, moveit_msgs::GetPositionIK::Response& response)
 {
+    ROS_INFO("ik request");
     if(!initialized)
     {
+        ROS_INFO("initializing");
         initialize_ik();
+        ROS_INFO("initialized");
     }
 
-    for(int i=0;i<7;i++)
+    ROS_INFO("reading inputs");
+    for(int i=0;i<SAWYER_JOINT_COUNT;i++)
         q_current(i) = request.ik_request.robot_state.joint_state.position[i];
 
 
@@ -143,14 +145,17 @@ bool ik(moveit_msgs::GetPositionIK::Request& request, moveit_msgs::GetPositionIK
 
     Frame target_frame (Rotation::Quaternion(q.x,q.y,q.z,q.w),Vector(p.x,p.y,p.z));
 
-	JntArray q_res;
-    ikSolverPos->CartToJnt(q_current, target_frame,q_res);
+    ROS_INFO("computing ik, target %lf %lf %lf", target_frame.p[0],target_frame.p[1],target_frame.p[2]);
+	  JntArray q_res;
+    int result = ikSolverPos->CartToJnt(q_current, target_frame,q_res);
+    ROS_INFO("IK RESULT: %d", result);
+    //0 if successful, -1 the gradient of $ E $ towards the joints is to small, -2 if joint position increments are to small, -3 if number of iterations is exceeded.
 
     sensor_msgs::JointState& respjoints= response.solution.joint_state;
 
     respjoints.name= request.ik_request.robot_state.joint_state.name;
 
-    for(int i=0;i<7;i++)
+    for(int i=0;i<SAWYER_JOINT_COUNT;i++)
         respjoints.position.push_back(q_res(i));
 
     return true;
