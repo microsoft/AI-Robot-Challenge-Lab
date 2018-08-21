@@ -10,6 +10,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 import demo_constants
 from sawyer_robot_facade import SawyerRobotFacade
 from object_detection import EnvironmentEstimation
+import moveit_msgs.srv
 
 
 class TaskPlanner:
@@ -26,6 +27,26 @@ class TaskPlanner:
         self.target_block = None
         self.target_tray = None
         self.target_block_index = 0
+
+    def call5d_ik(self, target_pose):
+        """
+        
+        :param target_pose: 
+        :return: 
+        """
+
+        rospy.logwarn("CALLING IK SERVICE")
+        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik")
+
+        req = moveit_msgs.srv.GetPositionIKRequest()
+        req.ik_request.robot_state.joint_state.name = ["right_j0","right_j1","right_j2","right_j3","right_j4","right_j5","right_j6"]
+        req.ik_request.robot_state.joint_state.position = self.sawyer_robot._limb.joint_angles()
+
+        rospy.logwarn("CALLING IK SERVICE request: "+ str(req))
+        resp = ikservice(req)
+
+        rospy.logwarn("SERVICE RESPONSE:"+  str(resp))
+
 
     def create_pick_tray_task(self, tray, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -77,6 +98,11 @@ class TaskPlanner:
         targetpose.orientation.w = 1
 
         def approachf():
+            """
+            
+            :return: 
+            """
+
             # self.sawyer_robot._approach(targetpose, time=1.0, approach_speed=1.0, hover_distance=0.3)
             rospy.logwarn("approach pose:" + str(targetpose))
             # approach with a pose the hover-distance above the requested pose
@@ -89,6 +115,7 @@ class TaskPlanner:
 
             # self._limb.set_joint_position_speed(0.0001)
             self.sawyer_robot._guarded_move_to_joint_position(joint_angles)
+
             # self._servo_to_pose(approach, time=time)
             rospy.sleep(0.1)
 
@@ -346,14 +373,16 @@ class TaskPlanner:
         trays_count = len(self.environment_estimation.get_trays())
         original_block_poses = []
 
-        """
         self.await(self.create_go_vision_head_pose_task())
+
+        """
+        
         self.await(self.create_go_xy_task(0.4, 0.1))
         self.await(self.create_go_xy_task(0.4, 0.2))
         self.await(self.create_go_xy_task(0.4, 0.1))
         self.await(self.create_go_xy_task(0.4, 0.0))
         """
-        
+
         """
         while True:
             rospy.logwarn("starting cycle: " + str(self.target_block_index))
@@ -404,6 +433,9 @@ class TaskPlanner:
             self.await(self.delay_task(10))
         """
 
+        while True:
+            self.await(self.delay_task(10))
+
     def reset_cycle(self):
 
         self.target_block_index = 0
@@ -423,7 +455,7 @@ class TaskPlanner:
         """
         :return:
         """
-        self.await_async_task(self.create_main_loop_task)
+        self.create_main_loop_task()
 
     def await_async_task(self, task, args=dict()):
         """
