@@ -59,6 +59,41 @@ class TaskPlanner:
 
         return Thread(target=self.sawyer_robot.move_to_start, args=[starting_joint_angles])
 
+    def create_go_xy_task(self, x, y):
+        """
+        
+        :param x: 
+        :param y: 
+        :return: 
+        """
+        targetpose = Pose()
+        targetpose.position.x = x
+        targetpose.position.y = y
+        targetpose.position.z = 0
+
+        targetpose.orientation.x = 0.0
+        targetpose.orientation.y = 0.0
+        targetpose.orientation.z = 0.0
+        targetpose.orientation.w = 1
+
+        def approachf():
+            # self.sawyer_robot._approach(targetpose, time=1.0, approach_speed=1.0, hover_distance=0.3)
+            rospy.logwarn("approach pose:" + str(targetpose))
+            # approach with a pose the hover-distance above the requested pose
+
+            targetpose.position.z = targetpose.position.z + 0.3
+
+            joint_angles = self.sawyer_robot._limb.ik_request(targetpose, self.sawyer_robot._tip_name)
+            rospy.logwarn(joint_angles)
+            joint_angles["right_j5"] += math.pi
+
+            # self._limb.set_joint_position_speed(0.0001)
+            self.sawyer_robot._guarded_move_to_joint_position(joint_angles)
+            # self._servo_to_pose(approach, time=time)
+            rospy.sleep(0.1)
+
+        return Thread(target=approachf)
+
     def create_go_vision_head_pose_task(self):
         """
         :return: 
@@ -312,6 +347,10 @@ class TaskPlanner:
         original_block_poses = []
 
         self.await(self.create_go_vision_head_pose_task())
+        self.await(self.create_go_xy_task(0.4, 0.1))
+        self.await(self.create_go_xy_task(0.4, 0.2))
+        self.await(self.create_go_xy_task(0.4, 0.1))
+        self.await(self.create_go_xy_task(0.4, 0.0))
 
         """
         while True:
