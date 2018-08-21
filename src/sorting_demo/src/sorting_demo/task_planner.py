@@ -346,12 +346,14 @@ class TaskPlanner:
         trays_count = len(self.environment_estimation.get_trays())
         original_block_poses = []
 
+        """
         self.await(self.create_go_vision_head_pose_task())
         self.await(self.create_go_xy_task(0.4, 0.1))
         self.await(self.create_go_xy_task(0.4, 0.2))
         self.await(self.create_go_xy_task(0.4, 0.1))
         self.await(self.create_go_xy_task(0.4, 0.0))
-
+        """
+        
         """
         while True:
             rospy.logwarn("starting cycle: " + str(self.target_block_index))
