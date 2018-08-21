@@ -11,6 +11,7 @@ import demo_constants
 from sawyer_robot_facade import SawyerRobotFacade
 from object_detection import EnvironmentEstimation
 import moveit_msgs.srv
+import moveit_msgs.msg
 
 
 class TaskPlanner:
@@ -36,14 +37,17 @@ class TaskPlanner:
         """
 
         rospy.logwarn("CALLING IK SERVICE")
-        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik")
+        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik",moveit_msgs.srv.GetPositionIK)
 
-        req = moveit_msgs.srv.GetPositionIKRequest()
-        req.ik_request.robot_state.joint_state.name = ["right_j0","right_j1","right_j2","right_j3","right_j4","right_j5","right_j6"]
-        req.ik_request.robot_state.joint_state.position = self.sawyer_robot._limb.joint_angles()
+        ik_req = moveit_msgs.msg.PositionIKRequest()
+        ik_req.robot_state.joint_state.name = ["right_j0","right_j1","right_j2","right_j3","right_j4","right_j5","right_j6"]
 
-        rospy.logwarn("CALLING IK SERVICE request: "+ str(req))
-        resp = ikservice(req)
+        jntangles = self.sawyer_robot._limb.joint_angles()
+        ik_req.robot_state.joint_state.position = [ jntangles[k] for k in jntangles]
+        ik_req.pose_stamped.pose = target_pose
+
+        rospy.logwarn("CALLING IK SERVICE request: "+ str(ik_req))
+        resp = ikservice(ik_req)
 
         rospy.logwarn("SERVICE RESPONSE:"+  str(resp))
 
@@ -374,6 +378,12 @@ class TaskPlanner:
         original_block_poses = []
 
         self.await(self.create_go_vision_head_pose_task())
+
+        poseaux = Pose(position=Point(x=0.5, y=0.0, z=0.2),
+                       orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+        self.call5d_ik(poseaux)
+
 
         """
         

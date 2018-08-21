@@ -9,6 +9,6 @@
   <!-- Start the Sawyer pick and place demo -->
   <node pkg="sorting_demo" type="program.py" name="sorting_demo" />
 
-  <node pkg="sawyer_ik_5d" type="sawyer_ik_5d_node" name="sawyer_ik_5d_node" />
+  <node pkg="sawyer_ik_5d" type="sawyer_ik_5d_node" name="sawyer_ik_5d_node"  output="screen"/>
 
 </launch>
