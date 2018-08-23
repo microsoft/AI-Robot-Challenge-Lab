@@ -37,25 +37,26 @@ class TaskPlanner:
         """
 
         rospy.logwarn("CALLING IK SERVICE")
-        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik",moveit_msgs.srv.GetPositionIK)
+        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
 
         ik_req = moveit_msgs.msg.PositionIKRequest()
-        ik_req.robot_state.joint_state.name = ["right_j0","right_j1","right_j2","right_j3","right_j4","right_j5","right_j6"]
+        ik_req.robot_state.joint_state.name = ["right_j0", "right_j1", "right_j2", "right_j3", "right_j4", "right_j5",
+                                               "right_j6"]
 
         jntangles = self.sawyer_robot._limb.joint_angles()
-        ik_req.robot_state.joint_state.position = [ jntangles[k] for k in jntangles]
+        ik_req.robot_state.joint_state.position = [jntangles[k] for k in jntangles]
         ik_req.pose_stamped.pose = target_pose
+        # ik_req.constraints.ik_link_name = "right_hand_camera_optical"
 
-        rospy.logwarn("CALLING IK SERVICE request: "+ str(ik_req))
+        rospy.logwarn("CALLING IK SERVICE request: " + str(ik_req))
         resp = ikservice(ik_req)
 
-        rospy.logwarn("SERVICE RESPONSE:"+  str(resp))
+        rospy.logwarn("SERVICE RESPONSE:" + str(resp))
 
-        targetjoints = dict(zip(resp.solution.joint_state.name,resp.solution.joint_state.position))
+        targetjoints = dict(zip(resp.solution.joint_state.name, resp.solution.joint_state.position))
 
         self.sawyer_robot._limb.set_joint_position_speed(0.000001)
         self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
-
 
     def create_pick_tray_task(self, tray, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -375,6 +376,7 @@ class TaskPlanner:
 
         rospy.logwarn("home pose:" + str(homepose))
 
+        """
         self.environment_estimation.update()
         blocks = self.environment_estimation.get_blocks()
         blocks_count = len(blocks)
@@ -402,7 +404,7 @@ class TaskPlanner:
                 self.call5d_ik(poseaux)
                 rospy.sleep(4)
 
-
+        """
         """
         
         self.await(self.create_go_xy_task(0.4, 0.1))
