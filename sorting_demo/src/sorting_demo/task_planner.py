@@ -51,6 +51,11 @@ class TaskPlanner:
 
         rospy.logwarn("SERVICE RESPONSE:"+  str(resp))
 
+        targetjoints = dict(zip(resp.solution.joint_state.name,resp.solution.joint_state.position))
+
+        self.sawyer_robot._limb.set_joint_position_speed(0.000001)
+        self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
+
 
     def create_pick_tray_task(self, tray, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -379,10 +384,23 @@ class TaskPlanner:
 
         self.await(self.create_go_vision_head_pose_task())
 
-        poseaux = Pose(position=Point(x=0.5, y=0.0, z=0.2),
-                       orientation=Quaternion(x=0, y=0, z=0, w=1))
+        # for ki in xrange(5):
 
-        self.call5d_ik(poseaux)
+        while True:
+            for block in blocks:
+                p = copy.deepcopy(block.pose)
+                p.position.z = 0.05
+
+                poseaux = p #Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+
+                poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
+                poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi/2.0))
+                poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
+
+                self.environment_estimation.update()
+                self.call5d_ik(poseaux)
+                rospy.sleep(4)
 
 
         """

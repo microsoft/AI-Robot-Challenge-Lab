@@ -137,8 +137,9 @@ bool ik(moveit_msgs::GetPositionIK::Request& request, moveit_msgs::GetPositionIK
 
     ROS_INFO("reading inputs");
     for(int i=0;i<SAWYER_JOINT_COUNT;i++)
+    {
         q_current(i) = request.ik_request.robot_state.joint_state.position[i];
-
+    }
 
     const geometry_msgs::Point& p = request.ik_request.pose_stamped.pose.position;
     const geometry_msgs::Quaternion& q = request.ik_request.pose_stamped.pose.orientation;
