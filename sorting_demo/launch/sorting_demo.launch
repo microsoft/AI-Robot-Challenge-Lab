@@ -11,4 +11,6 @@
 
   <node pkg="sawyer_ik_5d" type="sawyer_ik_5d_node" name="sawyer_ik_5d_node"  output="screen"/>
 
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find sorting_demo)/config/rviz.rviz"/>
+
 </launch>
