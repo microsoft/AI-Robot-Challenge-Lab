@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from rospkg.distro import current_distro_codename
 
 import rospy
 import argparse
@@ -28,7 +29,24 @@ from intera_interface import Limb
 from intera_motion_interface.utility_functions import int2bool
 
 
-def interaction_joint_trajectory(limb, joint_angles, trajType, interaction_active, interaction_control_mode, interaction_frame, speed_ratio, accel_ratio, K_impedance, max_impedance, in_endpoint_frame, force_command, K_nullspace, endpoint_name, timeout):
+def interaction_joint_trajectory(limb,
+                                 joint_angles,
+                                 trajType,
+                                 interaction_active,
+                                 interaction_control_mode,
+                                 interaction_frame,
+                                 speed_ratio,
+                                 accel_ratio,
+                                 K_impedance,
+                                 max_impedance,
+                                 in_endpoint_frame,
+                                 force_command,
+                                 K_nullspace,
+                                 endpoint_name,
+                                 timeout,
+                                 disable_damping_in_force_control,
+                                 disable_reference_resetting,
+                                 rotations_for_constrained_zeroG):
     try:
 
         traj = MotionTrajectory(limb=limb)
@@ -47,8 +65,14 @@ def interaction_joint_trajectory(limb, joint_angles, trajType, interaction_activ
             rospy.logerr('The number of joint_angles must be %d', len(current_joint_angles ))
             return None
 
+        # ----- testing intermediate points with real robot
+        middle_joint_angles = [ (current_joint_angles[i] + joint_angles[i])/2.0 for i in xrange(len(current_joint_angles))]
+        waypoint.set_joint_angles(joint_angles=middle_joint_angles)
+        traj.append_waypoint(waypoint.to_msg())
+
         waypoint.set_joint_angles(joint_angles = joint_angles)
         traj.append_waypoint(waypoint.to_msg())
+        # ----- end testing intermediate points with real robot
 
         # set the interaction control options in the current configuration
         interaction_options = InteractionOptions()
@@ -67,30 +91,31 @@ def interaction_joint_trajectory(limb, joint_angles, trajType, interaction_activ
         if len(interaction_frame) < 7:
             rospy.logerr('The number of elements must be 7!')
         elif len(interaction_frame) == 7:
+
             quat_sum_square = interaction_frame[3]*interaction_frame[3] + interaction_frame[4]*interaction_frame[4] + interaction_frame[5]*interaction_frame[5] + interaction_frame[6]*interaction_frame[6]
             if quat_sum_square  < 1.0 + 1e-7 and quat_sum_square > 1.0 - 1e-7:
-                interaction_frame = Pose()
-                interaction_frame.position.x = interaction_frame[0]
-                interaction_frame.position.y = interaction_frame[1]
-                interaction_frame.position.z = interaction_frame[2]
-                interaction_frame.orientation.w = interaction_frame[3]
-                interaction_frame.orientation.x = interaction_frame[4]
-                interaction_frame.orientation.y = interaction_frame[5]
-                interaction_frame.orientation.z = interaction_frame[6]
-                interaction_options.set_interaction_frame(interaction_frame)
+                target_interaction_frame = Pose()
+                target_interaction_frame.position.x = interaction_frame[0]
+                target_interaction_frame.position.y = interaction_frame[1]
+                target_interaction_frame.position.z = interaction_frame[2]
+                target_interaction_frame.orientation.w = interaction_frame[3]
+                target_interaction_frame.orientation.x = interaction_frame[4]
+                target_interaction_frame.orientation.y = interaction_frame[5]
+                target_interaction_frame.orientation.z = interaction_frame[6]
+                interaction_options.set_interaction_frame(target_interaction_frame)
             else:
                 rospy.logerr('Invalid input to quaternion! The quaternion must be a unit quaternion!')
         else:
             rospy.logerr('Invalid input to interaction_frame!')
 
-        interaction_options.set_disable_damping_in_force_control(args.disable_damping_in_force_control)
-        interaction_options.set_disable_reference_resetting(args.disable_reference_resetting)
-        interaction_options.set_rotations_for_constrained_zeroG(args.rotations_for_constrained_zeroG)
+        interaction_options.set_disable_damping_in_force_control(disable_damping_in_force_control)
+        interaction_options.set_disable_reference_resetting(disable_reference_resetting)
+        interaction_options.set_rotations_for_constrained_zeroG(rotations_for_constrained_zeroG)
 
         trajectory_options.interaction_params = interaction_options.to_msg()
         traj.set_trajectory_options(trajectory_options)
 
-        result = traj.send_trajectory(timeout=args.timeout)
+        result = traj.send_trajectory(timeout=timeout)
         if result is None:
             rospy.logerr('Trajectory FAILED to send!')
             return
@@ -246,7 +271,10 @@ def main():
                                  force_command = args.force_command,
                                  K_nullspace = args.K_nullspace,
                                  endpoint_name = args.endpoint_name,
-                                 timeout = args.timeout
+                                 timeout = args.timeout,
+                                 disable_damping_in_force_control=args.disable_damping_in_force_control,
+                                 disable_reference_resetting = args.disable_reference_resetting ,
+                                 rotations_for_constrained_zeroG = args.rotations_for_constrained_zeroG
                                  )
 
 if __name__ == '__main__':
