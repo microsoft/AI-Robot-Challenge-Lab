@@ -29,6 +29,8 @@ class TaskPlanner:
         self.target_tray = None
         self.target_block_index = 0
 
+        self.original_block_poses = []
+
     def call5d_ik(self, target_pose):
         """
         
@@ -345,21 +347,105 @@ class TaskPlanner:
                                           meet_time=3.0,
                                           retract_time=1.0))
 
-    def pick_piece_on_tray_and_place_on_table(self, original_block_poses):
-        self.await(self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
-                                         approach_speed=0.0001,
-                                         approach_time=2.0,
-                                         meet_time=3.0,
-                                         retract_time=1.0,
-                                         hover_distance=None))
+    def pick_all_pieces_from_tray_and_put_on_table(self, original_block_pose):
+        """
+        Pick a block from where it is located on the tray and move it back to the table
+        :param original_block_pose: 
+        :return: 
+        """
 
-        # yield self.create_go_home_task()
+        self.environment_estimation.update()
+        blocks = self.environment_estimation.get_blocks()
+        blocks_count = len(blocks)
 
-        self.await(self.create_place_task(copy.deepcopy(original_block_poses[self.target_block_index]),
-                                          approach_speed=0.0001,
-                                          approach_time=2.0,
-                                          meet_time=3.0,
-                                          retract_time=1.0))
+        while self.target_block_index < blocks_count:
+            self.create_detect_block_poses_task()
+
+            self.await(self.create_pick_task(copy.deepcopy(self.target_block.final_pose),
+                                             approach_speed=0.0001,
+                                             approach_time=2.0,
+                                             meet_time=3.0,
+                                             retract_time=1.0,
+                                             hover_distance=None))
+
+            # yield self.create_go_home_task()
+
+            self.await(self.create_place_task(copy.deepcopy(original_block_pose[self.target_block_index]),
+                                              approach_speed=0.0001,
+                                              approach_time=2.0,
+                                              meet_time=3.0,
+                                              retract_time=1.0))
+
+            self.target_block_index += 1
+            self.target_block = None
+
+    def create_iterate_all_cubes_task(self, iterations_count=None):
+        """"
+        the robot camera locates on top of each block iteratively and in a loop
+        """
+
+        self.environment_estimation.update()
+        blocks = self.environment_estimation.get_blocks()
+        blocks_count = len(blocks)
+
+        trays_count = len(self.environment_estimation.get_trays())
+
+
+        iteration = 0
+        while iterations_count is None or iteration < iterations_count:
+            for block in blocks:
+                p = copy.deepcopy(block.pose)
+                p.position.z = 0.05
+
+                poseaux = p  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+                poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
+                poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi / 2.0))
+                poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
+
+                self.environment_estimation.update()
+                self.call5d_ik(poseaux)
+                rospy.sleep(4)
+                iteration += 1
+
+    def create_wait_forever_task(self):
+        """
+        locks the taskplanner forever
+        :return: 
+        """
+        while True:
+            self.await(self.delay_task(10))
+
+    def create_detect_block_poses_task(self):
+        while self.target_block is None:
+            rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
+
+            self.environment_estimation.update()
+            self.await(self.create_decision_select_block_and_tray())
+            self.await(self.delay_task(0.1))
+
+    def create_move_all_cubes_to_trays(self):
+        """
+        Moves all cubes on the table to the trays according with its color
+        :return: 
+        """
+        self.environment_estimation.update()
+        blocks = self.environment_estimation.get_blocks()
+        blocks_count = len(blocks)
+
+        while self.target_block_index < blocks_count:
+            self.create_detect_block_poses_task()
+
+            rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
+
+            # concurrency issue, what if we lock the objectdetection update?
+
+            self.pick_block_on_table_and_place_on_tray(self.original_block_poses)
+
+            # concurrency issue
+            self.environment_estimation.get_tray(self.target_tray.id).notify_contains_block(self.target_block)
+            self.target_block_index += 1
+            self.target_block = None
 
     def create_main_loop_task(self):
         """
@@ -368,6 +454,7 @@ class TaskPlanner:
         """
         self.await(self.create_go_home_task())
 
+        """
         home_position = self.sawyer_robot._limb.endpoint_pose()
         pos = home_position["position"]
         q = home_position["orientation"]
@@ -375,96 +462,36 @@ class TaskPlanner:
                         orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3]))
 
         rospy.logwarn("home pose:" + str(homepose))
-
         """
-        self.environment_estimation.update()
-        blocks = self.environment_estimation.get_blocks()
-        blocks_count = len(blocks)
 
-        trays_count = len(self.environment_estimation.get_trays())
-        original_block_poses = []
 
         self.await(self.create_go_vision_head_pose_task())
 
         # for ki in xrange(5):
 
-        while True:
-            for block in blocks:
-                p = copy.deepcopy(block.pose)
-                p.position.z = 0.05
+        self.create_iterate_all_cubes_task(1)
 
-                poseaux = p #Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
-
-
-                poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
-                poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi/2.0))
-                poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
-
-                self.environment_estimation.update()
-                self.call5d_ik(poseaux)
-                rospy.sleep(4)
-
-        """
-        """
-        
-        self.await(self.create_go_xy_task(0.4, 0.1))
-        self.await(self.create_go_xy_task(0.4, 0.2))
-        self.await(self.create_go_xy_task(0.4, 0.1))
-        self.await(self.create_go_xy_task(0.4, 0.0))
-        """
-
-        """
-        while True:
+        for i in xrange(2):
             rospy.logwarn("starting cycle: " + str(self.target_block_index))
 
-            while self.target_block_index < blocks_count:
-                while self.target_block is None:
-                    rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
+            self.await(self.create_go_home_task())
+            # self.target_tray = None
 
-                    self.environment_estimation.update()
-                    self.await(self.create_decision_select_block_and_tray())
-                    self.await(self.delay_task(0.1))
-
-                rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % self.target_block_index)
-
-                # concurrency issue, what if we lock the objectdetection update?
-
-                self.pick_block_on_table_and_place_on_tray(original_block_poses)
-
-                # concurrency issue
-                self.environment_estimation.get_tray(self.target_tray.id).notify_contains_block(self.target_block)
-                self.target_block_index += 1
-                self.target_block = None
-
-
-                # self.target_tray = None
-
-            # yield self.create_go_home_task()
             # self.await_async_task(self.create_complete_turn_over_tray, {"homepose": homepose})
 
             # yield self.create_go_home_task()
-            # self.reset_cycle()
+            self.reset_cycle()
             # continue
 
-            while self.target_block_index < blocks_count:
-                while self.target_block is None:
-                    rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
-
-                    self.environment_estimation.update()
-                    self.await(self.create_decision_select_block_and_tray())
-                    self.await(self.delay_task(0.1))
-
-                self.pick_piece_on_tray_and_place_on_table(original_block_poses)
-
-                self.target_block_index += 1
-                self.target_block = None
+            self.create_move_all_cubes_to_trays()
 
             self.reset_cycle()
-            self.await(self.delay_task(10))
-        """
 
-        while True:
+            self.pick_all_pieces_from_tray_and_put_on_table(self.original_block_poses)
+
             self.await(self.delay_task(10))
+
+        self.create_wait_forever_task()
 
     def reset_cycle(self):
 
