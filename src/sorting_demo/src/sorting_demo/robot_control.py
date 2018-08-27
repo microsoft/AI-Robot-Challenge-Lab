@@ -11,7 +11,7 @@ from geometry_msgs.msg import (
 from object_detection import EnvironmentEstimation
 
 
-class SawyerRobotFacade(object):
+class SawyerRobotControl(object):
     def __init__(self, limb="right", hover_distance=0.15, tip_name="right_gripper_tip"):
         """
         :param limb:
