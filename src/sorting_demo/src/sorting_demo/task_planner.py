@@ -12,6 +12,7 @@ from sawyer_robot_facade import SawyerRobotFacade
 from object_detection import EnvironmentEstimation
 import moveit_msgs.srv
 import moveit_msgs.msg
+from robot_tasks_facade import RobotTaskFacade
 
 
 class TaskPlanner:
@@ -30,6 +31,11 @@ class TaskPlanner:
         self.target_block_index = 0
 
         self.original_block_poses = []
+
+        self.task_facade = RobotTaskFacade(self)
+
+    def get_task_facade(self):
+        return self.task_facade
 
     def call5d_ik(self, target_pose):
         """
@@ -543,6 +549,11 @@ class TaskPlanner:
         t = self.create_main_task()
         t.start()
 
+    def spin(self):
+        """
+        
+        :return: 
+        """
         while not rospy.is_shutdown():
             self.environment_estimation.update()
             rospy.sleep(2.0)
