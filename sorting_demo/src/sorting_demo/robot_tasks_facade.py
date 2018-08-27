@@ -20,7 +20,10 @@ class RobotTaskFacade:
         'Hello robot'
         :return: 
         """
+
         print "Robot Task: greet!"
+        self.task_planner.execute_task(self.task_planner.create_greet_task)
+
 
     def get_current_task(self):
         """

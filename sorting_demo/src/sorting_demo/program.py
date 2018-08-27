@@ -24,10 +24,11 @@ def main():
 
     task_facade = task_planner.get_task_facade()
 
-    # ask the robot to greet
-    task_facade.greet()
-
     task_planner.spin()
+
+    # ask the robot to greet
+    #task_facade.greet()
+
 
 
 if __name__ == '__main__':
