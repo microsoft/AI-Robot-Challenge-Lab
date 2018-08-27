@@ -20,9 +20,14 @@ def main():
     rospy.on_shutdown(functools.partial(gazebo_models.delete_gazebo_models, model_list))
 
     task_planner = TaskPlanner()
-
-    print("Running. Ctrl-c to quit")
     task_planner.run()
+
+    task_facade = task_planner.get_task_facade()
+
+    # ask the robot to greet
+    task_facade.greet()
+
+    task_planner.spin()
 
 
 if __name__ == '__main__':
