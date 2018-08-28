@@ -196,6 +196,21 @@ class EnvironmentEstimation:
         else:
             return filtered_trays[0]
 
+    def get_tray_by_num(self, num):
+        """
+        
+        :param num: 
+        :return: 
+        """
+        rospy.logwarn("by num: " + str(num))
+        rospy.logwarn("by trays: " + str([t.num for t in self.trays]))
+
+        filtered_trays = [tray for tray in self.trays if int(tray.num)== int(num)]
+        if len(filtered_trays) == 0:
+            return None
+        else:
+            return filtered_trays[0]
+
     def get_trays(self):
         """
         :return array of (name, geometry_msgs.msg.Pose)
