@@ -121,7 +121,7 @@ def load_gazebo_models():
         spawn_xacro_model(name, block_path, pose, world_reference_frame, mappings)
         model_list.append(name)
 
-    return model_list
+    return model_list, block_poses
 
 
 def delete_gazebo_models(model_list):
