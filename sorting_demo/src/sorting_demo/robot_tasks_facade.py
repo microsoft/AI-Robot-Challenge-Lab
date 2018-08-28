@@ -1,4 +1,5 @@
 import rospy
+from flask import Flask
 
 
 class RobotTaskFacade:
@@ -15,10 +16,60 @@ class RobotTaskFacade:
     'Hey robot! Put all tray contents on the table' 
     """
 
-    def __init__(self, task_planner):
-        self.task_planner = task_planner
+    def __init__(self):
+        self.task_planner = None
+
+        self.app = Flask(__name__)
+
+        @self.app.route("/current_task")
+        def get_current_task():
+            return self.get_current_task()
+
+        @self.app.route("/count_table_pieces")
+        def count_pieces_on_table_by_color(self):
+            self.count_pieces_on_table_by_color()
+
+        @self.app.route("/current_piece_color")
+        def get_current_piece_color(self):
+            return self.get_current_piece_color()
+
+        @self.app.route("/pause")
+        def pause(self):
+            return self.pause()
+
+        @self.app.route("/resume")
+        def resume(self):
+            return self.resume()
+
+        @self.app.route("/start")
+        def start(self):
+            return self.start()
+
+        @self.app.route("/stop")
+        def stop(self):
+            return self.stop()
+
+        @self.app.route("/greet")
+        def greet(self):
+            return self.greet()
+
+        @self.app.route("/put_all_contents_on_table")
+        def put_all_contents_on_table(self):
+            return self.put_all_contents_on_table
+
+        @self.app.route("/pick_block_by_color/<color>')")
+        def pick_block_by_color(self, color):
+            return self.pick_block_by_color(color)
+
+        @self.app.route("/put_block_into_tray/<color>/<trayid>')")
+        def put_block_into_tray(self, color, trayid):
+            self.put_block_into_tray(color,int(trayid))
+
+    def run_rest_server(self):
+        self.app.run(threaded=True)
 
     # -------- observer methods ------------------
+
     def get_current_task(self):
         """
         :return: str - it gets the name of the task the robot is doing 
@@ -35,6 +86,7 @@ class RobotTaskFacade:
         :return: 
         """
         rospy.logerr("To implement. Robot Task: count pieces on table by color!")
+        return 0
 
     def get_current_piece_color(self):
         """
@@ -43,6 +95,7 @@ class RobotTaskFacade:
         """
 
         rospy.logerr("To implement. Robot Task: get current piece color!")
+        return "GREEN"
 
     # ---------- lifecycle  ---------------------------
     def pause(self):
@@ -53,6 +106,7 @@ class RobotTaskFacade:
         :return: 
         """
         self.task_planner.pause()
+        return "ACK"
 
     def resume(self):
         """
@@ -60,6 +114,7 @@ class RobotTaskFacade:
         :return: 
         """
         self.task_planner.resume()
+        return "ACK"
 
     def start(self):
         """
@@ -67,6 +122,7 @@ class RobotTaskFacade:
         :return: 
         """
         self.task_planner.create_main_loop_task()
+        return "ACK"
 
     def stop(self):
         """
@@ -74,23 +130,7 @@ class RobotTaskFacade:
         :return: 
         """
         self.task_planner.stop()
-
-    # ------------ configure loop sorting ---------------------
-    def disable_sorting_by_color(self, color):
-        """
-        'Hey robot! Stop sorting green pieces'
-        :param color: 
-        :return: 
-        """
-        self.task_planner.disable_sorting_by_color(color)
-
-    def enable_sorting_by_color(self):
-        """
-        'Hey robot! Stop sorting green pieces'
-        :param color: 
-        :return:
-        """
-        self.task_planner.enable_sorting_by_color(color)
+        return "ACK"
 
     # --------- request tasks methods ---------------------
 
@@ -99,10 +139,18 @@ class RobotTaskFacade:
         'Hello robot'
         :return: 
         """
-        print "Robot Task: greet!"
         self.task_planner.execute_task(self.task_planner.create_greet_task)
+        return "ACK"
 
-    def pick_block(self, color):
+    def put_all_contents_on_table(self):
+        """
+        'Hey robot! Put all red pieces on the tray 2'
+        :return: 
+        """
+        self.task_planner.execute_task(self.task_planner.put_all_contents_on_table)
+        return "ACK"
+
+    def pick_block_by_color(self, color):
         """
         'Hey robot! Give me a red brick' 
 
@@ -111,18 +159,11 @@ class RobotTaskFacade:
         :return: 
         """
 
-        print "Robot Task: give me pice!"
         self.task_planner.execute_task(self.task_planner.pick_block_by_color, args=[color])
-
-    def put_all_contents_on_table(self):
-        """
-        'Hey robot! Put all red pieces on the tray 2'
-        :return: 
-        """
-        self.task_planner.execute_task(self.task_planner.put_all_contents_on_table)
+        return "ACK"
 
 
-    def put_block_into_tray(self, color, tray):
+    def put_block_into_tray(self, color, trayid):
         """
         'Hey robot! Put a red piece on the tray 2'
 
@@ -131,4 +172,24 @@ class RobotTaskFacade:
         :return: 
         """
 
-        print "Robot Task: put pieces to tray by color!"
+        self.task_planner.execute_task(self.task_planner.put_block_into_tray_task, args=[color,trayid])
+        return "ACK"
+
+    # ------------ configure loop sorting ---------------------
+    #@route("/disable_sorting_by_color/<color>')")
+    def disable_sorting_by_color(self, color):
+        """
+        'Hey robot! Stop sorting green pieces'
+        :param color: 
+        :return: 
+        """
+        self.task_planner.disable_sorting_by_color(color)
+
+    #@route("/enable_sorting_by_color/<color>')")
+    def enable_sorting_by_color(self,color):
+        """
+        'Hey robot! Stop sorting green pieces'
+        :param color: 
+        :return:
+        """
+        self.task_planner.enable_sorting_by_color(color)

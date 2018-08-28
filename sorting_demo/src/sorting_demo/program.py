@@ -24,10 +24,14 @@ def main():
 
     task_facade.start()
 
-    #rospy.sleep(40)
+    task_facade.run_rest_server()
+
+    #rospy.sleep(15)
+    #task_facade.pick_block_by_color("BLUE")
+    #task_facade.put_block_into_tray("BLUE", "1")
+
     #task_facade.put_all_contents_on_table()
 
-    #task_facade.give_me_piece("GREEN")
     #task_facade.pause()
 
     #rospy.sleep(30)
@@ -35,7 +39,7 @@ def main():
 
     #task_facade.stop("GREEN")
 
-
+    rospy.logwarn("task planner spin")
     task_planner.spin()
 
     # ask the robot to greet

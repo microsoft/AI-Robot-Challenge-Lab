@@ -19,3 +19,6 @@ class BlockState:
 
     def get_color(self):
         return self.color
+
+    def is_color(self,color):
+        return color.upper() in self.color.upper()
