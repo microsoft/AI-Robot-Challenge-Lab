@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import copy
 import re
 
 import rospy
@@ -10,6 +11,7 @@ from concepts.tray import TrayState
 
 from utils.mathutils import *
 import demo_constants
+from threading import Lock
 
 
 class EnvironmentEstimation:
@@ -29,6 +31,8 @@ class EnvironmentEstimation:
         pub = rospy.Subscriber('/gazebo/link_states', LinkStates, self._links_callback, queue_size=10)
 
         self.gazebo_world_to_ros_transform = None
+        self.original_blocks_poses_ = None
+        self.mutex = Lock()
 
     def _links_callback(self, links):
         """
@@ -95,53 +99,73 @@ class EnvironmentEstimation:
         For the simulated case it copies from gazebo_blocks and gazebo_trays to blocks and trays
         :return:
         """
-        # publish tfs
-        basehomopose = get_homo_matrix_from_pose_msg(self.gazebo_world_to_ros_transform, tag="base")
 
-        # rospy.logwarn("basehomo: " + str(basehomopose))
+        try:
+            self.mutex.acquire()
+            # publish tfs
+            basehomopose = get_homo_matrix_from_pose_msg(self.gazebo_world_to_ros_transform, tag="base")
 
-        collections = [self.gazebo_blocks, self.gazebo_trays]
+            # rospy.logwarn("basehomo: " + str(basehomopose))
 
-        blocks = []
-        trays = []
+            collections = [self.gazebo_blocks, self.gazebo_trays]
 
-        for items in collections:
-            for item in items:
+            blocks = []
+            trays = []
 
-                # block homogeneous transform
-                homo_pose = get_homo_matrix_from_pose_msg(item.pose, tag="block")
+            for items in collections:
+                for item in items:
 
-                # rospy.logwarn("TF PUBLISH..." +  str(homo_pose))
-                # rospy.logwarn("item state: " + str(item))
+                    # block homogeneous transform
+                    homo_pose = get_homo_matrix_from_pose_msg(item.pose, tag="block")
 
-                transf_homopose = inverse_compose(basehomopose, homo_pose)
+                    # rospy.logwarn("TF PUBLISH..." +  str(homo_pose))
+                    # rospy.logwarn("item state: " + str(item))
 
-                trans = tf.transformations.translation_from_matrix(transf_homopose)
-                quat = tf.transformations.quaternion_from_matrix(transf_homopose)
+                    transf_homopose = inverse_compose(basehomopose, homo_pose)
 
-                self.tf_broacaster.sendTransform(trans,
-                                                 quat,
-                                                 rospy.Time.now(),
-                                                 item.id,
-                                                 "world")
+                    trans = tf.transformations.translation_from_matrix(transf_homopose)
+                    quat = tf.transformations.quaternion_from_matrix(transf_homopose)
 
-                item.final_pose = homotransform_to_pose_msg(transf_homopose)
+                    self.tf_broacaster.sendTransform(trans,
+                                                     quat,
+                                                     rospy.Time.now(),
+                                                     item.id,
+                                                     "world")
 
-                if isinstance(item, BlockState):
-                    blocks.append(item)
-                elif isinstance(item, TrayState):
-                    trays.append(item)
-                #else:
-                    #rospy.logwarn("DETECTED ITEM:" + str(item))
+                    item.final_pose = homotransform_to_pose_msg(transf_homopose)
 
-        self.blocks = blocks
-        self.trays = trays
+                    if isinstance(item, BlockState):
+                        blocks.append(item)
+                    elif isinstance(item, TrayState):
+                        trays.append(item)
+                    #else:
+                        #rospy.logwarn("DETECTED ITEM:" + str(item))
+
+            self.blocks = blocks
+            self.trays = trays
+
+            if self.original_blocks_poses_ is None:
+                self.original_blocks_poses_ = [copy.deepcopy(block.final_pose) for block in blocks]
+
+        finally:
+            self.mutex.release()
 
     def get_blocks(self):
         """
         :return array of (name, geometry_msgs.msg.Pose)
         """
-        return self.blocks
+        try:
+            self.mutex.acquire()
+            return [copy.deepcopy(b) for b in self.blocks]
+        finally:
+            self.mutex.release()
+
+    def get_original_block_poses(self):
+        try:
+            self.mutex.acquire()
+            return [copy.deepcopy(p) for p in self.original_blocks_poses_]
+        finally:
+            self.mutex.release()
 
     def get_tray(self, id):
         """
@@ -167,6 +191,21 @@ class EnvironmentEstimation:
         rospy.logwarn("by color: " + str(self.trays))
 
         filtered_trays = [tray for tray in self.trays if tray.color == color]
+        if len(filtered_trays) == 0:
+            return None
+        else:
+            return filtered_trays[0]
+
+    def get_tray_by_num(self, num):
+        """
+        
+        :param num: 
+        :return: 
+        """
+        rospy.logwarn("by num: " + str(num))
+        rospy.logwarn("by trays: " + str([t.num for t in self.trays]))
+
+        filtered_trays = [tray for tray in self.trays if int(tray.num)== int(num)]
         if len(filtered_trays) == 0:
             return None
         else:

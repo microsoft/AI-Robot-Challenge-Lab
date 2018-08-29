@@ -8,10 +8,7 @@ from geometry_msgs.msg import (
     Pose,
 )
 
-from object_detection import EnvironmentEstimation
-
-
-class SawyerRobotFacade(object):
+class SawyerRobotControl(object):
     def __init__(self, limb="right", hover_distance=0.15, tip_name="right_gripper_tip"):
         """
         :param limb:
@@ -23,6 +20,7 @@ class SawyerRobotFacade(object):
         self._hover_distance = hover_distance  # in meters
         self._limb = intera_interface.Limb(limb)
         self._gripper = intera_interface.Gripper()
+        self._robot_enable = intera_interface.RobotEnable()
 
         # verify robot is enabled
         print("Getting robot state... ")
@@ -212,3 +210,9 @@ class SawyerRobotFacade(object):
 
             r.sleep()
         r.sleep()
+
+    def disable(self):
+        self._robot_enable.disable()
+
+    def enable(self):
+        self._robot_enable.enable()
