@@ -3,8 +3,8 @@
   <xacro:property name="tray_width" value="0.2" />
   <xacro:property name="tray_length" value="0.32" />
   <xacro:property name="tray_height" value="0.05" />
-  <xacro:property name="tray_thickness" value="0.01" />
-  <xacro:property name="tray_density" value="950" />
+  <xacro:property name="tray_thickness" value="0.015" />
+  <xacro:property name="tray_density" value="100" />
   <xacro:property name="tray_base_name" value="tray_base" />
 
   <xacro:macro name="tray_part" params="name width length height mass material xPos:=0 yPos:=0">
@@ -58,7 +58,7 @@
 
   </xacro:macro>
 
-  <xacro:tray_part name="${tray_base_name}" width="${tray_width}" length="${tray_length}" height="${tray_thickness}" mass="0.05" material="Gazebo/White" />
+  <xacro:tray_part name="${tray_base_name}" width="${tray_width}" length="${tray_length}" height="${tray_thickness}" mass="0.01" material="Gazebo/White" />
   <xacro:tray_part name="tray_wall0" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/Red" yPos="-1" />
   <xacro:tray_part name="tray_wall1" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/Red" yPos="1" />
   <xacro:tray_part name="tray_wall2" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/Blue" xPos="-1" />

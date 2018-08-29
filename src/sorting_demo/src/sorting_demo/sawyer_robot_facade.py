@@ -65,7 +65,7 @@ class SawyerRobotFacade(object):
         rospy.sleep(1.0)
 
         # servo to pose
-        self._servo_to_pose(pose, time=meet_time)
+        self._servo_to_pose_loop(pose, time=meet_time)
         # rospy.sleep(1.0)
 
 
@@ -80,7 +80,7 @@ class SawyerRobotFacade(object):
         rospy.sleep(0.1)
 
         # retract to clear object
-        self._retract(time=retract_time, hover_distance=hover_distance)
+        self._retract_loop(time=retract_time, hover_distance=hover_distance)
 
     def place_loop(self, pose, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -95,7 +95,7 @@ class SawyerRobotFacade(object):
         rospy.sleep(0.1)
 
         # servo to pose
-        self._servo_to_pose(pose, time=meet_time)
+        self._servo_to_pose_loop(pose, time=meet_time)
         rospy.sleep(0.1)
 
         if rospy.is_shutdown():
@@ -109,7 +109,7 @@ class SawyerRobotFacade(object):
 
         rospy.sleep(0.1)
         # retract to clear object
-        self._retract(time=retract_time)
+        self._retract_loop(time=retract_time)
 
     def gripper_open(self):
         """
@@ -160,11 +160,11 @@ class SawyerRobotFacade(object):
 
         # self._limb.set_joint_position_speed(0.0001)
         # self._guarded_move_to_joint_position(joint_angles)
-        self._servo_to_pose(approach, time=time)
+        self._servo_to_pose_loop(approach, time=time)
         rospy.sleep(0.1)
         # self._limb.set_joint_position_speed(0.0001)
 
-    def _retract(self, time=2, hover_distance=None):
+    def _retract_loop(self, time=2, hover_distance=None):
 
         if hover_distance is None:
             hover_distance = self._hover_distance
@@ -179,9 +179,9 @@ class SawyerRobotFacade(object):
         ik_pose.orientation.y = current_pose['orientation'].y
         ik_pose.orientation.z = current_pose['orientation'].z
         ik_pose.orientation.w = current_pose['orientation'].w
-        self._servo_to_pose(ik_pose, time=time)
+        self._servo_to_pose_loop(ik_pose, time=time)
 
-    def _servo_to_pose(self, target_pose, time=4.0, steps=400.0):
+    def _servo_to_pose_loop(self, target_pose, time=4.0, steps=400.0):
         """ An *incredibly simple* linearly-interpolated Cartesian move """
         r = rospy.Rate(1 / (time / steps))  # Defaults to 100Hz command rate
         current_pose = self._limb.endpoint_pose()
