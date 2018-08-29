@@ -48,3 +48,6 @@ class TrayState:
 
     def reset(self):
         self.blocks = []
+
+    def __str__(self):
+        return "Tray: "+ str(self.id) +",num: "+str(self.num)+" -> "+ str(len(self.blocks)) + " items"

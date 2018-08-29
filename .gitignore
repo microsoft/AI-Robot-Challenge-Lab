@@ -8,6 +8,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.vscode
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -328,3 +329,5 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+.vscode/c_cpp_properties.json
+.vscode/c_cpp_properties.json

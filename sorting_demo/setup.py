@@ -25,4 +25,4 @@ d['packages'] = ['sorting_demo',
                  'intera_motion_interface']
 d['package_dir'] = {'': 'src', 'utils': 'src/utils'}
 
-setup(**d)
+setup(**d, requires=['flask'])
