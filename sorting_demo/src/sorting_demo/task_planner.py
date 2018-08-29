@@ -11,6 +11,7 @@ import demo_constants
 from sawyer_robot_facade import SawyerRobotFacade
 from object_detection import EnvironmentEstimation
 import moveit_msgs.srv
+import moveit_msgs.msg
 
 
 class TaskPlanner:
@@ -36,17 +37,26 @@ class TaskPlanner:
         """
 
         rospy.logwarn("CALLING IK SERVICE")
-        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik")
+        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
 
-        req = moveit_msgs.srv.GetPositionIKRequest()
-        req.ik_request.robot_state.joint_state.name = ["right_j0","right_j1","right_j2","right_j3","right_j4","right_j5","right_j6"]
-        req.ik_request.robot_state.joint_state.position = self.sawyer_robot._limb.joint_angles()
+        ik_req = moveit_msgs.msg.PositionIKRequest()
+        ik_req.robot_state.joint_state.name = ["right_j0", "right_j1", "right_j2", "right_j3", "right_j4", "right_j5",
+                                               "right_j6"]
 
-        rospy.logwarn("CALLING IK SERVICE request: "+ str(req))
-        resp = ikservice(req)
+        jntangles = self.sawyer_robot._limb.joint_angles()
+        ik_req.robot_state.joint_state.position = [jntangles[k] for k in jntangles]
+        ik_req.pose_stamped.pose = target_pose
+        # ik_req.constraints.ik_link_name = "right_hand_camera_optical"
 
-        rospy.logwarn("SERVICE RESPONSE:"+  str(resp))
+        rospy.logwarn("CALLING IK SERVICE request: " + str(ik_req))
+        resp = ikservice(ik_req)
 
+        rospy.logwarn("SERVICE RESPONSE:" + str(resp))
+
+        targetjoints = dict(zip(resp.solution.joint_state.name, resp.solution.joint_state.position))
+
+        self.sawyer_robot._limb.set_joint_position_speed(0.000001)
+        self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
 
     def create_pick_tray_task(self, tray, approach_speed, approach_time, meet_time, retract_time):
         """
@@ -366,6 +376,7 @@ class TaskPlanner:
 
         rospy.logwarn("home pose:" + str(homepose))
 
+        """
         self.environment_estimation.update()
         blocks = self.environment_estimation.get_blocks()
         blocks_count = len(blocks)
@@ -375,6 +386,25 @@ class TaskPlanner:
 
         self.await(self.create_go_vision_head_pose_task())
 
+        # for ki in xrange(5):
+
+        while True:
+            for block in blocks:
+                p = copy.deepcopy(block.pose)
+                p.position.z = 0.05
+
+                poseaux = p #Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+
+                poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
+                poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi/2.0))
+                poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
+
+                self.environment_estimation.update()
+                self.call5d_ik(poseaux)
+                rospy.sleep(4)
+
+        """
         """
         
         self.await(self.create_go_xy_task(0.4, 0.1))
