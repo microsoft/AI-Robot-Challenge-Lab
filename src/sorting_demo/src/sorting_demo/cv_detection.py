@@ -32,7 +32,7 @@ class CameraHelper:
         :param table_height: The table height with respect to base_frame
         """
         self.camera_name = camera_name
-        self.base_height = base_height
+        self.base_frame = base_frame
         self.table_height = table_height
 
         self.image_queue = Queue.Queue()
