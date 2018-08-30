@@ -522,17 +522,20 @@ class TaskPlanner:
         while iterations_count is None or iteration < iterations_count:
             for block in blocks:
                 p = copy.deepcopy(block.pose)
+                #chose z plane
                 p.position.z = 0.05
 
                 poseaux = p  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
-
                 poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
                 poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi / 2.0))
                 poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
 
                 self.environment_estimation.update()
 
+
                 self.create_move_to_xyz_pr(poseaux).result()
+                #individual processing algorithm
+
                 self.delay_task(4).result()
                 iteration += 1
 
