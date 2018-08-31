@@ -106,7 +106,7 @@ class CameraHelper:
 
             return intersection
 
-def get_blob_info(cv_image):
+def get_blobs_info(cv_image):
     """
     Gets information about the colored blobs in the image
 
@@ -130,7 +130,7 @@ def get_blob_info(cv_image):
     cv_mask = cv2.cvtColor(cv_mask, cv2.COLOR_BGR2GRAY)
 
     cv_image_masked = cv2.bitwise_and(cv_image_blur, cv_image_blur, mask = cv_mask)
-    cv2.imshow("Masked original", cv_image_masked)
+    #cv2.imshow("Masked original", cv_image_masked)
 
     # HSV split
     cv_image_hsv = cv2.cvtColor(cv_image_masked, cv2.COLOR_BGR2HSV)
@@ -217,7 +217,7 @@ def get_blob_info(cv_image):
         # Collect data
         blob_info[current_hue] = contour_centroids
 
-    cv2.imshow("Convex contours", cv_image_contours_debug)
+    #cv2.imshow("Convex contours", cv_image_contours_debug)
 
     return blob_info
 
@@ -272,7 +272,7 @@ def test_ros():
             #cv2.imwrite("debug.png", cv_image)
 
             # Get color blobs info
-            blob_info = get_blob_info(cv_image)
+            blob_info = get_blobs_info(cv_image)
 
             # Project the points on 3D space
             points = [y for x in blob_info.values() for y in x]
@@ -311,7 +311,7 @@ def test_debug():
         cv_image = cv2.imread(image_path)
 
         # Get color blobs info
-        blob_info = get_blob_info(cv_image)
+        blob_info = get_blobs_info(cv_image)
         print(blob_info)
 
         # Wait for a key press

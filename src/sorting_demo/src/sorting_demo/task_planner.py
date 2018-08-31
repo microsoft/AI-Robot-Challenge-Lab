@@ -16,7 +16,7 @@ import rospy
 from geometry_msgs.msg import Pose, Point, Quaternion
 import demo_constants
 from robot_control import SawyerRobotControl
-from object_detection import EnvironmentEstimation
+from environment_estimation import EnvironmentEstimation
 import moveit_msgs.srv
 import moveit_msgs.msg
 from functools import wraps
@@ -263,7 +263,7 @@ class TaskPlanner:
                         'right_j6': 0.0}
 
         self.sawyer_robot._limb.move_to_joint_positions(joint_angles)
-        self.delay_task(6).result()
+        self.delay_task(1).result()
 
     @tasync("TURN OVER TRAY")
     def create_complete_turn_over_tray(self, target_tray, homepose):
@@ -381,15 +381,12 @@ class TaskPlanner:
         return self.sawyer_robot.place_loop(target_pose, approach_speed, approach_time, meet_time, retract_time)
 
     @tasync("SELECT BLOCK&TRAY")
-    def create_decision_select_block_and_tray(self, target_block_index):
+    def create_decision_select_block_and_tray(self, blocks, target_block_index):
         """
         :return:
         """
-        rospy.logwarn("\nPlacing task...")
 
         # An orientation for gripper fingers to be overhead and parallel to the obj
-
-        blocks = self.environment_estimation.get_blocks()
 
         rospy.logwarn("NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
@@ -486,7 +483,7 @@ class TaskPlanner:
         target_block_index = 0
 
         while target_block_index < blocks_count:
-            target_block, target_tray = self.create_detect_block_poses_task(target_block_index).result()
+            target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index).result()
 
             self.create_pick_task(copy.deepcopy(target_block.final_pose),
                                   approach_speed=0.0001,
@@ -506,38 +503,47 @@ class TaskPlanner:
 
             target_block_index += 1
 
+    @tasync("HEAD VISION PROCESSING")
+    def create_head_vision_processing(self):
+
+        self.environment_estimation.update()
+        self.environment_estimation.compute_block_pose_estimations_from_head_camera()
+
+        blocks = self.environment_estimation.get_blocks()
+
+        return blocks
+
+
+    @tasync("LOCATE ARMVIEW TO BLOCK ESTIMATION")
+    def create_move_top_block_view(self, block):
+        p = copy.deepcopy(block.headview_pose_estimation)
+        # chose z plane
+        p.position.z = 0.1
+
+        poseaux = p  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
+        poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
+        poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi / 2.0))
+        poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
+
+        self.create_move_to_xyz_pr(poseaux).result()
+        # individual processing algorithm
+
+        self.delay_task(3).result()
+
+
     @tasync("OBSERVE ALL CUBES")
-    def create_iterate_all_cubes_task(self, iterations_count=None):
+    def create_visit_all_cubes_armview(self, iterations_count=None):
         """"
         the robot camera locates on top of each block iteratively and in a loop
         """
-
-        self.environment_estimation.update()
-        blocks = self.environment_estimation.get_blocks()
-        blocks_count = len(blocks)
-
-        trays_count = len(self.environment_estimation.get_trays())
+        blocks = self.create_head_vision_processing().result()
 
         iteration = 0
         while iterations_count is None or iteration < iterations_count:
             for block in blocks:
-                p = copy.deepcopy(block.pose)
-                #chose z plane
-                p.position.z = 0.05
+                self.create_move_top_block_view(block).result()
 
-                poseaux = p  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
-                poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
-                poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi / 2.0))
-                poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
-
-                self.environment_estimation.update()
-
-
-                self.create_move_to_xyz_pr(poseaux).result()
-                #individual processing algorithm
-
-                self.delay_task(4).result()
-                iteration += 1
+            iteration += 1
 
     @tasync("WAIT FOREVER")
     def create_wait_forever_task(self):
@@ -601,7 +607,7 @@ class TaskPlanner:
         self.create_wait_forever_task().result()
 
     @tasync("DETECT BLOCK POSE")
-    def create_detect_block_poses_task(self, target_block_index):
+    def create_detect_block_poses_task(self, blocks, target_block_index):
         """
         
         :param target_block_index: 
@@ -610,28 +616,27 @@ class TaskPlanner:
         target_block = None
         target_tray = None
         while target_block is None:
-            rospy.logwarn(" -- ENVIRONMENT ESTIMATION")
-
-            self.environment_estimation.update()
-            target_block, target_tray = self.create_decision_select_block_and_tray(target_block_index).result()
+            target_block, target_tray = self.create_decision_select_block_and_tray(blocks, target_block_index).result()
             self.delay_task(0.1).result()
 
         return target_block, target_tray
 
     @tasync("MOVE ALL CUBES TO TRAY")
-    def create_move_all_cubes_to_trays(self):
+    def create_move_all_cubes_to_trays(self, blocks):
         """
         Moves all cubes on the table to the trays according with its color
         :return: 
         """
-        self.environment_estimation.update()
-        blocks = self.environment_estimation.get_blocks()
+
         blocks_count = len(blocks)
 
         target_block_index = 0
         original_block_poses = []
         while target_block_index < blocks_count:
-            target_block, target_tray = self.create_detect_block_poses_task(target_block_index).result()
+            self.create_go_home_task().result()
+            target_block, target_tray = self.create_detect_block_poses_task(blocks,target_block_index).result()
+
+            self.create_move_top_block_view(target_block).result()
 
             rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
@@ -677,13 +682,17 @@ class TaskPlanner:
         # for ki in xrange(5):
         # self.create_greet_task().result()
 
-        # self.create_go_vision_head_pose_task().result()
 
         # self.create_go_home_task().result()
 
-        # self.create_iterate_all_cubes_task(1).result()
+        #self.create_visit_all_cubes_armview(1).result()
+
 
         for i in xrange(2):
+            self.create_go_vision_head_pose_task().result()
+
+            blocks = self.create_head_vision_processing().result()
+
             self.create_go_home_task().result()
 
             # self.create_complete_turn_over_tray, target_tray {"homepose": homepose}).result()
@@ -692,7 +701,7 @@ class TaskPlanner:
             self.reset_cycle()
             # continue
 
-            original_block_poses = self.create_move_all_cubes_to_trays().result()
+            original_block_poses = self.create_move_all_cubes_to_trays(blocks).result()
 
             self.reset_cycle()
 
