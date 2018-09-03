@@ -270,6 +270,21 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 ### Setup sorting workspace
 
+1. First create a **catkin workspace** with the source code:
+    * mkdir catkin_workspace
+    * cd catkin_workspace
+    * git clone git@github.com:Microsoft/AI-Robot-Challenge.git src
+1. Then install the system dependencies and ros dependencies: `rosdep install --from-paths src --ignore-src -r -y`
+1. Build the code: `catkin_make`
+1. Run the following commands to launch the simulator:
+  ```
+  cd $HOME/ros_ws
+  ./intera.sh sim
+  cd $HOME/Documents/catkin_workspace
+  source devel/setup.bash
+  roslaunch sorting_demo sorting_demo.launch
+  ```
+
 ### Create a Computer Vision subscription
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
