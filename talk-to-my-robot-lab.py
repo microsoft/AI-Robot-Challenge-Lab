@@ -76,7 +76,7 @@ class BotRequestHandler:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
         else:
-            process_image(activity, context)
+            await process_image(activity, context)
         
         return web.Response(status=202)
     
@@ -89,7 +89,7 @@ class BotRequestHandler:
     async def unhandled_activity() -> web.Response:
         return web.Response(status=404)
     
-    def process_image(activity: Activity, context: TurnContext):
+    async def process_image(activity: Activity, context: TurnContext):
         print("Process image") # Replace with implementation
     
     def get_image_url(attachments):

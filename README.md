@@ -67,7 +67,7 @@ The planning scene feature allows to monitor the state, sensor and world geometr
 
 # Getting started  
 
-## Setup your environment
+## Lab Part 1: Setup your environment
 
 ### Setup your Azure subscription
 
@@ -153,7 +153,7 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 
 We created a basic bot using the SDK V4, we'll run it locally using the Bot Framework Emulator and extend its functionality.
 
-## Implement your bot
+## Lab Part 2: Implement your bot
 
 ### Add support for Language Understanding
 
@@ -264,7 +264,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
     return result
     ```
 
-## Making your robot intelligent with Microsoft AI
+## Lab Part 3: Making your robot intelligent with Microsoft AI
 
 We will use Computer Vision to extract information from an image and the Intera SDK to send commands to our robot.
 

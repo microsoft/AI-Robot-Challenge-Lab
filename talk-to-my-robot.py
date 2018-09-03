@@ -38,7 +38,7 @@ class ComputerVisionApiService:
         image_data = BytesIO(requests.get(image_url).content)
         
         try:
-            print(f'Processing image: {image_url}')
+            print('Processing image: {}'.format(image_url))
             response = requests.post(COMPUTER_VISION_ANALYZE_URL, headers=headers, params=params, data=image_data)
             response.raise_for_status()
             analysis = response.json()
@@ -48,6 +48,11 @@ class ComputerVisionApiService:
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
+class LuisResponse():
+    def __init__(self, intent, entity_value = None, entity_type = None):
+        self.intent = intent
+        self.entity_value = entity_value
+        self.entity_type = entity_type
 
 class LuisApiService:
     @staticmethod
@@ -67,8 +72,11 @@ class LuisApiService:
         try:
             r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
             topScoreIntent = r.json()['topScoringIntent']
+            entities = r.json()['entities']
             intent = topScoreIntent['intent'] if topScoreIntent['score'] > 0.5 else 'None' 
-            return intent
+            entity = entities[0] if len(entities) > 0 else None
+            
+            return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
@@ -87,24 +95,24 @@ class BotRequestHandler:
     async def handle_message(context: TurnContext) -> web.Response:
         activity = context.activity
         if activity.text:
-            intent = LuisApiService.post_utterance(activity.text)
+            luis_result = LuisApiService.post_utterance(activity.text)
 
-            response = await BotRequestHandler.create_reply_activity(activity, f'Top Intent: {intent}.')
+            response = await BotRequestHandler.create_reply_activity(activity, f'Top Intent: {luis_result.intent}.')
             await context.send_activity(response)
 
-            if intent == 'MoveArm':
+            if luis_result.intent == 'MoveArm':
                 BotCommandHandler.move_arm()
-            elif intent == 'ShowStats':
+            elif luis_result.intent == 'ShowStats':
                 stats = BotCommandHandler.show_stats()
                 response = await BotRequestHandler.create_reply_activity(activity, stats)
                 await context.send_activity(response)
-            elif intent == 'BlinkLight':
-                BotCommandHandler.blink_light()
+            elif luis_result.intent == 'MoveGrippers':
+                BotCommandHandler.move_grippers(luis_result.entity_value)
             else:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
         else:
-            process_image(activity, context)
+            await process_image(activity, context)
         
         return web.Response(status=202)
     
@@ -117,7 +125,7 @@ class BotRequestHandler:
     async def unhandled_activity() -> web.Response:
         return web.Response(status=404)
     
-    def process_image(activity: Activity, context: TurnContext):
+    async def process_image(activity: Activity, context: TurnContext):
         # Check if there is an image
         image_url = BotRequestHandler.get_image_url(activity.attachments)
 
@@ -188,15 +196,15 @@ class BotCommandHandler:
       
         print('done moving cube . . .')
     
-    def blink_light():
-        print('Blinking light... do something cool')
+    def move_grippers(action):
+        print(f'{action} grippers... wait a few seconds')
         # launch your python2 script using bash
-        python2_command = "python2.7 bot-blink-light.py"  
+        python2_command = "python2.7 bot-move-grippers.py -a {}".format(action)  
 
         process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()  # receive output from the python2 script
       
-        print('done blinking light . . .')
+        print('done moving grippers . . .')
         print('returncode: '  + str(process.returncode))
         print('output: ' + output.decode("utf-8"))
     
