@@ -38,6 +38,11 @@ class ComputerVisionApiService:
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
+class LuisResponse():
+    def __init__(self, intent, entity_value = None, entity_type = None):
+        self.intent = intent
+        self.entity_value = entity_value
+        self.entity_type = entity_type
 
 class LuisApiService:
     @staticmethod
@@ -65,12 +70,12 @@ class BotRequestHandler:
     async def handle_message(context: TurnContext) -> web.Response:
         activity = context.activity
         if activity.text:
-            intent = None
+            luis_result = LuisResponse('None')
 
-            response = await BotRequestHandler.create_reply_activity(activity, f'Top Intent: {intent}.')
+            response = await BotRequestHandler.create_reply_activity(activity, f'Top Intent: {luis_result.intent}.')
             await context.send_activity(response)
 
-            if intent == 'MoveArm':
+            if luis_result.intent == 'MoveArm':
                 BotCommandHandler.move_arm()
             else:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
@@ -138,7 +143,7 @@ class BotCommandHandler:
     def move_cube(color):
         # Replace with your code
     
-    def blink_light():
+    def move_grippers(action):
         # Replace with your code
     
 
