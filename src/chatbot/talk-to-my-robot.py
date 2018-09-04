@@ -138,13 +138,13 @@ class BotCommandHandler:
         print('output: ' + output.decode("utf-8"))
 
     def show_stats():
-        # Replace with your code
+        print("Replace with your code")
     
     def move_cube(color):
-        # Replace with your code
+        print("Replace with your code")
     
     def move_grippers(action):
-        # Replace with your code
+        print("Replace with your code")
     
 
 

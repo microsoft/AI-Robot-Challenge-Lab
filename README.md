@@ -97,10 +97,20 @@ If you need a new Azure subscription, then there are a couple of options to get 
 
 ### Run installation script on VM
 
-1. Clone this github repo into a directory called `lab-materials`.
-1. Navigate to `lab-materials/LabPart1` in a Terminal window.
+1. Clone this github repo into a directory called `robotics-lab` in your **Documents**.
+1. Navigate to `robotics-lab/setup` in a Terminal window.
 1. Run the following command: `chmod +x robot-challenge-setup.sh`.
 1. Run the shell script with the following command `./robot-challenge-setup.sh`.
+
+### Setup and launch the simulator
+
+1. Open a Terminal and navigate to `robotics-lab`.
+1. Build the code: `catkin_make`
+1. Run the following commands to launch the simulator:
+  ```
+  cd $HOME/ros_ws && ./intera.sh sim
+  cd $HOME/Documents/robotics-lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
+  ```
 
 ### Setup Language Understanding
 
@@ -141,7 +151,7 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 1. Check the **I agree** checkbox.
 1. Click the **Continue** button.
 1. From `My Apps`, click **Import new app**.
-1. **Select** the base model from `lab-materials\robotics-bot.json`.
+1. **Select** the base model from `robotics-lab\resources\robotics-bot.json`.
 1. Click on the **Done** button.
 1. **Wait** for the import to complete.
 1. Click on the **Train** button and wait for it to finish.
@@ -155,11 +165,6 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 We created a basic bot using the SDK V4, we'll run it locally using the Bot Framework Emulator and extend its functionality.
 
 ## Lab Part 2: Implement your bot
-
-### Copy the lab files
-
-1. Go to your **Documents** and create the following directory structure: `robotics-lab\src\chatbot`
-1. Copy the files from `lab-materials\LabPart2` to `robotics-lab\src\chatbot`.
 
 ### Add support for Language Understanding
 
@@ -192,6 +197,8 @@ We created a basic bot using the SDK V4, we'll run it locally using the Bot Fram
       ```
     * Replace the line `return None` with the following code snippet
       ```python
+      r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
+      topScoreIntent = r.json()['topScoringIntent']
       entities = r.json()['entities']
       intent = topScoreIntent['intent'] if topScoreIntent['score'] > 0.5 else 'None' 
       entity = entities[0] if len(entities) > 0 else None
@@ -299,21 +306,6 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 ## Lab Part 3: Making your robot intelligent with Microsoft AI
 
 We will use Computer Vision to extract information from an image and the Intera SDK to send commands to our robot.
-
-### Setup sorting workspace
-
-1. Copy the files from `lab-materials\LabPart3` to `robotics-lab\src`.
-1. Open a Terminal and navigate to `robotics-lab`.
-1. Then install the system dependencies and ros dependencies: `rosdep install --from-paths src --ignore-src -r -y`
-1. Build the code: `catkin_make`
-1. Run the following commands to launch the simulator:
-  ```
-  cd $HOME/ros_ws
-  ./intera.sh sim
-  cd $HOME/Documents/catkin_workspace
-  source devel/setup.bash
-  roslaunch sorting_demo sorting_demo.launch
-  ```
 
 ### Create a Computer Vision subscription
 
