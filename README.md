@@ -206,11 +206,22 @@ We created a basic bot using the SDK V4, we'll run it locally using the Bot Fram
       return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
       ```
 
-### Test the arm move
+### Run the Bot locally
 
-Run the Bot Locally:
+Run from a Terminal window:
 1. Navigate to `robotics-lab/src/chatbot` in a Terminal window.
 1. Run the following command: `python3.6 talk-to-my-robot.py`.
+
+Alternatively, you can run and debug the bot using Visual Studio Code:
+
+1. Open Visual Studio Code.
+1. Open the `robotics-lab/src/chatbot` folder that you extracted earlier.
+1. Click on `talk-to-my-robot.py` to open the python script.
+1. If prompted to install the Python Extension select Install, once installed, select Reload to activate the extension.
+1. Click on **View -> Command Palette** from the top menu and type `Python:Select Interpreter`. You should see python 3.6 in the options, select this version.
+1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script.
+
+### Test the arm move
 
 The bot emulator provides a convenient way to interact and debug your bot locally. Let's use the emulator to send requests to our bot:
 1. Open the **Bot Framework Emulator** app.
