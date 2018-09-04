@@ -125,12 +125,12 @@ def get_blob_info(cv_image):
     #cv2.imshow("Blur", cv_image_blur)
 
     # Apply ROI mask
-    mask_path = rospkg.RosPack().get_path('sorting_demo') + "/share/head-mask.png"
+    mask_path = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask.png"
     cv_mask = cv2.imread(mask_path)
     cv_mask = cv2.cvtColor(cv_mask, cv2.COLOR_BGR2GRAY)
 
     cv_image_masked = cv2.bitwise_and(cv_image_blur, cv_image_blur, mask = cv_mask)
-    cv2.imshow("Masked original", cv_image_masked)
+    #cv2.imshow("Masked original", cv_image_masked)
 
     # HSV split
     cv_image_hsv = cv2.cvtColor(cv_image_masked, cv2.COLOR_BGR2HSV)
@@ -154,8 +154,8 @@ def get_blob_info(cv_image):
 
     # Binarize the result
     BIN_THRESHOLD = 127
-    #ret, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    ret, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, BIN_THRESHOLD, 255, cv2.THRESH_BINARY)
+    #_, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, BIN_THRESHOLD, 255, cv2.THRESH_BINARY)
     #cv2.imshow("Threshold", cv_image_binary)
 
     # Calculate H-channel histogram, applying the binarized image as mask
@@ -217,7 +217,7 @@ def get_blob_info(cv_image):
         # Collect data
         blob_info[current_hue] = contour_centroids
 
-    cv2.imshow("Convex contours", cv_image_contours_debug)
+    #cv2.imshow("Convex contours", cv_image_contours_debug)
 
     return blob_info
 
@@ -245,11 +245,11 @@ def __publish_marker(publisher, index, point):
 
     publisher.publish(marker)
 
-def test_ros():
+def test_head_ros():
     """
     Test the blob detection and CameraHelper class using ROS
     """
-    rospy.init_node('cv_detection')
+    rospy.init_node('cv_detection_head_camera')
 
     camera_name = "head_camera"
 
@@ -269,7 +269,7 @@ def test_ros():
             cv_image = bridge.imgmsg_to_cv2(img_data, "bgr8")
 
             # Save for debugging
-            #cv2.imwrite("debug.png", cv_image)
+            #cv2.imwrite("/tmp/debug.png", cv_image)
 
             # Get color blobs info
             blob_info = get_blob_info(cv_image)
@@ -291,14 +291,14 @@ def test_ros():
     # Exit
     cv2.destroyAllWindows()
 
-def test_debug():
+def test_head_debug():
     """
     Test the blob detection using images on disk
     """
 
     # Get files
-    path = rospkg.RosPack().get_path('sorting_demo') + "/share"
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "head-mask" not in f]
+    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head"
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     #print(files)
 
     # Process files
@@ -321,4 +321,4 @@ def test_debug():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    sys.exit(test_debug())
+    sys.exit(test_head_debug())
