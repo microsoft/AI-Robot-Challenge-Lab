@@ -97,9 +97,20 @@ If you need a new Azure subscription, then there are a couple of options to get 
 
 ### Run installation script on VM
 
-1. Navigate to `AI-Robot-Challenge/setup/ubuntu` in a Terminal window.
+1. Clone this github repo into a directory called `robotics-lab` in your **Documents**.
+1. Navigate to `robotics-lab/setup` in a Terminal window.
 1. Run the following command: `chmod +x robot-challenge-setup.sh`.
 1. Run the shell script with the following command `./robot-challenge-setup.sh`.
+
+### Setup and launch the simulator
+
+1. Open a Terminal and navigate to `robotics-lab`.
+1. Build the code: `catkin_make`
+1. Run the following commands to launch the simulator:
+  ```
+  cd $HOME/ros_ws && ./intera.sh sim
+  cd $HOME/Documents/robotics-lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
+  ```
 
 ### Setup Language Understanding
 
@@ -140,7 +151,7 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 1. Check the **I agree** checkbox.
 1. Click the **Continue** button.
 1. From `My Apps`, click **Import new app**.
-1. **Select** the base model from `lab-materials\robotics-bot.json`.
+1. **Select** the base model from `robotics-lab\resources\robotics-bot.json`.
 1. Click on the **Done** button.
 1. **Wait** for the import to complete.
 1. Click on the **Train** button and wait for it to finish.
@@ -157,18 +168,19 @@ We created a basic bot using the SDK V4, we'll run it locally using the Bot Fram
 
 ### Add support for Language Understanding
 
+1. Navigate to the directory: `$HOME\Documents\robotics-lab\src\chatbot`.
 1. Open the **talk-to-my-robot.py** file.
 1. Go to the `BotRequestHandler` class around line 54.
 1. Modify the method `handle_message`, replace this line
   ```python
-  intent = None
+  luis_result = LuisResponse('None')
   ```
 
   with
   ```python
-  intent = LuisApiService.post_utterance(activity.text)
+  luis_result = LuisApiService.post_utterance(activity.text)
   ```
-1. Go to the `LuisApiService` class around line 42.
+1. Go to the `LuisApiService` class around line 47.
 1. Modify the method `post_utterance`:
     * Add the following code after the line `Request headers and parameters`
       ```python
@@ -187,65 +199,98 @@ We created a basic bot using the SDK V4, we'll run it locally using the Bot Fram
       ```python
       r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
       topScoreIntent = r.json()['topScoringIntent']
+      entities = r.json()['entities']
       intent = topScoreIntent['intent'] if topScoreIntent['score'] > 0.5 else 'None' 
-      return intent
+      entity = entities[0] if len(entities) > 0 else None
+      
+      return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
       ```
+      > [!ALERT] Check your indentation to avoid python compilation errors.
+
+### Run the Bot locally
+
+Run from a **Terminal** window:
+1. Navigate to `robotics-lab/src/chatbot` in a Terminal window.
+1. Run the following command: `python3.6 talk-to-my-robot.py`.
+
+  > [!ALERT] Reuse the Terminal when running the bot, if you run more than one bot you'll get an error due port conflicts.
+
+Alternatively, you can run and debug the bot using **Visual Studio Code**:
+
+1. Open Visual Studio Code.
+1. Open the `robotics-lab/src/chatbot` folder that you extracted earlier.
+1. Click on `talk-to-my-robot.py` to open the python script.
+1. If prompted to install the Python Extension select Install, once installed, select Reload to activate the extension.
+1. Click on **View -> Command Palette** from the top menu and type `Python:Select Interpreter`. You should see python 3.6 in the options, select this version.
+1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script.
 
 ### Test the arm move
 
-Run the Bot Locally:
-1. Navigate to `lab-materials` in a Terminal window.
-1. Run the following command: `python3.6 talk-to-my-robot.py`.
-
 The bot emulator provides a convenient way to interact and debug your bot locally. Let's use the emulator to send requests to our bot:
 1. Open the **Bot Framework Emulator** app.
-1. Click **Open Bot** and select the file `SawyerBot.bot` from your **lab-materials** directory.
+1. Click **Open Bot** and select the file `SawyerBot.bot` from your **chatbot** directory.
 
     > [!NOTE] Previously we had to provide the bot endpoint to the emulator but now it can read all the configuration from a file.
 1. **Type** `move your arm` and press enter.
 1. Return to **Gazebo** and wait for the simulator to move the arm.
+1. Go back to your bot Terminal window and stop the process with **CTRL+C**.
 
 
-### Make a light blink
+### Make the grippers open & close
 
 1. Go to the `BotRequestHandler` class.
 1. Modify the method `handle_message`, after the **if** statement
     ```python
-    if intent == 'MoveArm':
+    if luis_result.intent == 'MoveArm':
         BotCommandHandler.move_arm()
     ```
     Add the following code snippet
     ```python
-    elif intent == 'BlinkLight':
-        BotCommandHandler.blink_light()
+    elif luis_result.intent == 'MoveGrippers':
+        BotCommandHandler.move_grippers(luis_result.entity_value)
     ```
 1. Go to the `BotCommandHandler` class.
-1. Replace the method `blink_ligth` content with the following code snippet:
+1. Replace the method `move_grippers` content with the following code snippet:
     ```python
-    print('Blinking light... do something cool')
+    print(f'{action} grippers... wait a few seconds')
     # launch your python2 script using bash
-    python2_command = "python2.7 bot-blink-light.py"  
+    python2_command = "python2.7 bot-move-grippers.py -a {}".format(action)  
 
     process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()  # receive output from the python2 script
   
-    print('done blinking light . . .')
+    print('done moving grippers . . .')
     print('returncode: '  + str(process.returncode))
     print('output: ' + output.decode("utf-8"))
     ```
+
+### Test the grippers move
+
+1. Return to your bot Terminal window.
+1. Run the bot with the following command: `python3.6 talk-to-my-robot.py`.
+1. Go back to the **Bot Framework Emulator** app.
+1. Click **Start Over** to start a new conversation.
+1. **Type** `close grippers` and press enter.
+1. Return to **Gazebo** and wait for the simulator to move the grippers.
+1. Go back to the **Bot Framework Emulator** app.
+1. **Type** `open grippers` and press enter.
+1. Return to **Gazebo** and wait for the simulator to move the grippers.
+1. Go back to your bot Terminal window and stop the process with **CTRL+C**.
 
 ### Show stats
 
 1. Go to the `BotRequestHandler` class.
 1. Modify the method `handle_message`, after the **if** statement
     ```python
-    if intent == 'MoveArm':
+    if luis_result.intent == 'MoveArm':
         BotCommandHandler.move_arm()
     ```
     Add the following code snippet
     ```python
-    elif intent == 'ShowStats':
+    elif luis_result.intent == 'ShowStats':
         stats = BotCommandHandler.show_stats()
+        response = await BotRequestHandler.create_reply_activity(activity, stats)
+        await context.send_activity(response)
     ```
 1. Go to the `BotCommandHandler` class.
 1. Replace the method `show_stats` content with the following code snippet:
@@ -264,32 +309,26 @@ The bot emulator provides a convenient way to interact and debug your bot locall
     return result
     ```
 
+### Test the show statistics
+
+1. Return to your bot Terminal window.
+1. Run the following command: `python3.6 talk-to-my-robot.py`.
+1. Go back to the **Bot Framework Emulator** app.
+1. Click **Start Over** to start a new conversation.
+1. **Type** `show stats` and press enter.
+1. Wait a few seconds and wait for a response from your bot, it will display the stats in the emulator.
+1. Go back to your bot Terminal window and stop the process with **CTRL+C**.
+
+
 ## Lab Part 3: Making your robot intelligent with Microsoft AI
 
 We will use Computer Vision to extract information from an image and the Intera SDK to send commands to our robot.
-
-### Setup sorting workspace
-
-1. First create a **catkin workspace** with the source code:
-    * mkdir catkin_workspace
-    * cd catkin_workspace
-    * git clone git@github.com:Microsoft/AI-Robot-Challenge.git src
-1. Then install the system dependencies and ros dependencies: `rosdep install --from-paths src --ignore-src -r -y`
-1. Build the code: `catkin_make`
-1. Run the following commands to launch the simulator:
-  ```
-  cd $HOME/ros_ws
-  ./intera.sh sim
-  cd $HOME/Documents/catkin_workspace
-  source devel/setup.bash
-  roslaunch sorting_demo sorting_demo.launch
-  ```
 
 ### Create a Computer Vision subscription
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
 
-1. Return to the Azure Portal (++portal.azure.com++).
+1. Return to the [Azure Portal](portal.azure.com).
 1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
 1. **Select** the first result and then click the **Create** button.
 1. Provide the required information:
@@ -298,7 +337,7 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
     * Select the location: `West US`.
     * Select the the Pricing tier: `F0 (20 Calls per minute, 5k Calls per month)`.
     * Select the previously created resource group: `robotics-lab-<your initials>`.
-1. Click Create to create the resource and deploy it. This step might take a few moments.
+1. Click **Create** to create the resource and deploy it. This step might take a few moments.
 1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
 1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-computer-vision-<your initials>`).
 1. **Click** on the resource.
@@ -355,9 +394,17 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 1. Open the **move-cube.py** file.
 1. Add the following code snippet to the `move_cube` method:
 
-### Hook it all up
+### Test the move cube
 
-
+1. Go back to your bot Terminal window.
+1. Run the bot with the following command: `python3.6 talk-to-my-robot.py`.
+1. Go back to the **Bot Framework Emulator** app.
+1. Click **Start Over** to start a new conversation.
+1. Click the upload button from the left bottom corner to upload an image.
+1. Select the file `robotics-lab/resources/Images/cube-red.png`.
+1. Return to **Gazebo** and wait for the simulator to move the requested cube.
+1. Go back to the **Bot Framework Emulator** app.
+1. Select another image of a different color and check the simulator to verify which cube it moved.
 
 
 # Contributing

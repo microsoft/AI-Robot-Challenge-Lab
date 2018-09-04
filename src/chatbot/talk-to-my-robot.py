@@ -17,34 +17,24 @@ BOT_APP_PASSWORD = ''
 SETTINGS = BotFrameworkAdapterSettings(BOT_APP_ID, BOT_APP_PASSWORD)
 ADAPTER = BotFrameworkAdapter(SETTINGS)
 
-LUIS_APP_ID = '357b6036-c961-4bb0-9aa9-bbbcdf1e32f0'
-LUIS_SUBSCRIPTION_KEY = 'b7f33ef452a544079fb86356479f9300'
+LUIS_APP_ID = '<your luis application id>'
+LUIS_SUBSCRIPTION_KEY = '<your luis subscription key>'
 
 COMPUTER_VISION_ANALYZE_URL = "https://westus.api.cognitive.microsoft.com/vision/v2.0/analyze"
-COMPUTER_VISION_SUBSCRIPTION_KEY = "f35e56ef483640fc9153d69c5c123266"
+COMPUTER_VISION_SUBSCRIPTION_KEY = "<your computer vision subscription key>"
 
 
 class ComputerVisionApiService:
     @staticmethod
     def analyze_image(image_url):
         # Request headers and parameters
-        headers = {
-            'Ocp-Apim-Subscription-Key': COMPUTER_VISION_SUBSCRIPTION_KEY,
-            'Content-Type': 'application/octet-stream'
-        }
-        params = {'visualFeatures': 'Color'}
+        
 
         # Get image bytes content
-        image_data = BytesIO(requests.get(image_url).content)
+        
         
         try:
-            print('Processing image: {}'.format(image_url))
-            response = requests.post(COMPUTER_VISION_ANALYZE_URL, headers=headers, params=params, data=image_data)
-            response.raise_for_status()
-            analysis = response.json()
-            dominant_color = analysis["color"]["dominantColors"][0]
-            
-            return dominant_color
+            return None # Replace with implementation
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
@@ -58,25 +48,10 @@ class LuisApiService:
     @staticmethod
     def post_utterance(message):
         # Request headers and parameters
-        headers = {'Ocp-Apim-Subscription-Key': LUIS_SUBSCRIPTION_KEY}
-        params = {
-            # Query parameter
-            'q': message,
-            # Optional request parameters, set to default values
-            'timezoneOffset': '0',
-            'verbose': 'false',
-            'spellCheck': 'false',
-            'staging': 'false',
-        }
+
 
         try:
-            r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
-            topScoreIntent = r.json()['topScoringIntent']
-            entities = r.json()['entities']
-            intent = topScoreIntent['intent'] if topScoreIntent['score'] > 0.5 else 'None' 
-            entity = entities[0] if len(entities) > 0 else None
-            
-            return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
+            return None # Replace with implementation
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
@@ -95,19 +70,13 @@ class BotRequestHandler:
     async def handle_message(context: TurnContext) -> web.Response:
         activity = context.activity
         if activity.text:
-            luis_result = LuisApiService.post_utterance(activity.text)
+            luis_result = LuisResponse('None')
 
             response = await BotRequestHandler.create_reply_activity(activity, f'Top Intent: {luis_result.intent}.')
             await context.send_activity(response)
 
             if luis_result.intent == 'MoveArm':
                 BotCommandHandler.move_arm()
-            elif luis_result.intent == 'ShowStats':
-                stats = BotCommandHandler.show_stats()
-                response = await BotRequestHandler.create_reply_activity(activity, stats)
-                await context.send_activity(response)
-            elif luis_result.intent == 'MoveGrippers':
-                BotCommandHandler.move_grippers(luis_result.entity_value)
             else:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
@@ -126,17 +95,8 @@ class BotRequestHandler:
         return web.Response(status=404)
     
     async def process_image(activity: Activity, context: TurnContext):
-        # Check if there is an image
-        image_url = BotRequestHandler.get_image_url(activity.attachments)
-
-        if image_url:
-            dominant_color = ComputerVisionApiService.analyze_image(image_url)
-            response = await BotRequestHandler.create_reply_activity(activity, f'Do you need a {dominant_color} cube? Let me find one for you!')
-            BotCommandHandler.move_cube(dominant_color)
-        else:
-            response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction or image.')
-        await context.send_activity(response)
-
+        print("Process image") # Replace with implementation
+    
     def get_image_url(attachments):
         p = re.compile('^image/(jpg|jpeg|png|gif)$')
         for attachment in attachments:
@@ -178,35 +138,13 @@ class BotCommandHandler:
         print('output: ' + output.decode("utf-8"))
 
     def show_stats():
-        print('Showing stats... do something')
-        # launch your python2 script using bash
-        python2_command = "python2.7 bot-stats-node.py"  
-
-        process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
-        output, error = process.communicate()  # receive output from the python2 script
-        result = output.decode("utf-8")
-      
-        print('done getting state . . .')
-        print('returncode: '  + str(process.returncode))
-        print('output: ' + result + '\n')
-        return result
+        print("Replace with your code")
     
     def move_cube(color):
-        print(f'Moving {color} cube...')
-      
-        print('done moving cube . . .')
+        print("Replace with your code")
     
     def move_grippers(action):
-        print(f'{action} grippers... wait a few seconds')
-        # launch your python2 script using bash
-        python2_command = "python2.7 bot-move-grippers.py -a {}".format(action)  
-
-        process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
-        output, error = process.communicate()  # receive output from the python2 script
-      
-        print('done moving grippers . . .')
-        print('returncode: '  + str(process.returncode))
-        print('output: ' + output.decode("utf-8"))
+        print("Replace with your code")
     
 
 

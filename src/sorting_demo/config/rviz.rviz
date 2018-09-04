@@ -1,0 +1,546 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 0
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Status1
+        - /TF1
+        - /Path1
+        - /Path2
+        - /RobotModel1
+      Splitter Ratio: 0.5
+    Tree Height: 573
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.588679016
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: Image
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.0299999993
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base:
+          Value: true
+        block0::block:
+          Value: true
+        block1::block:
+          Value: true
+        block2::block:
+          Value: true
+        block3::block:
+          Value: true
+        block4::block:
+          Value: true
+        block5::block:
+          Value: true
+        block6::block:
+          Value: true
+        block7::block:
+          Value: true
+        block8::block:
+          Value: true
+        controller_box:
+          Value: true
+        head:
+          Value: true
+        head_camera:
+          Value: true
+        head_camera_optical:
+          Value: true
+        pedestal:
+          Value: true
+        pedestal_feet:
+          Value: true
+        right_arm_base_link:
+          Value: true
+        right_arm_itb:
+          Value: true
+        right_connector_plate_base:
+          Value: true
+        right_connector_plate_mount:
+          Value: true
+        right_electric_gripper_base:
+          Value: true
+        right_gripper_base:
+          Value: true
+        right_gripper_l_finger:
+          Value: true
+        right_gripper_l_finger_tip:
+          Value: true
+        right_gripper_r_finger:
+          Value: true
+        right_gripper_r_finger_tip:
+          Value: true
+        right_gripper_tip:
+          Value: true
+        right_hand:
+          Value: true
+        right_hand_camera:
+          Value: true
+        right_hand_camera_optical:
+          Value: true
+        right_l0:
+          Value: true
+        right_l1:
+          Value: true
+        right_l1_2:
+          Value: true
+        right_l2:
+          Value: true
+        right_l2_2:
+          Value: true
+        right_l3:
+          Value: true
+        right_l4:
+          Value: true
+        right_l4_2:
+          Value: true
+        right_l5:
+          Value: true
+        right_l6:
+          Value: true
+        right_torso_itb:
+          Value: true
+        right_wrist:
+          Value: true
+        screen:
+          Value: true
+        torso:
+          Value: true
+        tray0::tray_base:
+          Value: true
+        tray1::tray_base:
+          Value: true
+        tray2::tray_base:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 0.25
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          base:
+            controller_box:
+              {}
+            pedestal:
+              {}
+            pedestal_feet:
+              {}
+            right_arm_base_link:
+              right_l0:
+                head:
+                  head_camera:
+                    head_camera_optical:
+                      {}
+                  screen:
+                    {}
+                right_l1:
+                  right_l1_2:
+                    {}
+                  right_l2:
+                    right_l2_2:
+                      {}
+                    right_l3:
+                      right_l4:
+                        right_arm_itb:
+                          {}
+                        right_l4_2:
+                          {}
+                        right_l5:
+                          right_hand_camera:
+                            right_hand_camera_optical:
+                              {}
+                          right_l6:
+                            right_hand:
+                              right_gripper_base:
+                                right_connector_plate_base:
+                                  right_connector_plate_mount:
+                                    right_electric_gripper_base:
+                                      right_gripper_l_finger:
+                                        right_gripper_l_finger_tip:
+                                          {}
+                                      right_gripper_r_finger:
+                                        right_gripper_r_finger_tip:
+                                          {}
+                                right_gripper_tip:
+                                  {}
+                          right_wrist:
+                            {}
+                right_torso_itb:
+                  {}
+            torso:
+              {}
+          block0::block:
+            {}
+          block1::block:
+            {}
+          block2::block:
+            {}
+          block3::block:
+            {}
+          block4::block:
+            {}
+          block5::block:
+            {}
+          block6::block:
+            {}
+          block7::block:
+            {}
+          block8::block:
+            {}
+          tray0::tray_base:
+            {}
+          tray1::tray_base:
+            {}
+          tray2::tray_base:
+            {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /io/internal_camera/right_hand_camera/image_rect
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.300000012
+      Line Style: Lines
+      Line Width: 1
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.0299999993
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
+      Topic: /reelrbtx_follow_controller/reel_mouth_path
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 0; 0; 255
+      Enabled: true
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.300000012
+      Line Style: Lines
+      Line Width: 0.0299999993
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.0299999993
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
+      Topic: /reelrbtx_follow_controller/reel_base_path
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        controller_box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        head:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        head_camera:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        head_camera_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        pedestal:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        pedestal_feet:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_arm_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_arm_itb:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_connector_plate_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_connector_plate_mount:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_electric_gripper_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_gripper_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_gripper_l_finger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_gripper_l_finger_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_gripper_r_finger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_gripper_r_finger_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_gripper_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_hand:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_hand_camera:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_hand_camera_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_l0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l1_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l2_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l4_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_l6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_torso_itb:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_wrist:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        screen:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        torso:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Name: RobotModel
+      Robot Description: robot_description
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 2.20854378
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.0599999987
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0.463854343
+        Y: 0.0451556407
+        Z: 0.0798519328
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.0500000007
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.00999999978
+      Pitch: 0.304797798
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 5.46816921
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1056
+  Hide Left Dock: false
+  Hide Right Dock: false
+  Image:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd0000000400000000000002f400000396fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006100fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000280000027e000000d700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000001d3000001300000000000000000fb0000000a0049006d00610067006501000002ac000001120000001600ffffff000000010000010f00000396fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000002800000396000000ad00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073f0000003efc0100000002fb0000000800540069006d006501000000000000073f0000030000fffffffb0000000800540069006d00650100000000000004500000000000000000000003300000039600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1855
+  X: 65
+  Y: 24
