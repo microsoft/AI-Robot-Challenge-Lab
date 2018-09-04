@@ -205,14 +205,17 @@ We created a basic bot using the SDK V4, we'll run it locally using the Bot Fram
       
       return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
       ```
+      > [!ALERT] Check your indentation to avoid python compilation errors.
 
 ### Run the Bot locally
 
-Run from a Terminal window:
+Run from a **Terminal** window:
 1. Navigate to `robotics-lab/src/chatbot` in a Terminal window.
 1. Run the following command: `python3.6 talk-to-my-robot.py`.
 
-Alternatively, you can run and debug the bot using Visual Studio Code:
+  > [!ALERT] Reuse the Terminal when running the bot, if you run more than one bot you'll get an error due port conflicts.
+
+Alternatively, you can run and debug the bot using **Visual Studio Code**:
 
 1. Open Visual Studio Code.
 1. Open the `robotics-lab/src/chatbot` folder that you extracted earlier.
@@ -230,6 +233,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
     > [!NOTE] Previously we had to provide the bot endpoint to the emulator but now it can read all the configuration from a file.
 1. **Type** `move your arm` and press enter.
 1. Return to **Gazebo** and wait for the simulator to move the arm.
+1. Go back to your bot Terminal window and stop the process with **CTRL+C**.
 
 
 ### Make the grippers open & close
@@ -262,8 +266,8 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test the grippers move
 
-1. Navigate to `robotics-lab/src/chatbot` in a Terminal window.
-1. Run the following command: `python3.6 talk-to-my-robot.py`.
+1. Return to your bot Terminal window.
+1. Run the bot with the following command: `python3.6 talk-to-my-robot.py`.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. **Type** `close grippers` and press enter.
@@ -271,6 +275,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Go back to the **Bot Framework Emulator** app.
 1. **Type** `open grippers` and press enter.
 1. Return to **Gazebo** and wait for the simulator to move the grippers.
+1. Go back to your bot Terminal window and stop the process with **CTRL+C**.
 
 ### Show stats
 
@@ -306,12 +311,13 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test the show statistics
 
-1. Navigate to `lab-materials` in a Terminal window.
+1. Return to your bot Terminal window.
 1. Run the following command: `python3.6 talk-to-my-robot.py`.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. **Type** `show stats` and press enter.
 1. Wait a few seconds and wait for a response from your bot, it will display the stats in the emulator.
+1. Go back to your bot Terminal window and stop the process with **CTRL+C**.
 
 
 ## Lab Part 3: Making your robot intelligent with Microsoft AI
@@ -322,7 +328,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
 
-1. Return to the Azure Portal (++portal.azure.com++).
+1. Return to the [Azure Portal](portal.azure.com).
 1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
 1. **Select** the first result and then click the **Create** button.
 1. Provide the required information:
@@ -331,7 +337,7 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
     * Select the location: `West US`.
     * Select the the Pricing tier: `F0 (20 Calls per minute, 5k Calls per month)`.
     * Select the previously created resource group: `robotics-lab-<your initials>`.
-1. Click Create to create the resource and deploy it. This step might take a few moments.
+1. Click **Create** to create the resource and deploy it. This step might take a few moments.
 1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
 1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-computer-vision-<your initials>`).
 1. **Click** on the resource.
@@ -390,12 +396,12 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 
 ### Test the move cube
 
-1. Navigate to `robotics-lab/src/chatbot` in a Terminal window.
-1. Run the following command: `python3.6 talk-to-my-robot.py`.
+1. Go back to your bot Terminal window.
+1. Run the bot with the following command: `python3.6 talk-to-my-robot.py`.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. Click the upload button from the left bottom corner to upload an image.
-1. Select the file `lab-materials/Resources/Images/cube-red.png`.
+1. Select the file `robotics-lab/resources/Images/cube-red.png`.
 1. Return to **Gazebo** and wait for the simulator to move the requested cube.
 1. Go back to the **Bot Framework Emulator** app.
 1. Select another image of a different color and check the simulator to verify which cube it moved.
