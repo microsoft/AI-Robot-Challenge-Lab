@@ -1,3 +1,4 @@
+import flask
 import rospy
 from flask import Flask
 
@@ -16,54 +17,87 @@ class RobotTaskFacade:
     'Hey robot! Put all tray contents on the table' 
     """
 
-    def __init__(self):
-        self.task_planner = None
+    def __init__(self, task_planner):
+        self.task_planner = task_planner
 
         self.app = Flask(__name__)
 
         @self.app.route("/current_task")
         def get_current_task():
-            return self.get_current_task()
+            try:
+                return flask.json.jsonify(response= "ACK", result = self.get_current_task())
+            except Exception as ex:
+                return flask.json.jsonify(response= "ERR", message = ex.message)
 
         @self.app.route("/count_table_pieces")
-        def count_pieces_on_table_by_color(self):
-            self.count_pieces_on_table_by_color()
+        def count_pieces_on_table_by_color():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.count_pieces_on_table_by_color())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/current_piece_color")
-        def get_current_piece_color(self):
-            return self.get_current_piece_color()
+        def get_current_piece_color():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.get_current_piece_color())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/pause")
-        def pause(self):
-            return self.pause()
+        def pause():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.pause())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/resume")
-        def resume(self):
-            return self.resume()
+        def resume():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.resume())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/start")
-        def start(self):
-            return self.start()
+        def start():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.start())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/stop")
-        def stop(self):
-            return self.stop()
+        def stop():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.stop())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/greet")
-        def greet(self):
-            return self.greet()
+        def greet():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.greet())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/put_all_contents_on_table")
-        def put_all_contents_on_table(self):
-            return self.put_all_contents_on_table
+        def put_all_contents_on_table():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.put_all_contents_on_table)
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/pick_block_by_color/<color>')")
-        def pick_block_by_color(self, color):
-            return self.pick_block_by_color(color)
+        def pick_block_by_color(selfcolor):
+            try:
+                return flask.json.jsonify(response="ACK", result=self.pick_block_by_color(color))
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
         @self.app.route("/put_block_into_tray/<color>/<trayid>')")
-        def put_block_into_tray(self, color, trayid):
-            self.put_block_into_tray(color,int(trayid))
+        def put_block_into_tray( color, trayid):
+            try:
+                return flask.json.jsonify(response="ACK", result=self.put_block_into_tray(color,int(trayid)))
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
 
     def run_rest_server(self):
         self.app.run(threaded=True)
@@ -76,9 +110,9 @@ class RobotTaskFacade:
         """
         # returns the higher level task
 
-        currentaskname = self.task_planner.tasks[0]
-        rospy.logwarn("current task is: " + currentaskname)
-        return currentaskname
+        current_task = [t.name for t in self.task_planner.tasks]
+
+        return current_task
 
     def count_pieces_on_table_by_color(self):
         """
