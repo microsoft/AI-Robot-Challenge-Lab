@@ -23,6 +23,7 @@ LUIS_SUBSCRIPTION_KEY = '<your luis subscription key>'
 COMPUTER_VISION_ANALYZE_URL = "https://westus.api.cognitive.microsoft.com/vision/v2.0/analyze"
 COMPUTER_VISION_SUBSCRIPTION_KEY = "<your computer vision subscription key>"
 
+SIM_API_HOST = 'http://localhost:5000'
 
 class ComputerVisionApiService:
     @staticmethod
@@ -81,7 +82,7 @@ class BotRequestHandler:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
         else:
-            await process_image(activity, context)
+            await BotRequestHandler.process_image(activity, context)
         
         return web.Response(status=202)
     
