@@ -38,7 +38,7 @@ def get_blob_info(cv_image):
     cv_mask = cv2.imread(mask_path)
     cv_mask = cv2.cvtColor(cv_mask, cv2.COLOR_BGR2GRAY)
 
-    cv_image_masked = cv2.bitwise_and(cv_image_blur, cv_image_blur, mask = cv_mask)
+    cv_image_masked = cv2.bitwise_and(cv_image_blur, cv_image_blur, mask=cv_mask)
     #cv2.imshow("Masked original", cv_image_masked)
 
     # HSV split
@@ -55,20 +55,26 @@ def get_blob_info(cv_image):
 
     # Merge channels
     cv_image_clahe = cv2.merge((cv_image_h, cv_image_s, cv_image_v_clahe))
-    #cv2.imshow("CLAHE", cv_image_clahe)
+    #cv_image_clahe_rgb = cv2.cvtColor(cv_image_clahe, cv2.COLOR_HSV2BGR)
+    #cv2.imshow("CLAHE", cv_image_clahe_rgb)
 
     # Multiply Saturation and Value channels to separate the cubes, removing the table
     cv_image_sv_multiplied = cv2.multiply(cv_image_s, cv_image_v_clahe, scale=1/255.0)
     #cv2.imshow("Image S*V", cv_image_sv_multiplied)
 
     # Binarize the result
-    BIN_THRESHOLD = 127
+    BIN_THRESHOLD = 64
     #_, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     _, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, BIN_THRESHOLD, 255, cv2.THRESH_BINARY)
     #cv2.imshow("Threshold", cv_image_binary)
 
+    # Erode the image to use as mask
+    EROSION_SIZE = 3
+    erosion_kernel = numpy.ones((EROSION_SIZE, EROSION_SIZE), numpy.uint8)
+    cv_image_binary_eroded = cv2.erode(cv_image_binary, erosion_kernel)
+
     # Calculate H-channel histogram, applying the binarized image as mask
-    cv_image_h_histogram = cv2.calcHist([cv_image_h], [0], cv_image_binary, [256], [0, 255])
+    cv_image_h_histogram = cv2.calcHist([cv_image_h], [0], cv_image_binary_eroded, [180], [0, 179])
 
     # Smoothen the histogram to find local maxima
     HISTOGRAM_BLUR_SIZE = 11
@@ -77,41 +83,49 @@ def get_blob_info(cv_image):
     cv_image_h_histogram_smooth = cv2.GaussianBlur(cv_image_h_histogram_wrap, (HISTOGRAM_BLUR_SIZE, HISTOGRAM_BLUR_SIZE), 0)
     cv_image_h_histogram_cut = cv_image_h_histogram_smooth[histogram_length : 2 * histogram_length]
 
-    # Collect high peaks
-    PEAK_RATIO = 0.2
-    histogram_peak_cut = PEAK_RATIO * max(cv_image_h_histogram_cut)
+    # Collect peaks
     histogram_peaks = [i for i in range(len(cv_image_h_histogram_cut))
         if cv_image_h_histogram_cut[(i - 1) % histogram_length] < cv_image_h_histogram_cut[i] > cv_image_h_histogram_cut[(i + 1) % histogram_length]]
-    histogram_high_peaks = filter(lambda x : cv_image_h_histogram_cut[x] > histogram_peak_cut, histogram_peaks)
+
+    # Filter peaks
+    PEAK_MINIMUM = 100 # Ideally below the value of a single cube
+    PEAK_MAXIMUM = 500 # Ideally above the value of all the cubes of a single color
+    histogram_high_peaks = filter(lambda p : PEAK_MINIMUM < cv_image_h_histogram_cut[p] < PEAK_MAXIMUM, histogram_peaks)
     #print(histogram_high_peaks)
+    #pyplot.clf()
     #pyplot.plot(cv_image_h_histogram_cut)
-    #pyplot.show()
+    #pyplot.pause(0.001)
 
     # Process every color found in the histogram
     blob_info = {}
-    cv_image_contours_debug = cv2.cvtColor(cv_image_binary, cv2.COLOR_GRAY2BGR)
+    cv_image_contours_debug = cv2.cvtColor(cv_image_binary_eroded, cv2.COLOR_GRAY2BGR)
+
     for current_hue in histogram_high_peaks:
         # Perform a Hue rotation that will be used to make detecting the edge colors easier (red in HSV corresponds to both 0 and 180)
         HUE_AMPLITUDE = 5
-        cv_image_h_rotated = cv_image_h.copy()
+        cv_image_h_rotated = cv_image_h.astype(numpy.int16)
         cv_image_h_rotated[:] -= current_hue
         cv_image_h_rotated[:] += HUE_AMPLITUDE
+        cv_image_h_rotated = numpy.remainder(cv_image_h_rotated, 180)
+        cv_image_h_rotated = cv_image_h_rotated.astype(numpy.uint8)
+        #cv2.imshow("Hue rotation {}".format(histogram_high_peaks.index(current_hue)), cv_image_h_rotated)
 
         # Binarize using range function
         cv_image_h_inrange = cv2.inRange(cv_image_h_rotated, 0, HUE_AMPLITUDE * 2)
 
         # Apply binary mask (consider that both black and the edge color have hue 0)
-        cv_image_h_masked = cv2.bitwise_and(cv_image_h_inrange, cv_image_h_inrange, mask=cv_image_binary)
+        cv_image_h_masked = cv2.bitwise_and(cv_image_h_inrange, cv_image_h_inrange, mask=cv_image_binary_eroded)
+        #cv2.imshow("inRange {}".format(histogram_high_peaks.index(current_hue)), cv_image_h_masked)
 
-        # Erode
-        EROSION_SIZE = 5
-        erosion_kernel = numpy.ones((EROSION_SIZE, EROSION_SIZE), numpy.uint8)
-        cv_image_h_eroded = cv2.erode(cv_image_h_masked, erosion_kernel)
-        #cv2.imshow("inRange {}".format(histogram_high_peaks.index(current_hue)), cv_image_h_eroded)
+        # Find contours
+        _, contours, _ = cv2.findContours(cv_image_h_masked.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Find convex contours
-        _, contours, _ = cv2.findContours(cv_image_h_eroded.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        convex_contours = [cv2.convexHull(cnt) for cnt in contours]
+        # Filter by area
+        MINIMUM_AREA_SIZE = 50
+        contours_filtered_area = filter(lambda cnt: cv2.contourArea(cnt) > MINIMUM_AREA_SIZE, contours)
+
+        # Calculate convex hull
+        convex_contours = [cv2.convexHull(cnt) for cnt in contours_filtered_area]
 
         contour_color_hsv = numpy.array([[[current_hue, 255, 255]]], numpy.uint8)
         contour_color_rgb = cv2.cvtColor(contour_color_hsv, cv2.COLOR_HSV2BGR)[0][0].tolist()
@@ -198,6 +212,36 @@ def test_head_ros():
         rospy.logerr(err)
 
     # Exit
+    cv2.destroyAllWindows()
+
+def test_head_cam():
+    """
+    Test the blob detection using a USB camera
+    """
+
+    # Create a video capture object
+    capture = cv2.VideoCapture(1)
+    capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+    while True:
+        # Capture a frame
+        ret, cv_image = capture.read()
+
+        if ret:
+            # Save for debugging
+            #cv2.imwrite("/tmp/debug.png", cv_image)
+
+            # Get color blobs info
+            blob_info = get_blob_info(cv_image)
+            print(blob_info)
+
+            # Check for a press on the Escape key
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
+
+    # Exit
+    capture.release()
     cv2.destroyAllWindows()
 
 def test_head_debug():
