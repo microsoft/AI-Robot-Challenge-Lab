@@ -110,8 +110,6 @@ class TaskPlanner:
         self.tasks = []
         self.executor = ThreadPoolExecutor(max_workers=4)
 
-        self.task_facade = RobotTaskFacade()
-        self.task_facade.task_planner = self
         self.cancel_signal = False
         self.pause_flag = False
 
@@ -119,6 +117,8 @@ class TaskPlanner:
 
         self.current_in_hand_block = None
         self.current_in_hand_block_target_tray = None
+
+        self.task_facade = RobotTaskFacade(self)
 
     def has_cancel_signal(self):
         return self.cancel_signal
