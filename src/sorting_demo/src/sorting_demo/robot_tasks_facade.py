@@ -22,6 +22,13 @@ class RobotTaskFacade:
 
         self.app = Flask(__name__)
 
+        @self.app.route("/state")
+        def get_state():
+            try:
+                return flask.json.jsonify(response="ACK", result=self.get_state())
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
+
         @self.app.route("/current_task")
         def get_current_task():
             try:
@@ -105,15 +112,23 @@ class RobotTaskFacade:
 
     # -------- observer methods ------------------
 
+    def get_state(self):
+        """
+        
+        :return: the state of the application 
+        """
+
+        return self.task_planner.get_state()
+
     def get_current_task(self):
         """
         :return: str - it gets the name of the task the robot is doing 
         """
         # returns the higher level task
 
-        current_task = [t.name for t in self.task_planner.tasks]
+        task_stack = self.task_planner.get_task_stack()
 
-        return current_task
+        return task_stack
 
     def count_pieces_on_table_by_color(self):
         """
@@ -194,7 +209,7 @@ class RobotTaskFacade:
         :return: 
         """
 
-        self.task_planner.execute_task(self.task_planner.pick_block_by_color, args=[color])
+        self.task_planner.execute_task(self.task_planner.pick_block_on_table_by_color, args=[color])
         return "ACK"
 
 
