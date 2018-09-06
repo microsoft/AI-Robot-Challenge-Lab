@@ -18,6 +18,8 @@ from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import *
 
 import intera_interface
+import demo_constants
+
 
 class CameraHelper:
     """
@@ -253,7 +255,7 @@ def test_ros():
 
     camera_name = "head_camera"
 
-    TABLE_HEIGHT = -0.12
+    TABLE_HEIGHT = demo_constants.TABLE_HEIGHT
     camera_helper = CameraHelper(camera_name, "base", TABLE_HEIGHT)
 
     bridge = CvBridge()

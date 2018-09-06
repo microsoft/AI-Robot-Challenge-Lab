@@ -8,13 +8,15 @@ from geometry_msgs.msg import (
     Pose,
 )
 
+
 class SawyerRobotControl(object):
-    def __init__(self, limb="right", hover_distance=0.15, tip_name="right_gripper_tip"):
+    def __init__(self, trajectory_planner, limb="right", hover_distance=0.08, tip_name="right_gripper_tip"):
         """
         :param limb:
         :param hover_distance:
         :param tip_name:
         """
+        self.trajectory_planner = trajectory_planner
         self._limb_name = limb  # string
         self._tip_name = tip_name  # string
         self._hover_distance = hover_distance  # in meters
@@ -29,16 +31,18 @@ class SawyerRobotControl(object):
         print("Enabling robot... ")
         self._rs.enable()
 
+    """
     def move_to_start(self, start_angles=None):
-        """
+        '''
         :param start_angles:
         :return:
-        """
+        '''
         print("Moving the {0} arm to start pose...".format(self._limb_name))
         if not start_angles:
             start_angles = dict(zip(self._joint_names, [0] * 7))
         self._guarded_move_to_joint_position(start_angles)
         self.gripper_open()
+    """
 
     def pick_loop(self, pose, approach_speed=0.001, approach_time=3.0, meet_time=2.0, retract_time=2.0,
                   hover_distance=None):
@@ -63,9 +67,8 @@ class SawyerRobotControl(object):
         rospy.sleep(1.0)
 
         # servo to pose
-        self._servo_to_pose_loop(pose, time=meet_time)
+        self.original_servo_to_pose_loop(pose, time=meet_time)
         # rospy.sleep(1.0)
-
 
         if rospy.is_shutdown():
             return
@@ -93,7 +96,7 @@ class SawyerRobotControl(object):
         rospy.sleep(0.1)
 
         # servo to pose
-        self._servo_to_pose_loop(pose, time=meet_time)
+        self.original_servo_to_pose_loop(pose, time=meet_time)
         rospy.sleep(0.1)
 
         if rospy.is_shutdown():
@@ -163,7 +166,12 @@ class SawyerRobotControl(object):
         # self._limb.set_joint_position_speed(0.0001)
 
     def _retract_loop(self, time=2, hover_distance=None):
-
+        """
+        
+        :param time: 
+        :param hover_distance: 
+        :return: 
+        """
         if hover_distance is None:
             hover_distance = self._hover_distance
 
@@ -177,9 +185,9 @@ class SawyerRobotControl(object):
         ik_pose.orientation.y = current_pose['orientation'].y
         ik_pose.orientation.z = current_pose['orientation'].z
         ik_pose.orientation.w = current_pose['orientation'].w
-        self._servo_to_pose_loop(ik_pose, time=time)
+        self.original_servo_to_pose_loop(ik_pose, time=time)
 
-    def _servo_to_pose_loop(self, target_pose, time=4.0, steps=400.0):
+    def original_servo_to_pose_loop(self, target_pose, time=4.0, steps=400.0):
         """ An *incredibly simple* linearly-interpolated Cartesian move """
         r = rospy.Rate(1 / (time / steps))  # Defaults to 100Hz command rate
         current_pose = self._limb.endpoint_pose()
@@ -211,8 +219,30 @@ class SawyerRobotControl(object):
             r.sleep()
         r.sleep()
 
+    def _servo_to_pose_loop(self, target_pose, time=4.0, steps=400.0):
+        """
+        
+        :param target_pose: 
+        :param time: 
+        :param steps: 
+        :return: 
+        """
+        if not self.trajectory_planner.move_to_cartesian_target(target_pose):
+            #self.original_servo_to_pose_loop(target_pose, time=time, steps=steps)
+            while not rospy.is_shutdown():
+                rospy.logwarn("SKIPPED THE USAGE OF MOVEIT")
+                rospy.sleep(1.0)
+
     def disable(self):
+        """
+        
+        :return: 
+        """
         self._robot_enable.disable()
 
     def enable(self):
+        """
+        
+        :return: 
+        """
         self._robot_enable.enable()
