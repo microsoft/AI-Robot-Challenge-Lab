@@ -553,9 +553,9 @@ class TaskPlanner:
         blocks = self.environment_estimation.get_blocks()
         btarget = [i for i, b in enumerate(blocks) if b.is_color(color)][0]
 
-        target_block, target_tray = self.create_detect_block_poses_task(btarget).result()
+        target_block, target_tray = self.create_detect_block_poses_task(blocks, btarget).result()
 
-        self.create_pick_task(target_block.final_pose, approach_speed=0.0001, approach_time=2.0,
+        self.create_pick_task(target_block .final_pose, approach_speed=0.0001, approach_time=2.0,
                               meet_time=3.0,
                               retract_time=1.0,
                               hover_distance=None).result()
