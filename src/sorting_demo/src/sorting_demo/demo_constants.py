@@ -14,3 +14,4 @@ BLOCK_COLOR_MAPPINGS = [
 ]
 
 TRAY_COLORS = ["Red", "Green", "Blue"]
+TABLE_HEIGHT=-0.15

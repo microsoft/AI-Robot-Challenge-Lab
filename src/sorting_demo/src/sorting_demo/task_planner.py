@@ -27,6 +27,8 @@ import time
 from re import search
 from functools import wraps
 
+from trajectory_planner import TrajectoryPlanner
+
 
 def tasync(taskname):
     def wrapper(f):
@@ -81,15 +83,28 @@ def tasync(taskname):
 
 class Task:
     def __init__(self, name, future):
+        """
+        
+        :param name: 
+        :param future: 
+        """
         self.name = name
         self.future = future
         self.marked_cancel = False
 
     def cancel(self):
+        """
+        
+        :return: 
+        """
         marked_cancel = True
         resultcancel = self.future.cancel()
 
     def result(self):
+        """
+        
+        :return: 
+        """
         if self.future is not None:
             return self.future.result()
         else:
@@ -101,14 +116,19 @@ class TaskPlanner:
         """
         """
         limb = 'right'
-        hover_distance = 0.2  # meters
+        hover_distance = 0.08  # meters
 
         # subcomponents
         self.environment_estimation = EnvironmentEstimation()
-        self.sawyer_robot = SawyerRobotControl(limb, hover_distance)
+
+        self.trajectory_planner = TrajectoryPlanner()
+        self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limb, hover_distance)
 
         self.tasks = []
         self.executor = ThreadPoolExecutor(max_workers=4)
+
+        self.task_facade = RobotTaskFacade(self)
+        self.ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
 
         self.cancel_signal = False
         self.pause_flag = False
@@ -121,6 +141,10 @@ class TaskPlanner:
         self.task_facade = RobotTaskFacade(self)
 
     def has_cancel_signal(self):
+        """
+        
+        :return: 
+        """
         return self.cancel_signal
 
     def add_task(self, task):
@@ -155,10 +179,15 @@ class TaskPlanner:
         return self.task_facade
 
     def robot_sayt2s(self, text):
+        """
+        
+        :param text: 
+        :return: 
+        """
         rospy.logwarn("ROBOT SAYS: " + text)
 
     @tasync("MOVE XY")
-    def create_move_to_xyz_pr(self, target_pose):
+    def create_move_XY(self, target_pose):
         """
         Uses de 5DOF ik to locate the arm on top of the table with the camera looking ortogonally to the table.
         The free parameter is the yaw (rotation on Z axis)
@@ -167,7 +196,6 @@ class TaskPlanner:
         """
 
         rospy.logwarn("CALLING IK SERVICE")
-        ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
 
         ik_req = moveit_msgs.msg.PositionIKRequest()
         ik_req.robot_state.joint_state.name = ["right_j0", "right_j1", "right_j2", "right_j3", "right_j4", "right_j5",
@@ -179,17 +207,61 @@ class TaskPlanner:
         # ik_req.constraints.ik_link_name = "right_hand_camera_optical"
 
         rospy.logwarn("CALLING IK SERVICE request: " + str(ik_req))
-        resp = ikservice(ik_req)
+        resp = self.ikservice(ik_req)
 
         rospy.logwarn("SERVICE RESPONSE:" + str(resp))
 
         targetjoints = dict(zip(resp.solution.joint_state.name, resp.solution.joint_state.position))
 
         self.sawyer_robot._limb.set_joint_position_speed(0.000001)
-        self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
+        self.move_joint_position_guarded(targetjoints)
+        #self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
+
+    def move_joint_position_guarded(self,targetjoints):
+        """
+        
+        :param targetjoints: 
+        :return: 
+        """
+
+        #self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
+        #rospy.logwarn("JOINT VALUES "+  str(targetjoints.values()))
+        #rospy.logwarn("JOINT VALUES " + str(targetjoints))
+
+        #rospy.sleep(3)
+        #jnts = targetjoints.values()
+        #jnts.reverse()
+        found = self.trajectory_planner.move_to_joint_target(targetjoints)
+        rospy.logwarn("move joint planner: "+ str(targetjoints))
+
+        if not found:
+            self.create_wait_forever_task().result()
+            self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
+            return False
+        else:
+            return True
+
+
+    def limb_move_to_joint_positions(self, joint_angles, timeout):
+        """
+        
+        :param joint_angles: 
+        :param timeout: 
+        :return: 
+        """
+
+        #self.sawyer_robot._limb.move_to_joint_positions(joint_angles, timeout=15.0)
+        self.trajectory_planner.move_to_joint_target(joint_angles)
 
     def create_pick_tray_task(self, tray, approach_speed, approach_time, meet_time, retract_time):
         """
+        
+        :param tray: 
+        :param approach_speed: 
+        :param approach_time: 
+        :param meet_time: 
+        :param retract_time: 
+        :return: 
         """
         tray = copy.deepcopy(tray)
 
@@ -204,7 +276,7 @@ class TaskPlanner:
                                      retract_time)
 
     @tasync("GO HOME")
-    def create_go_home_task(self):
+    def create_go_home_task(self, check_obstacles=True):
         """
         :return:
         """
@@ -219,7 +291,11 @@ class TaskPlanner:
                                  'right_j5': 0.3968371433926965,
                                  'right_j6': 1.7659649178699421}
 
-        self.sawyer_robot.move_to_start(starting_joint_angles)
+        #self.sawyer_robot.move_to_start(starting_joint_angles)
+        if not check_obstacles:
+            self.sawyer_robot._guarded_move_to_joint_position(starting_joint_angles)
+        else:
+            self.move_joint_position_guarded(starting_joint_angles)
 
     @tasync("GREET TASK")
     def create_greet_task(self):
@@ -228,24 +304,24 @@ class TaskPlanner:
         :return: 
         """
         joint_angles_A = {'right_j0': 0.0,
-                          'right_j1': 0.0,
+                          'right_j1': 0.4,
                           'right_j2': 0.0,
-                          'right_j3': -numpy.pi / 2.0,
+                          'right_j3': -numpy.pi / 2.0 -0.4,
                           'right_j4': -numpy.pi / 4.0,
                           'right_j5': 0.0,
                           'right_j6': 0.0}
 
         joint_angles_B = {'right_j0': 0.0,
-                          'right_j1': 0.0,
+                          'right_j1': 0.4,
                           'right_j2': 0.0,
-                          'right_j3': -numpy.pi / 2.0,
+                          'right_j3': -numpy.pi / 2.0 -0.4,
                           'right_j4': -3 * numpy.pi / 4.0,
                           'right_j5': 0.0,
                           'right_j6': 0.0}
 
         for i in xrange(4):
-            self.sawyer_robot._guarded_move_to_joint_position(joint_angles_A)
-            self.sawyer_robot._guarded_move_to_joint_position(joint_angles_B)
+            self.move_joint_position_guarded(joint_angles_A)
+            self.move_joint_position_guarded(joint_angles_B)
 
     @tasync("GO TO VISION POSE")
     def create_go_vision_head_pose_task(self):
@@ -254,16 +330,37 @@ class TaskPlanner:
         """
         # joint_angles = self.sawyer_robot._limb.joint_angles()
 
+
         joint_angles = {'right_j0': 0.0,
-                        'right_j1': -numpy.pi / 2.0,
+                        'right_j1': -numpy.pi / 2.0 + 0.6,
                         'right_j2': 0.0,
-                        'right_j3': 0.0,
+                        'right_j3': numpy.pi / 2.0,
                         'right_j4': 0.0,
                         'right_j5': 0.0,
                         'right_j6': 0.0}
 
-        self.sawyer_robot._limb.move_to_joint_positions(joint_angles)
+        #self.sawyer_robot._limb.move_to_joint_positions(joint_angles)
+        found = self.move_joint_position_guarded(joint_angles)
         self.delay_task(1).result()
+
+        """
+        rospy.logwarn(self.sawyer_robot._limb.endpoint_pose())
+
+        targetpose = Pose()
+        targetpose.position.x = 0.4595219280890743
+        targetpose.position.y = 0.1473752184292072
+        targetpose.position.z = 0.019578584407653032
+
+        targetpose.orientation.x = -0.011325648436031916
+        targetpose.orientation.y = 0.9998115142702567
+        targetpose.orientation.z = -0.006101035043221461
+        targetpose.orientation.w = 0.014541079448283218
+
+        found = self.trajectory_planner.move_to_cartesian_target(targetpose)
+        """
+
+        if not found:
+            self.create_wait_forever_task().result()
 
     @tasync("TURN OVER TRAY")
     def create_complete_turn_over_tray(self, target_tray, homepose):
@@ -324,14 +421,17 @@ class TaskPlanner:
 
         # prev = self.sawyer_robot._limb.get_joint_position_speed()
         self.sawyer_robot._limb.set_joint_position_speed(0.0001)
-        self.sawyer_robot._limb.move_to_joint_positions(joint_angles, timeout=15.0)
+        self.limb_move_to_joint_positions(joint_angles,timeout=15.0)
+        #self.sawyer_robot._limb.move_to_joint_positions(joint_angles, timeout=15.0)
 
         self.delay_task(1).result()
 
         joint_angles["right_j5"] -= 3 * math.pi / 4.0
 
         # prev = self.sawyer_robot._limb.get_joint_position_speed()
-        self.sawyer_robot._limb.move_to_joint_positions(joint_angles, timeout=15.0)
+        #self.sawyer_robot._limb.move_to_joint_positions(joint_angles, timeout=15.0)
+        self.limb_move_to_joint_positions(joint_angles, timeout=15.0)
+
         self.delay_task(1).result()
 
         """
@@ -406,6 +506,11 @@ class TaskPlanner:
         return target_block, target_tray
 
     def compute_block_pick_offset_transform(self, pose):
+        """
+        
+        :param pose: 
+        :return: 
+        """
         overhead_orientation = Quaternion(
             x=-0.00142460053167,
             y=0.999994209902,
@@ -424,6 +529,11 @@ class TaskPlanner:
         return pose
 
     def compute_tray_pick_offset_transform(self, pose):
+        """
+        
+        :param pose: 
+        :return: 
+        """
         overhead_orientation = Quaternion(
             x=-0.00142460053167,
             y=0.999994209902,
@@ -456,16 +566,20 @@ class TaskPlanner:
 
         rospy.logwarn("target block pose : " + str(original_block_pose))
 
+        self.trajectory_planner.ceilheight=0.65
         self.create_pick_task(original_block_pose, approach_speed=0.0001, approach_time=2.0,
                               meet_time=3.0,
                               retract_time=1.0,
                               hover_distance=None).result()
 
+        self.trajectory_planner.ceilheight = 0.8
         self.create_place_task(copy.deepcopy(target_tray.get_tray_place_block_location()),
                                approach_speed=0.0001,
                                approach_time=2.0,
                                meet_time=3.0,
                                retract_time=1.0).result()
+
+        self.trajectory_planner.ceilheight = 0.75
 
         return original_block_pose
 
@@ -505,6 +619,10 @@ class TaskPlanner:
 
     @tasync("HEAD VISION PROCESSING")
     def create_head_vision_processing(self):
+        """
+        
+        :return: 
+        """
 
         self.environment_estimation.update()
         self.environment_estimation.compute_block_pose_estimations_from_head_camera()
@@ -513,23 +631,26 @@ class TaskPlanner:
 
         return blocks
 
-
     @tasync("LOCATE ARMVIEW TO BLOCK ESTIMATION")
     def create_move_top_block_view(self, block):
+        """
+        
+        :param block: geometry_msgs/Pose
+        :return: 
+        """
         p = copy.deepcopy(block.headview_pose_estimation)
         # chose z plane
-        p.position.z = 0.1
+        p.position.z = 0.05
 
         poseaux = p  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
         poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
         poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi / 2.0))
         poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
 
-        self.create_move_to_xyz_pr(poseaux).result()
+        self.create_move_XY(poseaux).result()
         # individual processing algorithm
 
         self.delay_task(3).result()
-
 
     @tasync("OBSERVE ALL CUBES")
     def create_visit_all_cubes_armview(self, iterations_count=None):
@@ -556,6 +677,11 @@ class TaskPlanner:
 
     @tasync("PICK BY COLOR")
     def pick_block_by_color(self, color):
+        """
+        
+        :param color: 
+        :return: 
+        """
         blocks = self.environment_estimation.get_blocks()
         btarget = [i for i, b in enumerate(blocks) if b.is_color(color)][0]
 
@@ -585,7 +711,6 @@ class TaskPlanner:
         rospy.logwarn("put block into tray: " + str(self.environment_estimation.get_trays()))
         target_tray = self.environment_estimation.get_tray_by_num(trayid)
         rospy.logwarn("put block into tray: " + str(target_tray))
-
 
         place_location = self.compute_block_pick_offset_transform(copy.deepcopy(target_tray.get_tray_pick_location()))
         self.create_place_task(place_location,
@@ -633,10 +758,12 @@ class TaskPlanner:
         target_block_index = 0
         original_block_poses = []
         while target_block_index < blocks_count:
-            self.create_go_home_task().result()
-            target_block, target_tray = self.create_detect_block_poses_task(blocks,target_block_index).result()
+            #self.create_go_home_task().result()
+            target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index).result()
 
+            self.trajectory_planner.ceilheight = 0.8
             self.create_move_top_block_view(target_block).result()
+            self.trajectory_planner.ceilheight = 0.7
 
             rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
@@ -655,10 +782,18 @@ class TaskPlanner:
 
     @tasync("DISABLE ROBOT")
     def disable_robot_task(self):
+        """
+        
+        :return: 
+        """
         self.sawyer_robot.disable()
 
     @tasync("ENABLE ROBOT")
     def enable_robot_task(self):
+        """
+        
+        :return: 
+        """
         self.sawyer_robot.enable()
 
     @tasync("LOOP SORTING TASK")
@@ -667,7 +802,8 @@ class TaskPlanner:
         This is the main plan of the application
         :return:
         """
-        self.create_go_home_task().result()
+
+        self.create_go_home_task(check_obstacles=False).result()
 
         """
         home_position = self.sawyer_robot._limb.endpoint_pose()
@@ -680,20 +816,20 @@ class TaskPlanner:
         """
 
         # for ki in xrange(5):
-        # self.create_greet_task().result()
-
+        #self.create_greet_task().result()
 
         # self.create_go_home_task().result()
 
-        #self.create_visit_all_cubes_armview(1).result()
+        # self.create_visit_all_cubes_armview(1).result()
 
+        #self.create_wait_forever_task().result()
 
         for i in xrange(2):
             self.create_go_vision_head_pose_task().result()
 
             blocks = self.create_head_vision_processing().result()
 
-            self.create_go_home_task().result()
+            #self.create_go_home_task().result()
 
             # self.create_complete_turn_over_tray, target_tray {"homepose": homepose}).result()
 
@@ -712,6 +848,10 @@ class TaskPlanner:
         self.create_wait_forever_task().result()
 
     def reset_cycle(self):
+        """
+        
+        :return: 
+        """
         for tray in self.environment_estimation.get_trays():
             tray.reset()
 
@@ -734,14 +874,26 @@ class TaskPlanner:
         # self.create_main_loop_task().result()
 
     def pause(self):
+        """
+        
+        :return: 
+        """
         rospy.logwarn("PAUSING TASK PLANNER")
         self.pause_flag = True
 
     def resume(self):
+        """
+        
+        :return: 
+        """
         rospy.logwarn("RESUMING TASK PLANNER")
         self.pause_flag = False
 
     def stop(self):
+        """
+        
+        :return: 
+        """
         self.sawyer_robot.disable()
         self.sawyer_robot.enable()
 
@@ -769,6 +921,10 @@ class TaskPlanner:
         self.cancel_signal = False
 
     def print_tasks(self):
+        """
+        
+        :return: 
+        """
         try:
             self.mutex.acquire()
             tasksstr = "\n".join([str(t.name) for t in self.tasks])
