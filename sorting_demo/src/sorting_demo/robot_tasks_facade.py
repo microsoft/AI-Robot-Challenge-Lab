@@ -85,14 +85,15 @@ class RobotTaskFacade:
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
-        @self.app.route("/pick_block_by_color/<color>')")
-        def pick_block_by_color(selfcolor):
+
+        @self.app.route("/pick_block_by_color/<color>")
+        def pick_block_by_color(color):
             try:
                 return flask.json.jsonify(response="ACK", result=self.pick_block_by_color(color))
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
-        @self.app.route("/put_block_into_tray/<color>/<trayid>')")
+        @self.app.route("/put_block_into_tray/<color>/<trayid>")
         def put_block_into_tray( color, trayid):
             try:
                 return flask.json.jsonify(response="ACK", result=self.put_block_into_tray(color,int(trayid)))
