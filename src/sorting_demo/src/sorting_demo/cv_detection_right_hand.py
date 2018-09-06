@@ -195,6 +195,36 @@ def test_right_hand_ros():
     # Exit
     cv2.destroyAllWindows()
 
+def test_right_hand_cam():
+    """
+    Test the blob detection using a USB camera
+    """
+
+    # Create a video capture object
+    capture = cv2.VideoCapture(1)
+    capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+    while True:
+        # Capture a frame
+        ret, cv_image = capture.read()
+
+        if ret:
+            # Save for debugging
+            #cv2.imwrite("/tmp/debug.png", cv_image)
+
+            # Get cube rotation
+            angles = get_cubes_z_rotation(cv_image)
+            print(angles)
+
+            # Check for a press on the Escape key
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
+
+    # Exit
+    capture.release()
+    cv2.destroyAllWindows()
+
 def test_right_hand_debug():
     """
     Test the cube orientation sensing using images on disk
