@@ -3,30 +3,24 @@ import copy
 import math
 import numpy
 import traceback
-from threading import Thread
-import utils.mathutils
-from  threading import Thread
-import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 from threading import Lock
-import time
-from functools import wraps
 
-import rospy
-from geometry_msgs.msg import Pose, Point, Quaternion
-import demo_constants
-from robot_control import SawyerRobotControl
-from environment_estimation import EnvironmentEstimation
-import moveit_msgs.srv
 import moveit_msgs.msg
-from functools import wraps
+import moveit_msgs.srv
+import rospy
+from geometry_msgs.msg import Quaternion
 
+import demo_constants
+import utils.mathutils
+from environment_estimation import EnvironmentEstimation
+from robot_control import SawyerRobotControl
 from robot_tasks_facade import RobotTaskFacade
 
 import time
 from re import search
 from functools import wraps
-
 
 def tasync(taskname):
     def wrapper(f):
