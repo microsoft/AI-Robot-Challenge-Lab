@@ -1,24 +1,25 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>sorting_demo</name>
+  <name>sawyer_ik_5d</name>
   <version>0.0.0</version>
-  <description>The sorting demo package</description>
+  <description>The sawyer_ik_5d package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="pblasco@plainconcepts.com">Pablo Iñigo Blasco</maintainer>
-  <maintainer email="mcsanchez@plainconcepts.com">Manuel Caballero Sánchez</maintainer>
+  <maintainer email="pblasco@plainconcepts.com">Pablo Inigo Blasco</maintainer>
+
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>Microsoft Copyright</license>
+  <license>copyright</license>
+
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/sorting_demo</url> -->
+  <!-- <url type="website">http://wiki.ros.org/sawyer_ik_5d</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
@@ -48,48 +49,23 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-
-  <build_depend>rospy</build_depend>
-  <build_depend>intera_core_msgs</build_depend>
-  <build_depend>gazebo_msgs</build_depend>
-  <build_depend>joint_state_controller</build_depend>
-  <build_depend>position_controllers</build_depend>
-  <build_depend>velocity_controllers</build_depend>
-  <build_depend>force_torque_sensor_controller</build_depend>
-  <build_depend>imu_sensor_controller</build_depend>
-  <build_depend>ros_control</build_depend>
-  <build_depend>joint_trajectory_controller</build_depend>
-  <build_depend>gripper_action_controller</build_depend>
-  <build_depend>gazebo_ros_control</build_depend>
-  <build_depend>gazebo_plugins</build_depend>
-  <build_depend>rospy-message-converter</build_depend>
-  <build_depend>gazebo_plugins</build_depend>
-
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>rospack</exec_depend>
-  <exec_depend>intera_core_msgs</exec_depend>
-  <exec_depend>intera_interface</exec_depend>
-  <exec_depend>sawyer_gazebo</exec_depend>
-  <exec_depend>gazebo_ros</exec_depend>
-  <exec_depend>gazebo_msgs</exec_depend>
-  <exec_depend>joint_state_controller</exec_depend>
-
-  <exec_depend>position_controllers</exec_depend>
-  <exec_depend>velocity_controllers</exec_depend>
-  <exec_depend>force_torque_sensor_controller</exec_depend>
-  <exec_depend>imu_sensor_controller</exec_depend>
-  <exec_depend>ros_control</exec_depend>
-  <exec_depend>joint_trajectory_controller</exec_depend>
-  <exec_depend>gripper_action_controller</exec_depend>
-  <exec_depend>rospy-message-converter</exec_depend>
-
-
-
+  <build_depend>orocos_kdl</build_depend>
+  <build_depend>kdl_parser</build_depend>
+  <build_depend>moveit_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_export_depend>orocos_kdl</build_export_depend>
+  <build_export_depend>kdl_parser</build_export_depend>
+  <build_export_depend>moveit_msgs</build_export_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <exec_depend>orocos_kdl</exec_depend>
+  <exec_depend>kdl_parser</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-    <gazebo_ros gazebo_model_path="${prefix}/.." />
+
   </export>
 </package>

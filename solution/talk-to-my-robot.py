@@ -23,6 +23,7 @@ LUIS_SUBSCRIPTION_KEY = 'b7f33ef452a544079fb86356479f9300'
 COMPUTER_VISION_ANALYZE_URL = "https://westus.api.cognitive.microsoft.com/vision/v2.0/analyze"
 COMPUTER_VISION_SUBSCRIPTION_KEY = "f35e56ef483640fc9153d69c5c123266"
 
+SIM_API_HOST = 'http://localhost:5000'
 
 class ComputerVisionApiService:
     @staticmethod
@@ -102,17 +103,17 @@ class BotRequestHandler:
 
             if luis_result.intent == 'MoveArm':
                 BotCommandHandler.move_arm()
-            elif luis_result.intent == 'MoveGrippers':
-                BotCommandHandler.move_grippers(luis_result.entity_value)
             elif luis_result.intent == 'ShowStats':
                 stats = BotCommandHandler.show_stats()
                 response = await BotRequestHandler.create_reply_activity(activity, stats)
                 await context.send_activity(response)
+            elif luis_result.intent == 'MoveGrippers':
+                BotCommandHandler.move_grippers(luis_result.entity_value)
             else:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
         else:
-            await process_image(activity, context)
+            await BotRequestHandler.process_image(activity, context)
         
         return web.Response(status=202)
     
@@ -132,10 +133,11 @@ class BotRequestHandler:
         if image_url:
             dominant_color = ComputerVisionApiService.analyze_image(image_url)
             response = await BotRequestHandler.create_reply_activity(activity, f'Do you need a {dominant_color} cube? Let me find one for you!')
+            await context.send_activity(response)
             BotCommandHandler.move_cube(dominant_color)
         else:
             response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction or image.')
-        await context.send_activity(response)
+            await context.send_activity(response)
 
     def get_image_url(attachments):
         p = re.compile('^image/(jpg|jpeg|png|gif)$')
@@ -193,8 +195,12 @@ class BotCommandHandler:
     
     def move_cube(color):
         print(f'Moving {color} cube...')
-      
-        print('done moving cube . . .')
+        try:
+            r = requests.get(f'{SIM_API_HOST}/put_block_into_tray/{color}/1')
+            r.raise_for_status()
+            print('done moving cube . . .')
+        except Exception as e:
+            print("[Errno {0}] {1}".format(e.errno, e.strerror))
     
     def move_grippers(action):
         print(f'{action} grippers... wait a few seconds')

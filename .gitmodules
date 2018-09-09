@@ -1,0 +1,15 @@
+[submodule "submodules/intera_sdk"]
+	path = src/submodules/intera_sdk
+	url = https://github.com/RethinkRobotics/intera_sdk
+[submodule "submodules/sawyer_simulator"]
+	path = src/submodules/sawyer_simulator
+	url = https://github.com/RethinkRobotics/sawyer_simulator.git
+[submodule "submodules/intera_common"]
+	path = src/submodules/intera_common
+	url = https://github.com/RethinkRobotics/intera_common
+[submodule "submodules/sawyer_moveit"]
+	path = src/submodules/sawyer_moveit
+	url = https://github.com/RethinkRobotics/sawyer_moveit
+[submodule "submodules/sawyer_robot"]
+	path = src/submodules/sawyer_robot
+	url = https://github.com/RethinkRobotics/sawyer_robot.git

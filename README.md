@@ -104,8 +104,14 @@ If you need a new Azure subscription, then there are a couple of options to get 
 
 ### Setup and launch the simulator
 
-1. Open a Terminal and navigate to `robotics-lab`.
-1. Build the code: `catkin_make`
+1. Open a Terminal and navigate to `robotics-lab/src`.
+1. Initialize git submodules:
+  * `git submodule init`
+  * `git submodule update`
+1. Move to the parent directory: `cd ..`
+1. Run the following command:
+  * `rosdep install --from-paths src --ignore-src -r -y`
+1. Build the code: `catkin build`
 1. Run the following commands to launch the simulator:
   ```
   cd $HOME/ros_ws && ./intera.sh sim
@@ -359,10 +365,11 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
     if image_url:
         dominant_color = ComputerVisionApiService.analyze_image(image_url)
         response = await BotRequestHandler.create_reply_activity(activity, f'Do you need a {dominant_color} cube? Let me find one for you!')
+        await context.send_activity(response)
         BotCommandHandler.move_cube(dominant_color)
     else:
         response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction or image.')
-    await context.send_activity(response)
+        await context.send_activity(response)
     ```
 1. Go to the `ComputerVisionApiService` class around line 27.
 1. Modify the method `analyze_image`:
@@ -389,10 +396,18 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
       return dominant_color
       ```
 
-### Add robot code (jamie will sort the bit to take out)
+### Add the robot code
 
-1. Open the **move-cube.py** file.
-1. Add the following code snippet to the `move_cube` method:
+1. Add the following code snippet to the `move_cube` method (**talk-to-my-robot.py** file):
+    ```python
+    print(f'Moving {color} cube...')
+    try:
+        r = requests.get(f'{SIM_API_HOST}/put_block_into_tray/{color}/1')
+        r.raise_for_status()
+        print('done moving cube . . .')
+    except Exception as e:
+        print("[Errno {0}] {1}".format(e.errno, e.strerror))
+    ```
 
 ### Test the move cube
 
@@ -421,3 +436,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+http://localhost:5000/state
