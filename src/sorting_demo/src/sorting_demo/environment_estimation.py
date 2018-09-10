@@ -10,6 +10,8 @@ from gazebo_msgs.msg import LinkStates, sys
 
 from concepts.block import BlockState
 from concepts.tray import TrayState
+from concepts.table import Table
+
 from cv_detection import CameraHelper, get_blobs_info
 
 from utils.mathutils import *
@@ -44,7 +46,9 @@ class EnvironmentEstimation:
 
         self.block_pose_estimation_head_camera = None
 
-    def identify_block_by_pos(self, projected):
+        self.table = Table()
+
+    def identify_block_from_aproximated_point(self, projected):
         bestindex = -1
         bestdist = sys.float_info.max
         for index, b in enumerate(self.blocks):
@@ -54,7 +58,7 @@ class EnvironmentEstimation:
             dy = p1.y - p2[1]
             dz = p1.z - p2[2]
 
-            dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+            dist = math.sqrt(dx * dx + dy * dy + dz * dz)
 
             if dist < bestdist:
                 bestdist = dist
@@ -64,8 +68,6 @@ class EnvironmentEstimation:
             return self.blocks[bestindex]
         else:
             return None
-
-
 
     def compute_block_pose_estimations_from_head_camera(self):
         try:
@@ -81,28 +83,32 @@ class EnvironmentEstimation:
             ptinfos = []
             for huekey in blobs_info.keys():
                 points = blobs_info[huekey]
-                rospy.logwarn("blob position[%d]: %s"%(index , str(points)))
+                rospy.logwarn("blob position[%d]: %s" % (index, str(points)))
                 for point in points:
                     ptinfos.append([huekey, point])
-                    index+=1
+                    index += 1
+
+            self.table.blocks = []
 
             for huekey, point2d in ptinfos:
                 projected = self.camera_helper.project_point_on_table(point2d)
                 rospy.logwarn("projected: %s" % str(projected))
 
-                blob = self.identify_block_by_pos(projected)
-                if blob is None:
+                block = self.identify_block_from_aproximated_point(projected)
+                if block is None:
                     continue
 
-                blob.headview_proj_estimation = point2d
+                self.table.blocks.append(block)
 
-                blob.headview_proj_estimation = projected
-                blob.hue_estimation = huekey
-                blob.headview_pose_estimation = Pose(
+                block.headview_proj_estimation = point2d
+
+                block.headview_proj_estimation = projected
+                block.hue_estimation = huekey
+                block.headview_pose_estimation = Pose(
                     position=Point(x=projected[0], y=projected[1], z=projected[2]),
                     orientation=Quaternion(x=0, y=0, z=0, w=1))
 
-                rospy.logwarn("blob identified: "+ str(blob))
+                rospy.logwarn("blob identified: " + str(block))
 
             for b in self.blocks:
                 rospy.logwarn(b)
@@ -149,9 +155,9 @@ class EnvironmentEstimation:
                 if BlockState.is_block(name):
                     item = self.get_block(name)
                     if item is None:
-                        #rospy.logwarn("block create name: "+ name)
+                        # rospy.logwarn("block create name: "+ name)
                         item = BlockState(id=name, pose=pose)
-                        item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"]
+                        item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"].replace("Gazebo/","")
                     else:
                         item.pose = pose
 
@@ -161,7 +167,7 @@ class EnvironmentEstimation:
                     # item = None
                     if item is None:
                         item = TrayState(id=name, pose=pose)
-                        item.color = demo_constants.TRAY_COLORS[item.num]
+                        item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/","")
                     else:
                         item.pose = pose
 
@@ -228,8 +234,8 @@ class EnvironmentEstimation:
             self.blocks = blocks
             self.trays = trays
 
-            #rospy.logwarn("GAZEBO blocks update lenght: %d"%len(self.gazebo_blocks))
-            #rospy.logwarn("blocks update lenght: %d"%len(self.blocks))
+            # rospy.logwarn("GAZEBO blocks update lenght: %d"%len(self.gazebo_blocks))
+            # rospy.logwarn("blocks update lenght: %d"%len(self.blocks))
             if self.original_blocks_poses_ is None:
                 self.original_blocks_poses_ = [copy.deepcopy(block.final_pose) for block in blocks]
 
@@ -242,7 +248,7 @@ class EnvironmentEstimation:
         """
         try:
             self.mutex.acquire()
-            return [copy.deepcopy(b) for b in self.blocks]
+            return [b for b in self.blocks]
         finally:
             self.mutex.release()
 
@@ -262,7 +268,6 @@ class EnvironmentEstimation:
                 return filtered_blocks[0]
         finally:
             self.mutex.release()
-
 
     def get_original_block_poses(self):
         try:

@@ -62,8 +62,9 @@
   <build_depend>gripper_action_controller</build_depend>
   <build_depend>gazebo_ros_control</build_depend>
   <build_depend>gazebo_plugins</build_depend>
-  <build_depend>gazebo_plugins</build_depend>
   <build_depend>moveit</build_depend>
+  <build_depend>rospy-message-converter</build_depend>
+
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>rospack</exec_depend>
@@ -82,7 +83,7 @@
   <exec_depend>ros_control</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>gripper_action_controller</exec_depend>
-
+  <exec_depend>rospy-message-converter</exec_depend>
 
 
 
