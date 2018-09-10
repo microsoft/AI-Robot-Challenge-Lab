@@ -20,6 +20,7 @@ def main():
     rospy.on_shutdown(functools.partial(gazebo_models.delete_gazebo_models, model_list))
 
     task_planner = TaskPlanner()
+
     task_facade = task_planner.get_task_facade()
 
     task_facade.start()
