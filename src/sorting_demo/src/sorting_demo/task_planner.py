@@ -222,6 +222,8 @@ class TaskPlanner:
         
         :return: 
         """
+
+        self.create_go_home_task().result()
         joint_angles_A = {'right_j0': 0.0,
                           'right_j1': 0.0,
                           'right_j2': 0.0,
