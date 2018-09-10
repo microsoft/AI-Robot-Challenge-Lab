@@ -3,24 +3,19 @@ import copy
 import math
 import numpy
 import traceback
-from threading import Thread
-import utils.mathutils
-from  threading import Thread
-import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 from threading import Lock
-import time
-from functools import wraps
 
-import rospy
-from geometry_msgs.msg import Pose, Point, Quaternion
-import demo_constants
-from robot_control import SawyerRobotControl
-from environment_estimation import EnvironmentEstimation
-import moveit_msgs.srv
 import moveit_msgs.msg
-from functools import wraps
+import moveit_msgs.srv
+import rospy
+from geometry_msgs.msg import Quaternion
 
+import demo_constants
+import utils.mathutils
+from environment_estimation import EnvironmentEstimation
+from robot_control import SawyerRobotControl
 from robot_tasks_facade import RobotTaskFacade
 
 import time
@@ -303,6 +298,8 @@ class TaskPlanner:
         
         :return: 
         """
+
+        self.create_go_home_task().result()
         joint_angles_A = {'right_j0': 0.0,
                           'right_j1': 0.4,
                           'right_j2': 0.0,
@@ -499,7 +496,7 @@ class TaskPlanner:
             rospy.logwarn("OUPS!!")
             return
 
-        target_tray = copy.deepcopy(self.environment_estimation.get_tray_by_color(target_block.get_color()))
+        target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
         target_tray.final_pose = self.compute_tray_pick_offset_transform(target_tray.final_pose)
 
         rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
@@ -676,16 +673,13 @@ class TaskPlanner:
             self.delay_task(10).result()
 
     @tasync("PICK BY COLOR")
-    def pick_block_by_color(self, color):
-        """
-        
-        :param color: 
-        :return: 
-        """
-        blocks = self.environment_estimation.get_blocks()
+
+    def pick_block_on_table_by_color(self, color):
+
+        blocks = self.environment_estimation.table.get_blocks()
         btarget = [i for i, b in enumerate(blocks) if b.is_color(color)][0]
 
-        target_block, target_tray = self.create_detect_block_poses_task(btarget).result()
+        target_block, target_tray = self.create_detect_block_poses_task(blocks, btarget).result()
 
         self.create_pick_task(target_block.final_pose, approach_speed=0.0001, approach_time=2.0,
                               meet_time=3.0,
@@ -706,18 +700,24 @@ class TaskPlanner:
         :param trayid: 
         :return: 
         """
-        self.reset_cycle()
-        target_block = self.pick_block_by_color(color).result()
+        #self.reset_cycle()
+        #decide and select block and pick it
+        target_block = self.pick_block_on_table_by_color(color).result()
+
         rospy.logwarn("put block into tray: " + str(self.environment_estimation.get_trays()))
         target_tray = self.environment_estimation.get_tray_by_num(trayid)
         rospy.logwarn("put block into tray: " + str(target_tray))
 
         place_location = self.compute_block_pick_offset_transform(copy.deepcopy(target_tray.get_tray_pick_location()))
+
         self.create_place_task(place_location,
                                approach_speed=0.0001,
                                approach_time=3.0,
                                meet_time=3.0,
                                retract_time=1.0).result()
+
+        self.environment_estimation.table.notify_block_removed(target_block)
+        target_tray.notify_contains_block(target_block)
 
     @tasync("REQUEST PUT ALL CONTENTS ON TABLE")
     def put_all_contents_on_table(self):
@@ -759,6 +759,7 @@ class TaskPlanner:
         original_block_poses = []
         while target_block_index < blocks_count:
             #self.create_go_home_task().result()
+
             target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index).result()
 
             self.trajectory_planner.ceilheight = 0.8
@@ -775,6 +776,8 @@ class TaskPlanner:
 
             # concurrency issue
             self.environment_estimation.get_tray(target_tray.id).notify_contains_block(target_block)
+            self.environment_estimation.table.notify_block_removed(target_block)
+
             target_block_index += 1
             rospy.logwarn("target block index: " + str(target_block_index))
 
@@ -834,12 +837,12 @@ class TaskPlanner:
             # self.create_complete_turn_over_tray, target_tray {"homepose": homepose}).result()
 
             # yield self.create_go_home_task()
-            self.reset_cycle()
+            #self.reset_cycle()
             # continue
 
             original_block_poses = self.create_move_all_cubes_to_trays(blocks).result()
 
-            self.reset_cycle()
+            #self.reset_cycle()
 
             self.pick_all_pieces_from_tray_and_put_on_table(original_block_poses).result()
 
@@ -854,6 +857,18 @@ class TaskPlanner:
         """
         for tray in self.environment_estimation.get_trays():
             tray.reset()
+
+    def get_state(self):
+        """
+        
+        :return: 
+        """
+        return {"table_state": self.environment_estimation.table.get_state(),
+                "trays": [t.get_state() for t in self.environment_estimation.trays],
+                "current_task": self.get_task_stack()}
+
+    def get_task_stack(self):
+        return [t.name for t in self.tasks]
 
     def execute_task(self, fn, args=[]):
         """
