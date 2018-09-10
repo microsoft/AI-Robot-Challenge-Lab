@@ -135,7 +135,7 @@ def get_blob_info(cv_image):
         contour_moments = [cv2.moments(cnt) for cnt in convex_contours]
         contour_centroids = [(int(moments["m10"] / moments["m00"]), int(moments["m01"] / moments["m00"])) for moments in contour_moments if moments["m00"] != 0]
         for (cx, cy) in contour_centroids:
-            cv2.circle(cv_image_contours_debug, (cx, cy), 3, contour_color_rgb, -1)
+            cv2.circle(cv_image_contours_debug, (cx, cy), 3, contour_color_rgb, cv2.FILLED)
 
         # Collect data
         blob_info[current_hue] = contour_centroids
