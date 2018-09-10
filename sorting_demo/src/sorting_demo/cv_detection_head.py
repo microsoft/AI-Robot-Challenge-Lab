@@ -15,7 +15,7 @@ from visualization_msgs.msg import *
 
 from cv_detection_camera_helper import CameraHelper
 
-def get_blob_info(cv_image):
+def get_blobs_info(cv_image):
     """
     Gets information about the colored blobs in the image
 
@@ -195,7 +195,7 @@ def test_head_ros():
             #cv2.imwrite("/tmp/debug.png", cv_image)
 
             # Get color blobs info
-            blob_info = get_blob_info(cv_image)
+            blob_info = get_blobs_info(cv_image)
 
             # Project the points on 3D space
             points = [y for x in blob_info.values() for y in x]
@@ -233,7 +233,7 @@ def test_head_cam():
             #cv2.imwrite("/tmp/debug.png", cv_image)
 
             # Get color blobs info
-            blob_info = get_blob_info(cv_image)
+            blob_info = get_blobs_info(cv_image)
             print(blob_info)
 
             # Check for a press on the Escape key
@@ -264,7 +264,7 @@ def test_head_debug():
         cv_image = cv2.imread(image_path)
 
         # Get color blobs info
-        blob_info = get_blob_info(cv_image)
+        blob_info = get_blobs_info(cv_image)
         print(blob_info)
 
         # Wait for a key press
