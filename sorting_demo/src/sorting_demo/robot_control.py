@@ -83,34 +83,6 @@ class SawyerRobotControl(object):
         # retract to clear object
         self._retract_loop(time=retract_time, hover_distance=hover_distance)
 
-    def place_loop(self, pose, approach_speed, approach_time, meet_time, retract_time):
-        """
-        Internal state machine for placing
-        :param pose:
-        :return:
-        """
-        if rospy.is_shutdown():
-            return
-        # servo above pose
-        self._approach(pose, time=approach_time, approach_speed=approach_speed, hover_distance=self._hover_distance)
-        rospy.sleep(0.1)
-
-        # servo to pose
-        self.original_servo_to_pose_loop(pose, time=meet_time)
-        rospy.sleep(0.1)
-
-        if rospy.is_shutdown():
-            return
-        # open the gripper
-        self.gripper_open()
-        rospy.sleep(0.1)
-
-        self.gripper_open()
-        self._gripper.set_object_weight(0)
-
-        rospy.sleep(0.1)
-        # retract to clear object
-        self._retract_loop(time=retract_time)
 
     def gripper_open(self):
         """

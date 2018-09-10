@@ -475,7 +475,29 @@ class TaskPlanner:
         :return:
         """
         rospy.logwarn("\nPlacing task..." + str(target_pose))
-        return self.sawyer_robot.place_loop(target_pose, approach_speed, approach_time, meet_time, retract_time)
+
+        if rospy.is_shutdown():
+            return
+            # servo above pose
+        self.sawyer_robot._approach(target_pose, time=approach_time, approach_speed=approach_speed, hover_distance=self._hover_distance)
+        rospy.sleep(0.1)
+
+        # servo to pose
+        self.sawyer_robot.original_servo_to_pose_loop(target_pose, time=meet_time)
+        rospy.sleep(0.1)
+
+        if rospy.is_shutdown():
+            return
+        # open the gripper
+        self.sawyer_robot.gripper_open()
+        rospy.sleep(0.1)
+
+        self.sawyer_robot.gripper_open()
+        self.sawyer_robot._gripper.set_object_weight(0)
+
+        rospy.sleep(0.1)
+        # retract to clear object
+        self.sawyer_robot._retract_loop(time=retract_time)
 
     @tasync("SELECT BLOCK&TRAY")
     def create_decision_select_block_and_tray(self, blocks, target_block_index):
