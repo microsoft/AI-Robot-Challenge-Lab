@@ -1,9 +1,11 @@
 #!/usr/bin/python
+import math
 import random
 import sys
 
 import rospkg
 import rospy
+import tf
 import xacro
 
 from geometry_msgs.msg import Pose, Point, Quaternion
@@ -99,7 +101,15 @@ def load_gazebo_models():
     k = 3
     for i in xrange(k):
         for j in xrange(k):
-            block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(-1, 1)*0.03 , y= -0.15 + i * 0.15 +random.uniform(-1, 1)*0.03, z=0.7725)))
+            q = tf.transformations.quaternion_from_euler(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi),
+                                                         random.uniform(0, 2 * math.pi))
+
+
+            block_poses.append(Pose(position=Point(x=0.65 + j * 0.12 + random.uniform(-1, 1) * 0.03,
+                                                   y=-0.15 + i * 0.15 + random.uniform(-1, 1) * 0.03, z=0.7725),
+                                    orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
+
+            #block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(-1, 1)*0.03 , y= -0.15 + i * 0.15 +random.uniform(-1, 1)*0.03, z=0.7725)))
 
     """
     Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
