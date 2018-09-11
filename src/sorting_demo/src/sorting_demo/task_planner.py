@@ -2,9 +2,7 @@
 import copy
 import math
 import numpy
-import traceback
 from concurrent.futures import ThreadPoolExecutor
-from functools import wraps
 from threading import Lock
 
 import moveit_msgs.msg
@@ -17,93 +15,15 @@ import utils.mathutils
 from environment_estimation import EnvironmentEstimation
 from robot_control import SawyerRobotControl
 from robot_tasks_facade import RobotTaskFacade
+from tasync import Task, tasync
+import tf
+import tf.transformations
 
 import time
 from re import search
 from functools import wraps
 
 from trajectory_planner import TrajectoryPlanner
-
-
-def tasync(taskname):
-    def wrapper(f):
-        @wraps(f)
-        def wrapped(self, *f_args, **f_kwargs):
-
-            if self.has_cancel_signal():
-                rospy.logerr("trying to invoke but cancel signal: " + str(taskname))
-                self.print_tasks()
-                return Task("CANCEL", None)
-
-            if self.pause_flag:
-                rospy.logerr("PAUSEEEE")
-                while self.pause_flag and not rospy.is_shutdown():
-                    rospy.sleep(0.5)
-                    rospy.logwarn("Task %s is paused" % taskname)
-
-            tt = Task(taskname, None)
-
-            def lamb():
-                res = None
-                try:
-                    # f_kwargs["task"] = tt
-                    res = f(self, *f_args, **f_kwargs)
-                except Exception as ex:
-                    rospy.logerr("task wrapping error (%s): %s" % (taskname, str(ex)))
-                    traceback.print_exc()
-                return res
-
-            self.add_task(tt)
-
-            fut = self.executor.submit(lamb)
-            tt.future = fut
-
-            def got_result(fut):
-                try:
-                    rospy.logwarn("removing task: " + tt.name)
-                    self.remove_task(tt)
-                except Exception as ex:
-                    rospy.logwarn("error at done callback: " + tt.name + str(ex))
-
-                self.print_tasks()
-
-            fut.add_done_callback(got_result)
-
-            return tt
-
-        return wrapped
-
-    return wrapper
-
-
-class Task:
-    def __init__(self, name, future):
-        """
-        
-        :param name: 
-        :param future: 
-        """
-        self.name = name
-        self.future = future
-        self.marked_cancel = False
-
-    def cancel(self):
-        """
-        
-        :return: 
-        """
-        marked_cancel = True
-        resultcancel = self.future.cancel()
-
-    def result(self):
-        """
-        
-        :return: 
-        """
-        if self.future is not None:
-            return self.future.result()
-        else:
-            return None
 
 
 class TaskPlanner:
@@ -137,14 +57,13 @@ class TaskPlanner:
 
     def has_cancel_signal(self):
         """
-        
+
         :return: 
         """
         return self.cancel_signal
 
     def add_task(self, task):
         """
-        
         :return: 
         """
         rospy.logwarn("adding task: " + task.name)
@@ -156,7 +75,6 @@ class TaskPlanner:
 
     def remove_task(self, task):
         """
-        
         :param tt: 
         :return: 
         """
@@ -168,14 +86,12 @@ class TaskPlanner:
 
     def get_task_facade(self):
         """
-        
         :return: 
         """
         return self.task_facade
 
     def robot_sayt2s(self, text):
         """
-        
         :param text: 
         :return: 
         """
@@ -209,10 +125,10 @@ class TaskPlanner:
         targetjoints = dict(zip(resp.solution.joint_state.name, resp.solution.joint_state.position))
 
         self.sawyer_robot._limb.set_joint_position_speed(0.000001)
-        self.move_joint_position_guarded(targetjoints)
+        self.safe_goto_joint_position(targetjoints)
         #self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
 
-    def move_joint_position_guarded(self,targetjoints):
+    def safe_goto_joint_position(self, targetjoints, attempts = 300, hang_on_fail = False):
         """
         
         :param targetjoints: 
@@ -226,13 +142,18 @@ class TaskPlanner:
         #rospy.sleep(3)
         #jnts = targetjoints.values()
         #jnts.reverse()
-        found = self.trajectory_planner.move_to_joint_target(targetjoints)
+        found = self.trajectory_planner.move_to_joint_target(targetjoints, attempts)
         rospy.logwarn("move joint planner: "+ str(targetjoints))
 
         if not found:
-            self.create_wait_forever_task().result()
-            self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
-            return False
+            if hang_on_fail:
+                self.create_wait_forever_task().result()
+            else:
+                self.trajectory_planner.group.set_planner_id("OMPL")
+                self.safe_goto_joint_position(targetjoints, attempts=500, hang_on_fail=True)
+                self.trajectory_planner.set_default_planner()
+
+            return True
         else:
             return True
 
@@ -290,12 +211,11 @@ class TaskPlanner:
         if not check_obstacles:
             self.sawyer_robot._guarded_move_to_joint_position(starting_joint_angles)
         else:
-            self.move_joint_position_guarded(starting_joint_angles)
+            self.safe_goto_joint_position(starting_joint_angles)
 
     @tasync("GREET TASK")
     def create_greet_task(self):
         """
-        
         :return: 
         """
 
@@ -317,8 +237,8 @@ class TaskPlanner:
                           'right_j6': 0.0}
 
         for i in xrange(4):
-            self.move_joint_position_guarded(joint_angles_A)
-            self.move_joint_position_guarded(joint_angles_B)
+            self.safe_goto_joint_position(joint_angles_A)
+            self.safe_goto_joint_position(joint_angles_B)
 
     @tasync("GO TO VISION POSE")
     def create_go_vision_head_pose_task(self):
@@ -337,7 +257,7 @@ class TaskPlanner:
                         'right_j6': 0.0}
 
         #self.sawyer_robot._limb.move_to_joint_positions(joint_angles)
-        found = self.move_joint_position_guarded(joint_angles)
+        found = self.safe_goto_joint_position(joint_angles)
         self.delay_task(1).result()
 
         """
@@ -504,16 +424,12 @@ class TaskPlanner:
         """
         :return:
         """
-
         # An orientation for gripper fingers to be overhead and parallel to the obj
-
         rospy.logwarn("NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
         target_block = None
         if blocks is not None and len(blocks) > 0:
             target_block = blocks[target_block_index]  # access first item , pose field
-
-            target_block.final_pose = self.compute_block_pick_offset_transform(target_block.final_pose)
         else:
             rospy.logwarn("OUPS!!")
             return
@@ -526,7 +442,6 @@ class TaskPlanner:
 
     def compute_block_pick_offset_transform(self, pose):
         """
-        
         :param pose: 
         :return: 
         """
@@ -540,7 +455,18 @@ class TaskPlanner:
                                 0,
                                 -0.25 * demo_constants.CUBE_EDGE_LENGTH]
 
-        pose.orientation = overhead_orientation
+        yrot = tf.transformations.quaternion_from_euler(0,math.pi,0)
+
+        cubeorientation = [pose.orientation.x, pose.orientation.y,pose.orientation.z,pose.orientation.w]
+        #oorient = [overhead_orientation.x,overhead_orientation.y,overhead_orientation.z,overhead_orientation.w]
+
+        #resultingorient = tf.transformations.quaternion_multiply(cubeorientation, tf.transformations.quaternion_conjugate(oorient))
+        resultingorient = tf.transformations.quaternion_multiply(cubeorientation, yrot)
+
+        #resultingorient = cubeorientation
+
+
+        pose.orientation = Quaternion(x=resultingorient[0], y=resultingorient[1],z=resultingorient[2],w=resultingorient[3])
 
         pose.position.x += overhead_translation[0]
         pose.position.y += overhead_translation[1]
@@ -549,7 +475,6 @@ class TaskPlanner:
 
     def compute_tray_pick_offset_transform(self, pose):
         """
-        
         :param pose: 
         :return: 
         """
@@ -565,7 +490,6 @@ class TaskPlanner:
     @tasync("SLEEP")
     def delay_task(self, secs):
         """
-        
         :param secs: 
         :return: 
         """
@@ -575,17 +499,19 @@ class TaskPlanner:
     @tasync("PICK BLOCK FROM TABLE AND MOVE TO TRAY")
     def pick_block_on_table_and_place_on_tray(self, target_block, target_tray):
         """
-        
         :param original_block_poses: 
         :return: 
         """
         rospy.logwarn("target block: " + str(target_block))
 
-        original_block_pose = copy.deepcopy(target_block.final_pose)
+        original_block_pose = copy.deepcopy(self.compute_block_pick_offset_transform(target_block.hand_estimated_pose))
+        #original_block_pose = copy.deepcopy(target_block.final_pose)
+
+        #original_block_pose = copy.deepcopy(target_block.hand_estimated_pose)
 
         rospy.logwarn("target block pose : " + str(original_block_pose))
 
-        self.trajectory_planner.ceilheight=0.65
+        self.trajectory_planner.ceilheight=0.7
         self.create_pick_task(original_block_pose, approach_speed=0.0001, approach_time=2.0,
                               meet_time=3.0,
                               retract_time=1.0,
@@ -616,7 +542,9 @@ class TaskPlanner:
         target_block_index = 0
 
         while target_block_index < blocks_count:
-            target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index).result()
+            target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index)\
+                                            .result()
+
 
             self.create_pick_task(copy.deepcopy(target_block.final_pose),
                                   approach_speed=0.0001,
@@ -639,7 +567,6 @@ class TaskPlanner:
     @tasync("HEAD VISION PROCESSING")
     def create_head_vision_processing(self):
         """
-        
         :return: 
         """
 
@@ -653,8 +580,6 @@ class TaskPlanner:
     @tasync("LOCATE ARMVIEW TO BLOCK ESTIMATION")
     def create_move_top_block_view(self, block):
         """
-        
-        :param block: geometry_msgs/Pose
         :return: 
         """
         p = copy.deepcopy(block.headview_pose_estimation)
@@ -669,7 +594,10 @@ class TaskPlanner:
         self.create_move_XY(poseaux).result()
         # individual processing algorithm
 
-        self.delay_task(3).result()
+        estimated_cube_pose = self.environment_estimation.compute_block_pose_estimation_from_arm_camera()
+
+        block.hand_estimated_pose = estimated_cube_pose
+
 
     @tasync("OBSERVE ALL CUBES")
     def create_visit_all_cubes_armview(self, iterations_count=None):
@@ -697,7 +625,10 @@ class TaskPlanner:
     @tasync("PICK BY COLOR")
 
     def pick_block_on_table_by_color(self, color):
-
+        """
+        :param color: 
+        :return: 
+        """
         blocks = self.environment_estimation.table.get_blocks()
         btarget = [i for i, b in enumerate(blocks) if b.is_color(color)][0]
 
@@ -717,20 +648,20 @@ class TaskPlanner:
     @tasync("PICK BY COLOR AND PUT TRAY")
     def put_block_into_tray_task(self, color, trayid):
         """
-        
         :param color: 
         :param trayid: 
         :return: 
         """
-        #self.reset_cycle()
-        #decide and select block and pick it
+        # self.reset_cycle()
+        # decide and select block and pick it
         target_block = self.pick_block_on_table_by_color(color).result()
 
         rospy.logwarn("put block into tray: " + str(self.environment_estimation.get_trays()))
         target_tray = self.environment_estimation.get_tray_by_num(trayid)
         rospy.logwarn("put block into tray: " + str(target_tray))
 
-        place_location = self.compute_block_pick_offset_transform(copy.deepcopy(target_tray.get_tray_pick_location()))
+        place_location = self.compute_block_pick_offset_transform(
+            copy.deepcopy(target_tray.get_tray_place_block_location()))
 
         self.create_place_task(place_location,
                                approach_speed=0.0001,
@@ -744,7 +675,6 @@ class TaskPlanner:
     @tasync("REQUEST PUT ALL CONTENTS ON TABLE")
     def put_all_contents_on_table(self):
         """
-        
         :return: 
         """
         self.environment_estimation.update()
@@ -756,7 +686,6 @@ class TaskPlanner:
     @tasync("DETECT BLOCK POSE")
     def create_detect_block_poses_task(self, blocks, target_block_index):
         """
-        
         :param target_block_index: 
         :return: 
         """
@@ -774,7 +703,6 @@ class TaskPlanner:
         Moves all cubes on the table to the trays according with its color
         :return: 
         """
-
         blocks_count = len(blocks)
 
         target_block_index = 0
@@ -786,7 +714,9 @@ class TaskPlanner:
 
             self.trajectory_planner.ceilheight = 0.8
             self.create_move_top_block_view(target_block).result()
-            self.trajectory_planner.ceilheight = 0.7
+            self.trajectory_planner.ceilheight = 2.9
+
+            #self.create_go_home_task().result()
 
             rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
@@ -808,7 +738,6 @@ class TaskPlanner:
     @tasync("DISABLE ROBOT")
     def disable_robot_task(self):
         """
-        
         :return: 
         """
         self.sawyer_robot.disable()
@@ -816,7 +745,6 @@ class TaskPlanner:
     @tasync("ENABLE ROBOT")
     def enable_robot_task(self):
         """
-        
         :return: 
         """
         self.sawyer_robot.enable()
@@ -847,7 +775,6 @@ class TaskPlanner:
 
         # self.create_visit_all_cubes_armview(1).result()
 
-        #self.create_wait_forever_task().result()
 
         for i in xrange(2):
             self.create_go_vision_head_pose_task().result()
@@ -857,14 +784,13 @@ class TaskPlanner:
             #self.create_go_home_task().result()
 
             # self.create_complete_turn_over_tray, target_tray {"homepose": homepose}).result()
-
             # yield self.create_go_home_task()
-            #self.reset_cycle()
+            # self.reset_cycle()
             # continue
 
             original_block_poses = self.create_move_all_cubes_to_trays(blocks).result()
 
-            #self.reset_cycle()
+            # self.reset_cycle()
 
             self.pick_all_pieces_from_tray_and_put_on_table(original_block_poses).result()
 
@@ -874,7 +800,7 @@ class TaskPlanner:
 
     def reset_cycle(self):
         """
-        
+
         :return: 
         """
         for tray in self.environment_estimation.get_trays():
@@ -882,7 +808,6 @@ class TaskPlanner:
 
     def get_state(self):
         """
-        
         :return: 
         """
         return {"table_state": self.environment_estimation.table.get_state(),
@@ -894,7 +819,6 @@ class TaskPlanner:
 
     def execute_task(self, fn, args=[]):
         """
-        
         :param fn: 
         :return: 
         """
@@ -912,7 +836,6 @@ class TaskPlanner:
 
     def pause(self):
         """
-        
         :return: 
         """
         rospy.logwarn("PAUSING TASK PLANNER")
@@ -920,7 +843,6 @@ class TaskPlanner:
 
     def resume(self):
         """
-        
         :return: 
         """
         rospy.logwarn("RESUMING TASK PLANNER")
@@ -928,7 +850,6 @@ class TaskPlanner:
 
     def stop(self):
         """
-        
         :return: 
         """
         self.sawyer_robot.disable()
@@ -959,7 +880,6 @@ class TaskPlanner:
 
     def print_tasks(self):
         """
-        
         :return: 
         """
         try:
@@ -973,7 +893,6 @@ class TaskPlanner:
 
     def spin(self):
         """
-        
         :return: 
         """
         while not rospy.is_shutdown():

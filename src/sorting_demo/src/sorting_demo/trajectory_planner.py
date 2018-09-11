@@ -35,13 +35,7 @@ class TrajectoryPlanner:
 
         rospy.sleep(0.1)
 
-        #self.group.set_planner_id("OMPL")
-        self.group.set_planner_id("RRTConnectkConfigDefault")
-        #self.group.set_planner_id("LBKPIECEkConfigDefault")
-        #self.group.set_planner_id("ESTkConfigDefault")
-
-        # commit
-        rospy.sleep(0.2)
+        self.set_default_planner()
 
         print "============ Reference frame: %s" % self.group.get_planning_frame()
 
@@ -49,6 +43,14 @@ class TrajectoryPlanner:
         print self.robot.get_group_names()
         print self.robot.get_current_state()
 
+        rospy.sleep(0.2)
+
+    def set_default_planner(self):
+        # self.group.set_planner_id("OMPL")
+        self.group.set_planner_id("RRTConnectkConfigDefault")
+        # self.group.set_planner_id("LBKPIECEkConfigDefault")
+        # self.group.set_planner_id("ESTkConfigDefault")
+        # commit
         rospy.sleep(0.2)
 
     def create_environment_obstacles(self):
@@ -189,7 +191,7 @@ class TrajectoryPlanner:
         self.planning_scene_diff_publisher.publish(planning_scene)
         """
 
-    def move_to_joint_target(self, joints):
+    def move_to_joint_target(self, joints, attempts = 300):
         """
         
         :param joints: float array
@@ -204,7 +206,7 @@ class TrajectoryPlanner:
         except Exception as ex:
             pass
 
-        self.group.set_num_planning_attempts(300)
+        self.group.set_num_planning_attempts(attempts)
 
         rospy.sleep(0.3)
 

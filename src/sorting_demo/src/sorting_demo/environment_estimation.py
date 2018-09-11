@@ -4,25 +4,27 @@ import re
 
 import math
 import rospy
+import tf
 import tf.transformations
 from cv_bridge import CvBridge
 from gazebo_msgs.msg import LinkStates, sys
-
+from geometry_msgs.msg import Pose, Point, Quaternion
 from concepts.block import BlockState
 from concepts.tray import TrayState
 from concepts.table import Table
 
-from cv_detection import CameraHelper, get_blobs_info
+from cv_detection_head import CameraHelper, get_blobs_info
 
+from cv_detection_right_hand import get_cubes_z_rotation
 from utils.mathutils import *
 import demo_constants
 from threading import RLock
+import cv2
 
 
 class EnvironmentEstimation:
     def __init__(self):
         """
-
         """
         self.gazebo_trays = []
         self.gazebo_blocks = []
@@ -31,6 +33,7 @@ class EnvironmentEstimation:
         self.blocks = []
 
         self.tf_broacaster = tf.TransformBroadcaster()
+        self.tf_listener = tf.TransformListener()
 
         # initial simulated implementation
         pub = rospy.Subscriber('/gazebo/link_states', LinkStates, self._links_callback, queue_size=10)
@@ -39,16 +42,19 @@ class EnvironmentEstimation:
         self.original_blocks_poses_ = None
         self.mutex = RLock()
 
-        camera_name = "head_camera"
         TABLE_HEIGHT = -0.12
-        self.camera_helper = CameraHelper(camera_name, "base", TABLE_HEIGHT)
+        self.head_camera_helper = CameraHelper("head_camera", "base", TABLE_HEIGHT)
         self.bridge = CvBridge()
-
         self.block_pose_estimation_head_camera = None
-
         self.table = Table()
 
+        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
+
     def identify_block_from_aproximated_point(self, projected):
+        """
+        :param projected: 
+        :return: 
+        """
         bestindex = -1
         bestdist = sys.float_info.max
         for index, b in enumerate(self.blocks):
@@ -69,10 +75,82 @@ class EnvironmentEstimation:
         else:
             return None
 
+    def compute_block_pose_estimation_from_arm_camera(self):
+        # Take picture
+        img_data = self.hand_camera_helper.take_single_picture()
+
+        # Convert to OpenCV format
+        cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
+
+        camwtrans = None
+        camwrot = None
+
+        try:
+            (camwtrans, camwrot) = self.tf_listener.lookupTransform('/right_hand_camera_optical', '/base',
+                                                                    rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+            rospy.logerr(ex.message)
+
+        rotmat = tf.transformations.quaternion_matrix(camwrot)
+        transmat = tf.transformations.translation_matrix((camwtrans))
+        zaxis = rotmat[2,:]
+
+        cameratransform = tf.transformations.concatenate_matrices(rotmat,transmat)
+
+        #empirically obtained with a drawing, and rviz... the optical z axis is the one that is looking fordware (world x)
+        # also weirdly the frame axis in the rotation matrix are rows instead of columns
+        camera_yaw_angle =   math.atan2(zaxis[1],zaxis[0])
+
+        rospy.logwarn("camera angle:" + str(camera_yaw_angle*180.0/math.pi))
+        rospy.logwarn("camera rot:" + str(rotmat))
+        rospy.logwarn("zaxis camera vector:" + str(zaxis))
+        # Save for debugging
+        # cv2.imwrite("/tmp/debug.png", cv_image)
+
+        # Get cube rotation
+        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=120)
+        center = (cv_image.shape[1]/2, cv_image.shape[0]/2)
+
+        def cubedistToCenter(cube):
+            #((370, 224), 26.0, True, False)
+            dx = cube[0][0] - center[0]
+            dy = cube[0][1] - center[1]
+
+            return dx*dx + dy*dy
+
+        sorted_center_cubes = sorted(detected_cubes_info, key=cubedistToCenter)
+
+        cube = sorted_center_cubes[0]
+
+        image_cube_angle = cube[1] * (math.pi/180.0)
+        rospy.logwarn("image detected cube angle: "+ str(image_cube_angle))
+
+        final_cube_yaw_angle =   camera_yaw_angle - image_cube_angle
+
+        while final_cube_yaw_angle > math.pi/4:
+            final_cube_yaw_angle -= math.pi/2
+
+
+        while final_cube_yaw_angle < -math.pi/4:
+            final_cube_yaw_angle += math.pi/2
+
+        projected = self.hand_camera_helper.project_point_on_table(cube[0])
+        poseq = tf.transformations.quaternion_from_euler(0,0, final_cube_yaw_angle)
+
+        rospy.logwarn("quaternion angle:" + str(poseq))
+        self.tf_broacaster.sendTransform(projected,poseq,rospy.Time(0), "estimated_cube_1", "base")
+        rospy.logwarn(projected)
+
+        return Pose(position= Point(x=projected[0], y = projected[1], z = projected[1]),
+                    orientation= Quaternion(x= poseq[0], y = poseq[1], z=poseq[2], w=poseq[3]))
+
     def compute_block_pose_estimations_from_head_camera(self):
+        """
+        :return: 
+        """
         try:
             self.mutex.acquire()
-            img_data = self.camera_helper.take_single_picture()
+            img_data = self.head_camera_helper.take_single_picture()
 
             # Convert to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
@@ -91,7 +169,7 @@ class EnvironmentEstimation:
             self.table.blocks = []
 
             for huekey, point2d in ptinfos:
-                projected = self.camera_helper.project_point_on_table(point2d)
+                projected = self.head_camera_helper.project_point_on_table(point2d)
                 rospy.logwarn("projected: %s" % str(projected))
 
                 block = self.identify_block_from_aproximated_point(projected)
@@ -157,7 +235,7 @@ class EnvironmentEstimation:
                     if item is None:
                         # rospy.logwarn("block create name: "+ name)
                         item = BlockState(id=name, pose=pose)
-                        item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"].replace("Gazebo/","")
+                        item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"].replace("Gazebo/", "")
                     else:
                         item.pose = pose
 
@@ -167,7 +245,7 @@ class EnvironmentEstimation:
                     # item = None
                     if item is None:
                         item = TrayState(id=name, pose=pose)
-                        item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/","")
+                        item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/", "")
                     else:
                         item.pose = pose
 
@@ -254,7 +332,6 @@ class EnvironmentEstimation:
 
     def get_block(self, id):
         """
-
         :param id:
         :return:
         """
@@ -270,6 +347,9 @@ class EnvironmentEstimation:
             self.mutex.release()
 
     def get_original_block_poses(self):
+        """
+        :return: 
+        """
         try:
             self.mutex.acquire()
             return [copy.deepcopy(p) for p in self.original_blocks_poses_]
@@ -278,7 +358,6 @@ class EnvironmentEstimation:
 
     def get_tray(self, id):
         """
-
         :param id:
         :return:
         """
@@ -294,7 +373,6 @@ class EnvironmentEstimation:
 
     def get_tray_by_color(self, color):
         """
-
         :param id:
         :return:
         """
@@ -311,7 +389,6 @@ class EnvironmentEstimation:
 
     def get_tray_by_num(self, num):
         """
-        
         :param num: 
         :return: 
         """
