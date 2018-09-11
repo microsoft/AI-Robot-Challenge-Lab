@@ -36,10 +36,10 @@ class RobotTaskFacade:
             except Exception as ex:
                 return flask.json.jsonify(response= "ERR", message = ex.message)
 
-        @self.app.route("/count_table_pieces")
-        def count_pieces_on_table_by_color():
+        @self.app.route("/count_table_pieces/<color>")
+        def count_pieces_on_table_by_color(color):
             try:
-                return flask.json.jsonify(response="ACK", result=self.count_pieces_on_table_by_color())
+                return flask.json.jsonify(response="ACK", result=self.count_pieces_on_table_by_color(color))
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
@@ -130,7 +130,7 @@ class RobotTaskFacade:
 
         return task_stack
 
-    def count_pieces_on_table_by_color(self):
+    def count_pieces_on_table_by_color(self, color):
         """
         :param color: str - "red", "blue", "green"
         :return: 
