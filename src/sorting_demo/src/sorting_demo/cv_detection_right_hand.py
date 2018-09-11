@@ -89,7 +89,7 @@ def __apply_template_matching(angle, template, image):
 
     return (max_match, angle, template_rotated, image_templated_inrange_size_corrected)
 
-def get_cubes_z_rotation(cv_image):
+def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
     """
     Gets the cubes rotation in the Z plane from an image. The results are sorted by distance to the center of the image
 
@@ -144,7 +144,6 @@ def get_cubes_z_rotation(cv_image):
     #cv2.imshow("Contours", cv_image_contours_filled)
 
     # Create cube image for template matching
-    CUBE_SIZE = 90
     cv_image_cube_template = numpy.full((CUBE_SIZE, CUBE_SIZE, 1), 255, numpy.uint8)
 
     CUBE_BORDER_SIZE = 4
@@ -247,7 +246,7 @@ def get_cubes_z_rotation(cv_image):
             cv2.circle(template_matching_debug_image, (point_x, point_y), 5, clearance_circle_color, cv2.FILLED)
             cv2.circle(template_matching_debug_image, (point_x, point_y), 5, (255, 255, 255), 2)
 
-    cv2.imshow("Template matching result", template_matching_debug_image)
+    #cv2.imshow("Template matching result", template_matching_debug_image)
 
     return cube_positions_and_angles_sorted
 

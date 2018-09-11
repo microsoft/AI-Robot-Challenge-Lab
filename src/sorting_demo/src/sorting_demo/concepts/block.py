@@ -23,6 +23,8 @@ class BlockState:
         # the 3d pose estimation from the head image processing
         self.headview_pose_estimation = None
 
+        self.hand_estimated_pose = None
+
     def __str__(self):
         return "[Block estpos = %s]" % str(self.headview_pose_estimation)
 
