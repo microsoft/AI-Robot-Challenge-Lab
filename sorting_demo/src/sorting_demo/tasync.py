@@ -2,6 +2,7 @@ from functools import wraps
 import rospy
 import traceback
 
+
 def tasync(taskname):
     def wrapper(f):
         @wraps(f)
@@ -13,7 +14,7 @@ def tasync(taskname):
                 return Task("CANCEL", None)
 
             if self.pause_flag:
-                rospy.logerr("PAUSEEEE")
+                rospy.logerr("PAUSE")
                 while self.pause_flag and not rospy.is_shutdown():
                     rospy.sleep(0.5)
                     rospy.logwarn("Task %s is paused" % taskname)
@@ -24,6 +25,7 @@ def tasync(taskname):
                 res = None
                 try:
                     # f_kwargs["task"] = tt
+                    rospy.logwarn("launching task")
                     res = f(self, *f_args, **f_kwargs)
                 except Exception as ex:
                     rospy.logerr("task wrapping error (%s): %s" % (taskname, str(ex)))
@@ -32,6 +34,7 @@ def tasync(taskname):
 
             self.add_task(tt)
 
+            rospy.logwarn("launching task")
             fut = self.executor.submit(lamb)
             tt.future = fut
 

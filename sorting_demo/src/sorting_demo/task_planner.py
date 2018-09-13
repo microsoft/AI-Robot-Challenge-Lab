@@ -3,6 +3,7 @@ import copy
 import math
 import numpy
 from concurrent.futures import ThreadPoolExecutor
+from docutils.nodes import target
 from threading import Lock
 
 import moveit_msgs.msg
@@ -31,18 +32,17 @@ class TaskPlanner:
         """
         """
         limb = 'right'
-        hover_distance = 0.08  # meters
+        self._hover_distance = 0.08  # meters
 
         # subcomponents
         self.environment_estimation = EnvironmentEstimation()
 
         self.trajectory_planner = TrajectoryPlanner()
-        self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limb, hover_distance)
+        self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limb, self._hover_distance)
 
         self.tasks = []
-        self.executor = ThreadPoolExecutor(max_workers=4)
+        self.executor = ThreadPoolExecutor(max_workers=8)
 
-        self.task_facade = RobotTaskFacade(self)
         self.ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
 
         self.cancel_signal = False
@@ -69,6 +69,7 @@ class TaskPlanner:
         rospy.logwarn("adding task: " + task.name)
         try:
             self.mutex.acquire()
+            rospy.logwarn("adding task mutex: " + task.name)
             self.tasks.append(task)
         finally:
             self.mutex.release()
@@ -124,16 +125,26 @@ class TaskPlanner:
 
         targetjoints = dict(zip(resp.solution.joint_state.name, resp.solution.joint_state.position))
 
-        self.sawyer_robot._limb.set_joint_position_speed(0.000001)
-        self.safe_goto_joint_position(targetjoints)
+        rospy.logwarn("Target joints:" + str(targetjoints))
+        rospy.logwarn("target jonts: " + str(jntangles))
+
+        #self.sawyer_robot._limb.set_joint_position_speed(0.000001)
+        self.safe_goto_joint_position(targetjoints).result()
+        rospy.logwarn("Completed!! current joints: " + str(self.sawyer_robot._limb.joint_angles()))
+
+
         #self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
 
+    @tasync("GOTO JOINT GOAL")
     def safe_goto_joint_position(self, targetjoints, attempts = 300, hang_on_fail = False):
         """
         
         :param targetjoints: 
+        :param attempts: 
+        :param hang_on_fail: 
         :return: 
         """
+
 
         #self.sawyer_robot._guarded_move_to_joint_position(targetjoints)
         #rospy.logwarn("JOINT VALUES "+  str(targetjoints.values()))
@@ -142,20 +153,30 @@ class TaskPlanner:
         #rospy.sleep(3)
         #jnts = targetjoints.values()
         #jnts.reverse()
-        found = self.trajectory_planner.move_to_joint_target(targetjoints, attempts)
-        rospy.logwarn("move joint planner: "+ str(targetjoints))
 
-        if not found:
-            if hang_on_fail:
-                self.create_wait_forever_task().result()
+        try:
+
+            rospy.logwarn("traj planner move to joint target")
+            found = self.trajectory_planner.move_to_joint_target(targetjoints, attempts)
+            rospy.logwarn("move joint planner: "+ str(targetjoints))
+
+            if not found:
+                if hang_on_fail:
+                    self.create_wait_forever_task().result()
+                else:
+                    self.trajectory_planner.group.set_planner_id("OMPL")
+                    self.safe_goto_joint_position(targetjoints, attempts=500, hang_on_fail=True).result()
+                    self.trajectory_planner.set_default_planner()
+
+                return True
             else:
-                self.trajectory_planner.group.set_planner_id("OMPL")
-                self.safe_goto_joint_position(targetjoints, attempts=500, hang_on_fail=True)
-                self.trajectory_planner.set_default_planner()
+                return True
+        except Exception as ex:
+            rospy.logerr(ex.message)
+            self.create_wait_forever_task().result()
 
-            return True
-        else:
-            return True
+        return None
+
 
 
     def limb_move_to_joint_positions(self, joint_angles, timeout):
@@ -211,7 +232,7 @@ class TaskPlanner:
         if not check_obstacles:
             self.sawyer_robot._guarded_move_to_joint_position(starting_joint_angles)
         else:
-            self.safe_goto_joint_position(starting_joint_angles)
+            self.safe_goto_joint_position(starting_joint_angles).result()
 
     @tasync("GREET TASK")
     def create_greet_task(self):
@@ -237,8 +258,8 @@ class TaskPlanner:
                           'right_j6': 0.0}
 
         for i in xrange(4):
-            self.safe_goto_joint_position(joint_angles_A)
-            self.safe_goto_joint_position(joint_angles_B)
+            self.safe_goto_joint_position(joint_angles_A).result()
+            self.safe_goto_joint_position(joint_angles_B).result()
 
     @tasync("GO TO VISION POSE")
     def create_go_vision_head_pose_task(self):
@@ -257,7 +278,7 @@ class TaskPlanner:
                         'right_j6': 0.0}
 
         #self.sawyer_robot._limb.move_to_joint_positions(joint_angles)
-        found = self.safe_goto_joint_position(joint_angles)
+        found = self.safe_goto_joint_position(joint_angles).result()
         self.delay_task(1).result()
 
         """
@@ -595,6 +616,12 @@ class TaskPlanner:
         # individual processing algorithm
 
         estimated_cube_pose = self.environment_estimation.compute_block_pose_estimation_from_arm_camera()
+
+        if estimated_cube_pose is None:
+            rospy.logwarn("cube not detected")
+            self.create_wait_forever_task().result()
+        else:
+            rospy.logwarn("CUBE POSE DETECTED")
 
         block.hand_estimated_pose = estimated_cube_pose
 

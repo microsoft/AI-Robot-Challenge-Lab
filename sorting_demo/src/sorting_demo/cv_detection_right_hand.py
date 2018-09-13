@@ -246,7 +246,8 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
             cv2.circle(template_matching_debug_image, (point_x, point_y), 5, clearance_circle_color, cv2.FILLED)
             cv2.circle(template_matching_debug_image, (point_x, point_y), 5, (255, 255, 255), 2)
 
-    #cv2.imshow("Template matching result", template_matching_debug_image)
+    cv2.imshow("Template matching result", template_matching_debug_image)
+    cv2.waitKey(0)
 
     return cube_positions_and_angles_sorted
 
