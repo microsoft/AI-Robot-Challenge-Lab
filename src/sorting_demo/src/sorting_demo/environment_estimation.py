@@ -93,56 +93,63 @@ class EnvironmentEstimation:
 
         rotmat = tf.transformations.quaternion_matrix(camwrot)
         transmat = tf.transformations.translation_matrix((camwtrans))
-        zaxis = rotmat[2,:]
+        zaxis = rotmat[2, :]
 
-        cameratransform = tf.transformations.concatenate_matrices(rotmat,transmat)
+        cameratransform = tf.transformations.concatenate_matrices(rotmat, transmat)
 
-        #empirically obtained with a drawing, and rviz... the optical z axis is the one that is looking fordware (world x)
+        # empirically obtained with a drawing, and rviz... the optical z axis is the one that is looking fordware (world x)
         # also weirdly the frame axis in the rotation matrix are rows instead of columns
-        camera_yaw_angle =   math.atan2(zaxis[1],zaxis[0])
+        camera_yaw_angle = math.atan2(zaxis[1], zaxis[0])
 
-        rospy.logwarn("camera angle:" + str(camera_yaw_angle*180.0/math.pi))
+        rospy.logwarn("camera angle:" + str(camera_yaw_angle * 180.0 / math.pi))
         rospy.logwarn("camera rot:" + str(rotmat))
         rospy.logwarn("zaxis camera vector:" + str(zaxis))
         # Save for debugging
         # cv2.imwrite("/tmp/debug.png", cv_image)
 
         # Get cube rotation
-        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=120)
-        center = (cv_image.shape[1]/2, cv_image.shape[0]/2)
+        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=150)
+        center = (cv_image.shape[1] / 2, cv_image.shape[0] / 2)
 
         def cubedistToCenter(cube):
-            #((370, 224), 26.0, True, False)
+            # ((370, 224), 26.0, True, False)
             dx = cube[0][0] - center[0]
             dy = cube[0][1] - center[1]
 
-            return dx*dx + dy*dy
+            return dx * dx + dy * dy
 
         sorted_center_cubes = sorted(detected_cubes_info, key=cubedistToCenter)
 
-        cube = sorted_center_cubes[0]
+        try:
+            cube = sorted_center_cubes[0]
 
-        image_cube_angle = cube[1] * (math.pi/180.0)
-        rospy.logwarn("image detected cube angle: "+ str(image_cube_angle))
+            image_cube_angle = cube[1] * (math.pi / 180.0)
+            rospy.logwarn("image detected cube angle: " + str(image_cube_angle))
 
-        final_cube_yaw_angle =   camera_yaw_angle - image_cube_angle
+            final_cube_yaw_angle = camera_yaw_angle - image_cube_angle
 
-        while final_cube_yaw_angle > math.pi/4:
-            final_cube_yaw_angle -= math.pi/2
+            while final_cube_yaw_angle > math.pi / 4:
+                final_cube_yaw_angle -= math.pi / 2
 
+            while final_cube_yaw_angle < -math.pi / 4:
+                final_cube_yaw_angle += math.pi / 2
 
-        while final_cube_yaw_angle < -math.pi/4:
-            final_cube_yaw_angle += math.pi/2
+            projected = self.hand_camera_helper.project_point_on_table(cube[0])
+            poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
 
-        projected = self.hand_camera_helper.project_point_on_table(cube[0])
-        poseq = tf.transformations.quaternion_from_euler(0,0, final_cube_yaw_angle)
+            rospy.logwarn("quaternion angle:" + str(poseq))
+            self.tf_broacaster.sendTransform(projected, poseq, rospy.Time(0), "estimated_cube_1", "base")
+            rospy.logwarn(projected)
 
-        rospy.logwarn("quaternion angle:" + str(poseq))
-        self.tf_broacaster.sendTransform(projected,poseq,rospy.Time(0), "estimated_cube_1", "base")
-        rospy.logwarn(projected)
+            cv2.imshow("cube detection", cv_image)
+            cv2.waitKey(0)
 
-        return Pose(position= Point(x=projected[0], y = projected[1], z = projected[1]),
-                    orientation= Quaternion(x= poseq[0], y = poseq[1], z=poseq[2], w=poseq[3]))
+            return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
+                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3]))
+        except Exception as ex:
+            cv2.imshow("erroneus cube detection", cv_image)
+            cv2.waitKey(0)
+            return None
 
     def compute_block_pose_estimations_from_head_camera(self):
         """

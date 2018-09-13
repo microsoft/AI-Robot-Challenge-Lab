@@ -57,7 +57,7 @@ class SawyerRobotControl(object):
         # open the gripper
 
         self.gripper_open()
-        rospy.sleep(0.1)
+        rospy.sleep(1.0)
 
         if hover_distance is None:
             hover_distance = self._hover_distance
@@ -68,7 +68,7 @@ class SawyerRobotControl(object):
 
         # servo to pose
         self.original_servo_to_pose_loop(pose, time=meet_time)
-        # rospy.sleep(1.0)
+        rospy.sleep(1.0)
 
         if rospy.is_shutdown():
             return

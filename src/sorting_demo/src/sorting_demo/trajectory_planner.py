@@ -49,7 +49,7 @@ class TrajectoryPlanner:
         # self.group.set_planner_id("OMPL")
         self.group.set_planner_id("RRTConnectkConfigDefault")
         # self.group.set_planner_id("LBKPIECEkConfigDefault")
-        # self.group.set_planner_id("ESTkConfigDefault")
+        self.group.set_planner_id("ESTkConfigDefault")
         # commit
         rospy.sleep(0.2)
 
@@ -99,7 +99,7 @@ class TrajectoryPlanner:
         postxwallpose.pose.orientation.w = 1.0
         postxwallpose.header.stamp = rospy.Time.now()
         postxwallpose.header.frame_id = self.robot.get_planning_frame()
-        self.scene.add_box("postbackwall", postxwallpose , size=largexwall)
+        self.scene.add_box("postbackwall", postxwallpose, size=largexwall)
 
         frontwall = geometry_msgs.msg.PoseStamped()
         frontwall.pose = Pose(position=Point(x=1.1, y=0.0, z=0.0))
@@ -132,22 +132,22 @@ class TrajectoryPlanner:
         constraints = moveit_msgs.msg.Constraints()
 
         orientationconstraint = moveit_msgs.msg.OrientationConstraint()
-        #orientationconstraint.orientation.w=1
+        # orientationconstraint.orientation.w=1
         orientationconstraint.orientation.x = -0.011325648436031916
         orientationconstraint.orientation.y = 0.9998115142702567
         orientationconstraint.orientation.z = -0.006101035043221461
         orientationconstraint.orientation.w = 0.014541079448283218
 
-        orientationconstraint.absolute_x_axis_tolerance= 1.5
+        orientationconstraint.absolute_x_axis_tolerance = 1.5
         orientationconstraint.absolute_y_axis_tolerance = 1.5
         orientationconstraint.absolute_z_axis_tolerance = 1.5
         orientationconstraint.weight = 1.0
 
-        orientationconstraint.link_name="right_l6"
-        orientationconstraint.header.frame_id="world"
+        orientationconstraint.link_name = "right_l6"
+        orientationconstraint.header.frame_id = "world"
         orientationconstraint.header.stamp = rospy.Time.now()
 
-        #constraints.orientation_constraints.append(orientationconstraint)
+        # constraints.orientation_constraints.append(orientationconstraint)
 
         """
         jcm = moveit_msgs.msg.JointConstraint()
@@ -191,7 +191,7 @@ class TrajectoryPlanner:
         self.planning_scene_diff_publisher.publish(planning_scene)
         """
 
-    def move_to_joint_target(self, joints, attempts = 300):
+    def move_to_joint_target(self, joints, attempts=300):
         """
         
         :param joints: float array
@@ -199,8 +199,9 @@ class TrajectoryPlanner:
         """
         self.clear_parameters()
 
-        self.create_environment_obstacles()
+        # self.create_environment_obstacles()
 
+        # self.group.set_goal_joint_tolerance	(0.2)
         try:
             self.group.set_joint_value_target(joints)
         except Exception as ex:
@@ -222,7 +223,7 @@ class TrajectoryPlanner:
 
         # rospy.logwarn("PLAAAAN!!! "+ str(plan1))
 
-        if plan1.joint_trajectory.header.frame_id !="":
+        if plan1.joint_trajectory.header.frame_id != "":
             display_trajectory = moveit_msgs.msg.DisplayTrajectory()
 
             display_trajectory.trajectory_start = self.robot.get_current_state()
@@ -235,6 +236,39 @@ class TrajectoryPlanner:
         else:
             return False
 
+    """
+    def original_servo_to_pose_loop(self, target_pose, time=4.0, steps=400.0):
+        r = rospy.Rate(1 / (time / steps))  # Defaults to 100Hz command rate
+        current_pose = self._limb.endpoint_pose()
+        ik_delta = Pose()
+        ik_delta.position.x = (current_pose['position'].x - target_pose.position.x) / steps
+        ik_delta.position.y = (current_pose['position'].y - target_pose.position.y) / steps
+        ik_delta.position.z = (current_pose['position'].z - target_pose.position.z) / steps
+        ik_delta.orientation.x = (current_pose['orientation'].x - target_pose.orientation.x) / steps
+        ik_delta.orientation.y = (current_pose['orientation'].y - target_pose.orientation.y) / steps
+        ik_delta.orientation.z = (current_pose['orientation'].z - target_pose.orientation.z) / steps
+        ik_delta.orientation.w = (current_pose['orientation'].w - target_pose.orientation.w) / steps
+        for d in range(int(steps), -1, -1):
+            if rospy.is_shutdown():
+                return
+            ik_step = Pose()
+            ik_step.position.x = d * ik_delta.position.x + target_pose.position.x
+            ik_step.position.y = d * ik_delta.position.y + target_pose.position.y
+            ik_step.position.z = d * ik_delta.position.z + target_pose.position.z
+            ik_step.orientation.x = d * ik_delta.orientation.x + target_pose.orientation.x
+            ik_step.orientation.y = d * ik_delta.orientation.y + target_pose.orientation.y
+            ik_step.orientation.z = d * ik_delta.orientation.z + target_pose.orientation.z
+            ik_step.orientation.w = d * ik_delta.orientation.w + target_pose.orientation.w
+            joint_angles = self._limb.ik_request(ik_step, self._tip_name)
+            if joint_angles:
+                self._limb.set_joint_positions(joint_angles)
+            else:
+                rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
+
+            r.sleep()
+        r.sleep()
+    """
+
     def move_to_cartesian_target(self, pose_target):
         """
         
@@ -243,7 +277,7 @@ class TrajectoryPlanner:
         """
         self.clear_parameters()
 
-        self.create_environment_obstacles()
+        # self.create_environment_obstacles()
 
         self.group.set_pose_target(pose_target)
         self.group.set_num_planning_attempts(10)
@@ -259,7 +293,7 @@ class TrajectoryPlanner:
 
         # rospy.logwarn("PLAAAAN!!! "+ str(plan1))
 
-        if plan1.joint_trajectory.header.frame_id !="":
+        if plan1.joint_trajectory.header.frame_id != "":
             display_trajectory = moveit_msgs.msg.DisplayTrajectory()
 
             display_trajectory.trajectory_start = self.robot.get_current_state()
