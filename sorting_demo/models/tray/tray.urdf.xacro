@@ -47,7 +47,7 @@
           </surface>
         </collision>
 
-        <static>true</static>
+        <is_static>true</is_static>
 
     </gazebo>
 

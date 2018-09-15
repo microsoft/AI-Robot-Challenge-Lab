@@ -960,10 +960,14 @@ class TaskPlanner:
         self.create_move_XY(poseaux).result()
         # individual processing algorithm
 
-        estimated_cube_pose = self.environment_estimation.compute_block_pose_estimation_from_arm_camera(CUBE_SIZE=CUBE_SIZE)
+        estimated_cube_pose, graspA, graspB = self.environment_estimation.compute_block_pose_estimation_from_arm_camera(CUBE_SIZE=CUBE_SIZE)
 
         if estimated_cube_pose is None:
             rospy.logerr("cube on table not detected")
+            return False
+
+        if not graspA and not graspB:
+            rospy.logerr("there is no available grasping for this piece")
             return False
 
         self.environment_estimation.update()
@@ -1086,6 +1090,12 @@ class TaskPlanner:
         :return: 
         """
         blocks_count = len(blocks)
+
+        #declare all boxes on obstacles
+        for block in blocks:
+            self.trajectory_planner.register_box(block)
+            block.grasp_pose = block.headview_pose_estimation
+            self.trajectory_planner.update_block(block)
 
         while blocks_count > 0:
             # self.create_go_home_task().result()

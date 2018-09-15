@@ -53,9 +53,10 @@ class TrajectoryPlanner:
 
         rospy.sleep(0.2)
 
-    def register_box(self, pose):
-        self.registered_blocks.append(pose)
-        rospy.sleep(0.1)
+    def register_box(self, block):
+        if not block in self.registered_blocks:
+            self.registered_blocks.append(block)
+            rospy.sleep(0.1)
 
     def set_default_tables_z(self):
         self.table1_z = demo_constants.TABLE_HEIGHT + 0.02

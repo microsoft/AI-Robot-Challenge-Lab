@@ -15,6 +15,7 @@ class BlockState:
         self.gazebo_pose = None
         self.table_grasp_pose = None
         self.tray_place_pose = None
+        self.table_grasp_pose = None
 
         # the 2d blob point estimabion based on the head_image processing
         self.hue_estimation = None

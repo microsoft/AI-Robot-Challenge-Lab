@@ -127,6 +127,9 @@ class EnvironmentEstimation:
             cube = sorted_center_cubes[0]
 
             image_cube_angle = cube[1] * (math.pi / 180.0)
+            graspA = cube[2]
+            graspB = cube[3]
+
             rospy.logwarn("image detected cube angle: " + str(image_cube_angle))
 
             final_cube_yaw_angle = camera_yaw_angle - image_cube_angle
@@ -147,13 +150,14 @@ class EnvironmentEstimation:
             #cv2.imshow("cube detection", cv_image)
             #cv2.waitKey(0)
 
+
             return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
-                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3]))
+                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])),graspA,graspB
         except Exception as ex:
             rospy.logwarn("erroneous cube detection")
             #cv2.imshow("erroneus cube detection", cv_image)
             #cv2.waitKey(0)
-            return None
+            return None, None, None
 
     def compute_block_pose_estimations_from_head_camera(self):
         """
