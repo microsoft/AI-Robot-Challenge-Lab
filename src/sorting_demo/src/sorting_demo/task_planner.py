@@ -782,9 +782,10 @@ class TaskPlanner:
 
         # original_block_pose = copy.deepcopy(target_block.hand_estimated_pose)
 
-        self.trajectory_planner.ceilheight = 0.8
 
         try:
+            self.trajectory_planner.ceilheight = 0.7
+
             self.trajectory_planner.register_box(target_block)
 
             self.moveit_tabletop_pick(target_block).result()
