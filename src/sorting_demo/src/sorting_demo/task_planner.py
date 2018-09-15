@@ -755,7 +755,7 @@ class TaskPlanner:
         result = False
         while not result or result < 0:
             self.trajectory_planner.set_default_tables_z()
-            self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT - 0.05
+            self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table2_collision()
             self.trajectory_planner.update_table1_collision()
             target_block.tray = target_tray
@@ -804,7 +804,7 @@ class TaskPlanner:
 
             rospy.logwarn("target block pose : " + str(target_block.grasp_pose))
             self.trajectory_planner.set_default_tables_z()
-            self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT - 0.05
+            self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table2_collision()
 
             result = self.trajectory_planner.pick(target_block,"table2")
