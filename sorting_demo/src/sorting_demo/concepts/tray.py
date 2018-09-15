@@ -70,7 +70,7 @@ class TrayState:
         self.blocks = []
 
     def get_state(self):
-        return {"id": self.id, "pose":  message_converter.convert_ros_message_to_dictionary(self.tray_pose), "blocks": [b.get_state() for b in self.blocks]}
+        return {"id": self.id, "pose":  message_converter.convert_ros_message_to_dictionary(self.final_pose), "blocks": [b.get_state() for b in self.blocks]}
 
     def __str__(self):
         return "Tray: "+ str(self.id) +",num: "+str(self.num)+" -> "+ str(len(self.blocks)) + " items"
