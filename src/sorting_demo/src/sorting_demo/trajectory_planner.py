@@ -49,7 +49,7 @@ class TrajectoryPlanner:
         self.registered_blocks = []
 
         self.tableshape = (0.913, 0.913, 0.01)
-        #self.tableshape = (1.2, 1.2, 0.01)
+        # self.tableshape = (1.2, 1.2, 0.01)
 
         rospy.sleep(0.2)
 
@@ -63,8 +63,7 @@ class TrajectoryPlanner:
 
     def set_default_planner(self):
         # self.group.set_planner_id("OMPL")
-        # self.group.set_planner_id("RRTConnectk
-        # ConfigDefault")
+        #self.group.set_planner_id("RRTConnectkConfigDefault")
         # self.group.set_planner_id("LBKPIECEkConfigDefault")
         self.group.set_planner_id("ESTkConfigDefault")
         # commit
@@ -82,11 +81,11 @@ class TrajectoryPlanner:
         grasp.grasp_pose.header.frame_id = "world"
         grasp.grasp_pose.header.stamp = rospy.Time.now()
         grasp.grasp_pose.pose = target_pose
-        grasp.grasp_pose.pose.position.z+=0.1
+        grasp.grasp_pose.pose.position.z += 0.1
 
         grasp.pre_grasp_approach.direction.vector.z = -1.0
-        grasp.pre_grasp_approach.min_distance = 0.095
-        grasp.pre_grasp_approach.desired_distance = 0.15
+        grasp.pre_grasp_approach.min_distance = 0.08
+        grasp.pre_grasp_approach.desired_distance = 0.1
 
         # opened gripper
         grasp.pre_grasp_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
@@ -96,8 +95,8 @@ class TrajectoryPlanner:
         grasp.pre_grasp_posture.points = [trajpoint]
 
         grasp.post_grasp_retreat.direction.vector.z = 1.0
-        grasp.post_grasp_retreat.min_distance = 0.095
-        grasp.post_grasp_retreat.desired_distance = 0.15
+        grasp.post_grasp_retreat.min_distance = 0.08
+        grasp.post_grasp_retreat.desired_distance = 0.1
 
         # closed gripper
         grasp.grasp_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
@@ -111,25 +110,26 @@ class TrajectoryPlanner:
 
         return self.group.pick("block" + str(block_index), graps)
 
-    def place(self,block):
+    def place(self, block):
 
+        self.group.set_num_planning_attempts(500)
         self.create_environment_obstacles()
 
         place_location = moveit_msgs.msg.PlaceLocation()
         place_location.place_pose.header.frame_id = "world"
         place_location.place_pose.pose = block.tray_place_pose
 
-        place_location.pre_place_approach.direction.header.frame_id="world"
+        place_location.pre_place_approach.direction.header.frame_id = "world"
         place_location.pre_place_approach.direction.vector.z = -1.0
-        place_location.pre_place_approach.min_distance = 0.2
-        place_location.pre_place_approach.desired_distance = 0.115
+        place_location.pre_place_approach.min_distance = 0.08
+        place_location.pre_place_approach.desired_distance = 0.1
 
         place_location.post_place_retreat.direction.header.frame_id = "world"
         place_location.post_place_retreat.direction.vector.z = 1.0
-        place_location.post_place_retreat.min_distance = 0.1
-        place_location.post_place_retreat.desired_distance = 0.2
+        place_location.post_place_retreat.min_distance = 0.08
+        place_location.post_place_retreat.desired_distance = 0.1
 
-        #open
+        # open
         place_location.post_place_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
         trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
         trajpoint.positions = [0.04, 0.04]
@@ -139,13 +139,12 @@ class TrajectoryPlanner:
         rospy.sleep(1.0)
         return self.group.place("block" + str(self.registered_blocks.index(block)), place_location)
 
-
     def update_block(self, block):
         rospy.logwarn("updating block collision info")
         if not block in self.registered_blocks:
             raise Exception("block does not exist")
 
-        rospy.logwarn("current blocks: "+ str(self.registered_blocks))
+        rospy.logwarn("current blocks: " + str(self.registered_blocks))
         block_pose = geometry_msgs.msg.PoseStamped()
         block_pose.pose = block.grasp_pose
         block_pose.header.stamp = rospy.Time.now()
@@ -154,7 +153,6 @@ class TrajectoryPlanner:
         self.scene.add_box("block" + str(block_index), block_pose, size=(0.04, 0.04, 0.04))
         rospy.sleep(0.5)
         return block_index
-
 
     def register_table1(self):
         table1pose = geometry_msgs.msg.PoseStamped()
@@ -170,57 +168,59 @@ class TrajectoryPlanner:
         table2pose.pose.orientation.w = 1.0
         table2pose.header.stamp = rospy.Time.now()
         table2pose.header.frame_id = "world"
+        edgeheight = 0.15
+
         self.scene.add_box("table2", table2pose, size=self.tableshape)
 
-
-        edgezsize = 0.3
         edgex = geometry_msgs.msg.PoseStamped()
-        edgex.pose = Pose(position=Point(x=0.0, y=1.0 - self.tableshape[1]/2.0, z=self.table2_z + edgezsize*0.5))
+        edgex.pose = Pose(position=Point(x=0.0, y=1.0 - self.tableshape[1] / 2.0, z=self.table2_z + edgeheight * 0.5))
         edgex.pose.orientation.w = 1.0
         edgex.header.stamp = rospy.Time.now()
         edgex.header.frame_id = "world"
 
-        newshape = (self.tableshape[0], self.tableshape[1]*0.01, self.tableshape[2]+edgezsize)
+        newshape = (self.tableshape[0], self.tableshape[1] * 0.01, self.tableshape[2] + edgeheight)
         self.scene.add_box("table2_edgex", edgex, size=newshape)
 
-
         edgex2 = geometry_msgs.msg.PoseStamped()
-        edgex2.pose = Pose(position=Point(x=0.0, y=1.0 + self.tableshape[1]/2.0, z=self.table2_z  + edgezsize*0.5))
+        edgex2.pose = Pose(position=Point(x=0.0, y=1.0 + self.tableshape[1] / 2.0, z=self.table2_z + edgeheight * 0.5))
         edgex2.pose.orientation.w = 1.0
         edgex2.header.stamp = rospy.Time.now()
         edgex2.header.frame_id = "world"
 
-        newshape = (self.tableshape[0], self.tableshape[1]*0.01, self.tableshape[2]+edgezsize)
+        newshape = (self.tableshape[0], self.tableshape[1] * 0.01, self.tableshape[2] + edgeheight)
         self.scene.add_box("table2_edgex2", edgex2, size=newshape)
 
         edgey = geometry_msgs.msg.PoseStamped()
-        edgey.pose = Pose(position=Point(x=self.tableshape[0] / 2.0, y=1.0 , z=self.table2_z  + edgezsize*0.5))
+        edgey.pose = Pose(position=Point(x=self.tableshape[0] / 2.0, y=1.0, z=self.table2_z + edgeheight * 0.5))
         edgey.pose.orientation.w = 1.0
         edgey.header.stamp = rospy.Time.now()
         edgey.header.frame_id = "world"
 
-        newshape = (self.tableshape[0]*0.01, self.tableshape[1] , self.tableshape[2] + edgezsize)
+        newshape = (self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight)
         self.scene.add_box("table2_edgey", edgey, size=newshape)
 
         edgey2 = geometry_msgs.msg.PoseStamped()
-        edgey2.pose = Pose(position=Point(x= - self.tableshape[0] / 2.0, y=1.0 , z=self.table2_z  + edgezsize*0.5))
+        edgey2.pose = Pose(position=Point(x=- self.tableshape[0] / 2.0, y=1.0, z=self.table2_z + edgeheight * 0.5))
         edgey2.pose.orientation.w = 1.0
         edgey2.header.stamp = rospy.Time.now()
         edgey2.header.frame_id = "world"
 
-        newshape = (self.tableshape[0]*0.01, self.tableshape[1] , self.tableshape[2] + edgezsize  + edgezsize*0.5)
+        newshape = (self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight * 0.5)
         self.scene.add_box("table2_edgey2", edgey2, size=newshape)
 
         splits = 3
-        for i in xrange(1,splits):
+        for i in xrange(1, splits):
             edgeyi = geometry_msgs.msg.PoseStamped()
-            edgeyi.pose = Pose(position=Point(x= i*self.tableshape[0] / float(splits) - self.tableshape[0]*0.5, y=1.0, z=self.table2_z + edgezsize * 0.5))
+            edgeyi.pose = Pose(
+                position=Point(x=i * self.tableshape[0] / float(splits) - self.tableshape[0] * 0.5, y=1.0,
+                               z=self.table2_z + edgeheight * 0.5))
             edgeyi.pose.orientation.w = 1.0
             edgeyi.header.stamp = rospy.Time.now()
             edgeyi.header.frame_id = "world"
 
-            newshape = (self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgezsize + edgezsize * 0.5)
-            self.scene.add_box("table2_edgey_"+str(i), edgeyi, size=newshape)
+            newshape = (
+            self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight + edgeheight * 0.5)
+            self.scene.add_box("table2_edgey_" + str(i), edgeyi, size=newshape)
 
     def create_environment_obstacles(self):
         """
@@ -231,7 +231,6 @@ class TrajectoryPlanner:
         largexwall = (0.01, 2.0, 1.4)
         ywall = (2.0, 0.01, 1.4)
 
-
         ceil1pose = geometry_msgs.msg.PoseStamped()
         ceil1pose.pose = Pose(position=Point(x=0.0, y=0.0, z=self.ceilheight))
         ceil1pose.pose.orientation.w = 1.0
@@ -240,14 +239,14 @@ class TrajectoryPlanner:
         self.scene.add_box("ceil1", ceil1pose, size=ceilshape)
 
         xwallpose = geometry_msgs.msg.PoseStamped()
-        xwallpose.pose = Pose(position=Point(x=-0.35, y=0.0, z=0.0))
+        xwallpose.pose = Pose(position=Point(x=-0.2, y=0.0, z=0.0))
         xwallpose.pose.orientation.w = 1.0
         xwallpose.header.stamp = rospy.Time.now()
         xwallpose.header.frame_id = self.robot.get_planning_frame()
         self.scene.add_box("backwall", xwallpose, size=backwall)
 
         postxwallpose = geometry_msgs.msg.PoseStamped()
-        postxwallpose.pose = Pose(position=Point(x=-0.9, y=0.0, z=0.0))
+        postxwallpose.pose = Pose(position=Point(x=-0.6, y=0.0, z=0.0))
         postxwallpose.pose.orientation.w = 1.0
         postxwallpose.header.stamp = rospy.Time.now()
         postxwallpose.header.frame_id = self.robot.get_planning_frame()
@@ -353,7 +352,7 @@ class TrajectoryPlanner:
 
         self.clear_parameters()
 
-        #self.create_environment_obstacles()
+        # self.create_environment_obstacles()
 
         # self.group.set_goal_joint_tolerance	(0.2)
         try:
