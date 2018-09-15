@@ -2,11 +2,16 @@ from functools import wraps
 import rospy
 import traceback
 
+import sys
+
 
 def tasync(taskname):
     def wrapper(f):
         @wraps(f)
         def wrapped(self, *f_args, **f_kwargs):
+
+            if rospy.is_shutdown():
+                sys.exit(0)
 
             if self.has_cancel_signal():
                 rospy.logerr("trying to invoke but cancel signal: " + str(taskname))

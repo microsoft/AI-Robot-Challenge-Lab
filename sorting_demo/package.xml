@@ -64,9 +64,9 @@
   <build_depend>gazebo_plugins</build_depend>
   <build_depend>moveit</build_depend>
   <build_depend>rospy-message-converter</build_depend>
+  <build_depend>gazebo_plugins</build_depend>
+  <build_depend>python-flask</build_depend>
   <build_depend>python-catkin-tools</build_depend>
-
-
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>rospack</exec_depend>

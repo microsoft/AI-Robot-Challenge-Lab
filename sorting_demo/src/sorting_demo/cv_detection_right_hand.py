@@ -13,6 +13,8 @@ from cv_bridge import CvBridge, CvBridgeError
 
 from cv_detection_camera_helper import CameraHelper
 
+imgindex = 0
+
 def __create_mask_image_from_template(reference_image, template, pos_x, pos_y):
     '''
     Resize a template image to match a reference image size, placing the template's center in the given position, to be used as a mask
@@ -246,8 +248,11 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
             cv2.circle(template_matching_debug_image, (point_x, point_y), 5, clearance_circle_color, cv2.FILLED)
             cv2.circle(template_matching_debug_image, (point_x, point_y), 5, (255, 255, 255), 2)
 
-    cv2.imshow("Template matching result", template_matching_debug_image)
-    cv2.waitKey(0)
+    #cv2.imshow("Template matching result", template_matching_debug_image)
+    global imgindex
+    cv2.imwrite("/tmp/img"+ str(imgindex)+".jpg", template_matching_debug_image)
+    imgindex+=1
+    #cv2.waitKey(0)
 
     return cube_positions_and_angles_sorted
 
