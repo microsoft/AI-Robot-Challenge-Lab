@@ -292,12 +292,15 @@ class TaskPlanner:
         """
         :return: 
         """
+        self.trajectory_planner.ceilheight = 0.95
+        self.trajectory_planner.update_ceiling_obstacle()
+
         # joint_angles = self.sawyer_robot._limb.joint_angles()
 
         oldceil = self.trajectory_planner.ceilheight
 
         joint_angles = {'right_j0': 0.0,
-                        'right_j1': -numpy.pi / 2.0 ,
+                        'right_j1': -numpy.pi / 2.0,
                         'right_j2': 0.0,
                         'right_j3': numpy.pi / 2.0,
                         'right_j4': 0.0,
@@ -308,7 +311,7 @@ class TaskPlanner:
 
         # self.sawyer_robot._limb.move_to_joint_positions(joint_angles)
         found = self.safe_goto_joint_position(joint_angles).result()
-        #self.delay_task(0.2).result()
+        # self.delay_task(0.2).result()
         rospy.sleep(0.5)
         self.trajectory_planner.ceilheight = oldceil
         """
@@ -462,7 +465,6 @@ class TaskPlanner:
         ik_pose.orientation.w = current_pose['orientation'].w
         self.create_linear_motion_task(ik_pose, time=time).result()
 
-
     @tasync("PICK LOOP")
     def create_pick_loop_task(self, target_pose, approach_speed=0.001, approach_time=3.0, meet_time=2.0,
                               retract_time=2.0,
@@ -474,11 +476,12 @@ class TaskPlanner:
         """
         self.sawyer_robot._limb.set_joint_position_speed(1.0)
 
-
         if hover_distance is None:
             hover_distance = self._hover_distance
 
-        final_joints = self.sawyer_robot._limb.ik_request(target_pose, self.sawyer_robot._tip_name, joint_seed=self.starting_joint_angles, nullspace_goal=self.starting_joint_angles)
+        final_joints = self.sawyer_robot._limb.ik_request(target_pose, self.sawyer_robot._tip_name,
+                                                          joint_seed=self.starting_joint_angles,
+                                                          nullspace_goal=self.starting_joint_angles)
         hover_pose = copy.deepcopy(target_pose)
         hover_pose.position.z += hover_distance
         # rospy.logwarn("SEED pick: "+ str(jntsseed))
@@ -624,9 +627,11 @@ class TaskPlanner:
         hover_distance = self.place_hover_distance
         self.sawyer_robot._limb.set_joint_position_speed(1.0)
 
-        #final_joints = self.sawyer_robot._limb.ik_request(target_pose, self.sawyer_robot._tip_name)
+        # final_joints = self.sawyer_robot._limb.ik_request(target_pose, self.sawyer_robot._tip_name)
 
-        final_joints = self.sawyer_robot._limb.ik_request(target_pose, self.sawyer_robot._tip_name, joint_seed=self.starting_joint_angles, nullspace_goal=self.starting_joint_angles)
+        final_joints = self.sawyer_robot._limb.ik_request(target_pose, self.sawyer_robot._tip_name,
+                                                          joint_seed=self.starting_joint_angles,
+                                                          nullspace_goal=self.starting_joint_angles)
 
         hover_pose = copy.deepcopy(target_pose)
         hover_pose.position.z += hover_distance
@@ -743,13 +748,14 @@ class TaskPlanner:
             rospy.sleep(secs)
 
     @tasync("MOVEIT TRAY PLACE")
-    def moveit_tray_place(self,target_block,target_tray):
+    def moveit_tray_place(self, target_block, target_tray):
         result = False
-        while not result or result <0:
+        while not result or result < 0:
             self.trajectory_planner.set_default_tables_z()
             self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT - 0.05
-            self.trajectory_planner.update_table2()
-            self.trajectory_planner.register_table1()
+            self.trajectory_planner.update_table2_collision()
+            self.trajectory_planner.update_table1_collision()
+            target_block.tray = target_tray
             target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose())
             result = self.trajectory_planner.place(target_block)
             rospy.logwarn("place result: " + str(result))
@@ -758,18 +764,51 @@ class TaskPlanner:
     def moveit_tabletop_pick(self, target_block):
         # self.sawyer_robot.gripper_open()
         result = False
-        while not result or result <0:
+        while not result or result < 0:
             rospy.logwarn("target block: " + str(target_block))
 
             target_block.grasp_pose = copy.deepcopy(
-                self.compute_grasp_pose_offset(target_block.hand_estimated_pose))
+                self.compute_grasp_pose_offset(target_block.arm_view_estimated_pose))
             rospy.logwarn("target block pose : " + str(target_block.grasp_pose))
             self.trajectory_planner.set_default_tables_z()
             self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT - 0.05
-            self.trajectory_planner.register_table1()
-            result = self.trajectory_planner.pick(target_block)
+            self.trajectory_planner.update_table1_collision()
+            result = self.trajectory_planner.pick(target_block,"table1")
             rospy.logwarn("pick result: " + str(result))
 
+
+    @tasync("MOVEIT TABLETOP PLACE")
+    def moveit_tabletop_place(self,target_block):
+        result = False
+        while not result or result < 0:
+            self.trajectory_planner.set_default_tables_z()
+            self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT - 0.05
+            self.trajectory_planner.update_table2_collision()
+            self.trajectory_planner.update_table1_collision()
+            target_block.tray_place_pose = self.compute_grasp_pose_offset(target_block.arm_view_estimated_pose)
+
+            result = self.trajectory_planner.place(target_block)
+            rospy.logwarn("place result: " + str(result))
+
+    @tasync("MOVEIT TRAYTOP PICK")
+    def moveit_traytop_pick(self, target_block):
+        # self.sawyer_robot.gripper_open()
+        result = False
+        while not result or result < 0:
+            rospy.logwarn("target block: " + str(target_block))
+
+            target_block.grasp_pose = self.compute_grasp_pose_offset(target_block.tray_place_pose)
+
+            rospy.logwarn("target block pose : " + str(target_block.grasp_pose))
+            self.trajectory_planner.set_default_tables_z()
+            self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT - 0.05
+            self.trajectory_planner.update_table2_collision()
+
+            result = self.trajectory_planner.pick(target_block,"table2")
+            rospy.logwarn("pick result: " + str(result))
+
+            target_block.tray.blocks.remove(target_block)
+            target_block.tray = None
 
     @tasync("PICK BLOCK FROM TABLE AND MOVE TO TRAY")
     def pick_block_on_table_and_place_on_tray(self, target_block, target_tray):
@@ -780,7 +819,7 @@ class TaskPlanner:
 
         # original_block_pose = copy.deepcopy(target_block.final_pose)
 
-        # original_block_pose = copy.deepcopy(target_block.hand_estimated_pose)
+        # original_block_pose = copy.deepcopy(target_block.arm_view_estimated_pose)
 
 
         try:
@@ -792,24 +831,22 @@ class TaskPlanner:
 
             rospy.sleep(0.5)
 
-            self.moveit_tray_place(target_block,target_tray).result()
+            self.moveit_tray_place(target_block, target_tray).result()
 
         except:
             self.create_wait_forever_task().result()
 
+        # self.create_wait_forever_task().result()
 
-
-        #self.create_wait_forever_task().result()
-
-        #self.trajectory_planner.ceilheight = 0.8
-        #self.create_pick_task(grasp_block_pose, approach_speed=0.01, approach_time=1.0,
+        # self.trajectory_planner.ceilheight = 0.8
+        # self.create_pick_task(grasp_block_pose, approach_speed=0.01, approach_time=1.0,
         #                      meet_time=1.0,
         #                      retract_time=0.5,
         #                      hover_distance=None).result()
 
 
 
-        #self.create_place_task(
+        # self.create_place_task(
         #    copy.deepcopy(self.compute_block_pick_offset_transform(target_tray.get_tray_place_block_pose())),
         #    approach_speed=0.0001,
         #    approach_time=2.0,
@@ -822,7 +859,7 @@ class TaskPlanner:
         return target_block.grasp_pose
 
     @tasync("BLOCK FROM TRAY TO TABLE")
-    def pick_all_pieces_from_tray_and_put_on_table(self, original_block_pose):
+    def pick_all_pieces_from_tray_and_put_on_table(self):
         """
         Pick a block from where it is located on the tray and move it back to the table
         :param original_block_pose: 
@@ -833,28 +870,30 @@ class TaskPlanner:
 
         for target_tray in self.environment_estimation.get_trays():
             for target_block in target_tray.blocks:
+                self.moveit_traytop_pick(target_block).result()
+                self.moveit_tabletop_place(target_block).result()
 
-                    #target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index) \
-                    #    .result()
+                # target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index) \
+                #    .result()
 
-                self.create_pick_task(copy.deepcopy(target_block.final_pose),
-                                      approach_speed=0.0001,
-                                      approach_time=2.0,
-                                      meet_time=3.0,
-                                      retract_time=1.0,
-                                      hover_distance=None).result()
+                # self.create_pick_task(copy.deepcopy(target_block.final_pose),
+                #                      approach_speed=0.0001,
+                #                      approach_time=2.0,
+                #                      meet_time=3.0,
+                #                      retract_time=1.0,
+                #                      hover_distance=None).result()
 
-                #place_pose = self.compute_grasp_pose_offset(target_block.grasp_pose)
-                place_pose = target_block.grasp_pose
+                # place_pose = self.compute_grasp_pose_offset(target_block.grasp_pose)
+                #place_pose = target_block.grasp_pose
                 # rospy.logerr("place vs: "+ str(target_block.final_pose) +"\n"+ str(place_pose))
 
-                self.create_place_task(copy.deepcopy(place_pose),
-                                       approach_speed=0.0001,
-                                       approach_time=2.0,
-                                       meet_time=3.0,
-                                       retract_time=1.0).result()
+                #self.create_place_task(copy.deepcopy(place_pose),
+                #                       approach_speed=0.0001,
+                #                       approach_time=2.0,
+                #                       meet_time=3.0,
+                #                       retract_time=1.0).result()
 
-                #target_block_index += 1
+                # target_block_index += 1
 
     @tasync("HEAD VISION PROCESSING")
     def create_head_vision_processing_on_table(self):
@@ -872,7 +911,7 @@ class TaskPlanner:
         :return: 
         """
 
-        rospy.loginfo("trying to estimate pose of block: "+ str(block))
+        rospy.loginfo("trying to estimate pose of block: " + str(block))
         top_view_pose = copy.deepcopy(block.headview_pose_estimation)
         # chose z plane
         top_view_pose.position.z = 0.05
@@ -899,7 +938,7 @@ class TaskPlanner:
         else:
             rospy.logwarn("CUBE POSE DETECTED")
 
-        block.hand_estimated_pose = estimated_cube_pose
+        block.arm_view_estimated_pose = estimated_cube_pose
         return True
 
     @tasync("OBSERVE ALL CUBES")
@@ -983,7 +1022,7 @@ class TaskPlanner:
         self.environment_estimation.update()
         original_blocks_poses = self.environment_estimation.get_original_block_poses()
         rospy.logwarn(original_blocks_poses)
-        self.pick_all_pieces_from_tray_and_put_on_table(original_blocks_poses).result()
+        self.pick_all_pieces_from_tray_and_put_on_table().result()
         self.create_wait_forever_task().result()
 
     @tasync("DETECT BLOCK POSE")
@@ -1008,7 +1047,6 @@ class TaskPlanner:
         """
         blocks_count = len(blocks)
 
-        original_block_poses = []
         while blocks_count > 0:
             # self.create_go_home_task().result()
 
@@ -1021,30 +1059,24 @@ class TaskPlanner:
                 rospy.logerr("single image cube not detected, recomputing cubes")
                 self.create_go_vision_head_pose_task().result()
                 blocks = self.create_head_vision_processing_on_table().result()
-                rospy.logwarn("new detected cubes: "+ str(blocks))
-                #target_block_index = 0
+                rospy.logwarn("new detected cubes: " + str(blocks))
+                # target_block_index = 0
                 blocks_count = len(blocks)
                 continue
 
-            self.trajectory_planner.ceilheight = 2.9
-
             # self.create_go_home_task().result()
 
-            #rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % target_block_index)
+            # rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
             # concurrency issue, what if we lock the objectdetection update?
 
-            original_block_pose = self.pick_block_on_table_and_place_on_tray(target_block, target_tray).result()
-
-            original_block_poses.append(original_block_pose)
-
-            # concurrency issue
-            self.environment_estimation.get_tray(target_tray.id).notify_contains_block(target_block)
+            self.pick_block_on_table_and_place_on_tray(target_block, target_tray).result()
+            target_tray.notify_contains_block(target_block)
             self.environment_estimation.table.notify_block_removed(target_block)
+            blocks_count = len(blocks)
 
-            #rospy.logwarn("target block index: " + str(target_block_index))
+            # rospy.logwarn("target block index: " + str(target_block_index))
 
-        return original_block_poses
 
     @tasync("DISABLE ROBOT")
     def disable_robot_task(self):
@@ -1087,7 +1119,7 @@ class TaskPlanner:
         # self.create_visit_all_cubes_armview(1).result()
 
 
-        for i in xrange(2):
+        for i in xrange(100):
             self.create_go_vision_head_pose_task().result()
             blocks = self.create_head_vision_processing_on_table().result()
 
@@ -1098,13 +1130,13 @@ class TaskPlanner:
             # self.reset_cycle()
             # continue
 
-            original_block_poses = self.create_move_all_cubes_to_trays(blocks).result()
+            self.create_move_all_cubes_to_trays(blocks).result()
 
             # self.reset_cycle()
 
-            self.pick_all_pieces_from_tray_and_put_on_table(original_block_poses).result()
+            self.pick_all_pieces_from_tray_and_put_on_table().result()
 
-            self.delay_task(10).result()
+            self.delay_task(1).result()
 
         self.create_wait_forever_task().result()
 

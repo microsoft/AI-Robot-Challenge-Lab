@@ -69,13 +69,13 @@ class TrajectoryPlanner:
         # commit
         rospy.sleep(0.2)
 
-    def pick(self, block):
+    def pick(self, block, surface):
         target_pose = block.grasp_pose
 
         self.group.set_num_planning_attempts(300)
-        self.create_environment_obstacles()
+        self.update_environment_obstacles()
         block_index = self.update_block(block)
-        self.group.set_support_surface_name("table1")
+        self.group.set_support_surface_name(surface)
 
         grasp = moveit_msgs.msg.Grasp()
         grasp.grasp_pose.header.frame_id = "world"
@@ -113,7 +113,7 @@ class TrajectoryPlanner:
     def place(self, block):
 
         self.group.set_num_planning_attempts(500)
-        self.create_environment_obstacles()
+        self.update_environment_obstacles()
 
         place_location = moveit_msgs.msg.PlaceLocation()
         place_location.place_pose.header.frame_id = "world"
@@ -154,7 +154,7 @@ class TrajectoryPlanner:
         rospy.sleep(0.5)
         return block_index
 
-    def register_table1(self):
+    def update_table1_collision(self):
         table1pose = geometry_msgs.msg.PoseStamped()
         table1pose.pose = Pose(position=Point(x=0.75, y=0.0, z=self.table1_z))
         table1pose.pose.orientation.w = 1.0
@@ -162,7 +162,7 @@ class TrajectoryPlanner:
         table1pose.header.frame_id = "world"
         self.scene.add_box("table1", table1pose, size=self.tableshape)
 
-    def update_table2(self):
+    def update_table2_collision(self):
         table2pose = geometry_msgs.msg.PoseStamped()
         table2pose.pose = Pose(position=Point(x=0.0, y=1.0, z=self.table2_z))
         table2pose.pose.orientation.w = 1.0
@@ -222,14 +222,9 @@ class TrajectoryPlanner:
             self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight + edgeheight * 0.5)
             self.scene.add_box("table2_edgey_" + str(i), edgeyi, size=newshape)
 
-    def create_environment_obstacles(self):
-        """
-        :return: 
-        """
+
+    def update_ceiling_obstacle(self):
         ceilshape = (2.0, 2.0, 0.02)
-        backwall = (0.01, 0.25, 1.4)
-        largexwall = (0.01, 2.0, 1.4)
-        ywall = (2.0, 0.01, 1.4)
 
         ceil1pose = geometry_msgs.msg.PoseStamped()
         ceil1pose.pose = Pose(position=Point(x=0.0, y=0.0, z=self.ceilheight))
@@ -237,6 +232,17 @@ class TrajectoryPlanner:
         ceil1pose.header.stamp = rospy.Time.now()
         ceil1pose.header.frame_id = self.robot.get_planning_frame()
         self.scene.add_box("ceil1", ceil1pose, size=ceilshape)
+
+
+    def update_environment_obstacles(self):
+        """
+        :return: 
+        """
+        backwall = (0.01, 0.25, 1.4)
+        largexwall = (0.01, 2.0, 1.4)
+        ywall = (2.0, 0.01, 1.4)
+
+        self.update_ceiling_obstacle()
 
         xwallpose = geometry_msgs.msg.PoseStamped()
         xwallpose.pose = Pose(position=Point(x=-0.2, y=0.0, z=0.0))
@@ -408,7 +414,7 @@ class TrajectoryPlanner:
         """
         self.clear_parameters()
 
-        self.create_environment_obstacles()
+        self.update_environment_obstacles()
 
         self.group.set_pose_target(pose_target)
         self.group.set_num_planning_attempts(attempts)
