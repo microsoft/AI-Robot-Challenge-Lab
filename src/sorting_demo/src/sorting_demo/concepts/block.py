@@ -12,7 +12,7 @@ class BlockState:
         self.homogeneous_transform = None
         search = BlockState.regex.search(id)
         self.num = int(search.group(1))
-        self.final_pose = None
+        self.gazebo_pose = None
         self.table_grasp_pose = None
         self.tray_place_pose = None
 
@@ -25,7 +25,9 @@ class BlockState:
         # the 3d pose estimation from the head image processing
         self.headview_pose_estimation = None
 
-        self.arm_view_estimated_pose = None
+        self.tabletop_arm_view_estimated_pose = None
+
+        self.traytop_arm_view_estimated_pose =None
 
         self.tray = None
 
@@ -34,7 +36,7 @@ class BlockState:
         return "[Block estpos = %s]" % str(self.headview_pose_estimation)
 
     def get_state(self):
-        return {"id": self.id, "table_pose": message_converter.convert_ros_message_to_dictionary(self.final_pose),
+        return {"id": self.id, "table_pose": message_converter.convert_ros_message_to_dictionary(self.gazebo_pose),
                 "color": self.color}
 
     @staticmethod

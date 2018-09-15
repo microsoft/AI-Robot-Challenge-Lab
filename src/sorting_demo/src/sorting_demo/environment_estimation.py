@@ -37,7 +37,7 @@ class EnvironmentEstimation:
         self.tf_listener = tf.TransformListener()
 
         # initial simulated implementation
-        pub = rospy.Subscriber('/gazebo/link_states', LinkStates, self._links_callback, queue_size=10)
+        pub = rospy.Subscriber('/gazebo/link_states', LinkStates, self.simulated_link_state_callback, queue_size=10)
 
         self.gazebo_world_to_ros_transform = None
         self.original_blocks_poses_ = None
@@ -76,7 +76,7 @@ class EnvironmentEstimation:
         else:
             return None
 
-    def compute_block_pose_estimation_from_arm_camera(self):
+    def compute_block_pose_estimation_from_arm_camera(self, CUBE_SIZE=150):
         #get latest image from topic
         rospy.sleep(0.3)
         # Take picture
@@ -111,7 +111,7 @@ class EnvironmentEstimation:
         # cv2.imwrite("/tmp/debug.png", cv_image)
 
         # Get cube rotation
-        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=150)
+        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=CUBE_SIZE)
         center = (cv_image.shape[1] / 2, cv_image.shape[0] / 2)
 
         def cubedistToCenter(cube):
@@ -221,7 +221,7 @@ class EnvironmentEstimation:
         finally:
             self.mutex.release()
 
-    def _links_callback(self, links):
+    def simulated_link_state_callback(self, links):
         """
         string[] name
         geometry_msgs/Pose[] pose
@@ -328,7 +328,7 @@ class EnvironmentEstimation:
                                                      item.id,
                                                      "world")
 
-                    item.final_pose = homotransform_to_pose_msg(transf_homopose)
+                    item.gazebo_pose = homotransform_to_pose_msg(transf_homopose)
 
                     if isinstance(item, BlockState):
                         blocks.append(item)
@@ -343,7 +343,7 @@ class EnvironmentEstimation:
             # rospy.logwarn("GAZEBO blocks update lenght: %d"%len(self.gazebo_blocks))
             # rospy.logwarn("blocks update lenght: %d"%len(self.blocks))
             if self.original_blocks_poses_ is None:
-                self.original_blocks_poses_ = [copy.deepcopy(block.final_pose) for block in blocks]
+                self.original_blocks_poses_ = [copy.deepcopy(block.gazebo_pose) for block in blocks]
 
         finally:
             self.mutex.release()

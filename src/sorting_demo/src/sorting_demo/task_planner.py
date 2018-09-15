@@ -148,7 +148,10 @@ class TaskPlanner:
         rospy.logwarn("target jonts: " + str(jntangles))
 
         # self.sawyer_robot._limb.set_joint_position_speed(0.000001)
-        self.safe_goto_joint_position(targetjoints).result()
+        result = False
+        while not result:
+            result = self.safe_goto_joint_position(targetjoints).result()
+
         rospy.logwarn("Completed!! current joints: " + str(self.sawyer_robot._limb.joint_angles()))
 
 
@@ -213,7 +216,7 @@ class TaskPlanner:
             rospy.logerr(ex.message)
             self.create_wait_forever_task().result()
 
-        return None
+        return False
 
     def limb_move_to_joint_positions(self, joint_angles, timeout):
         """
@@ -694,7 +697,7 @@ class TaskPlanner:
             return False
 
         target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
-        target_tray.final_pose = self.compute_tray_pick_offset_transform(target_tray.final_pose)
+        target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
 
         rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
         return target_block, target_tray
@@ -768,7 +771,7 @@ class TaskPlanner:
             rospy.logwarn("target block: " + str(target_block))
 
             target_block.grasp_pose = copy.deepcopy(
-                self.compute_grasp_pose_offset(target_block.arm_view_estimated_pose))
+                self.compute_grasp_pose_offset(target_block.tabletop_arm_view_estimated_pose))
             rospy.logwarn("target block pose : " + str(target_block.grasp_pose))
             self.trajectory_planner.set_default_tables_z()
             self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT - 0.05
@@ -785,7 +788,7 @@ class TaskPlanner:
             self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT - 0.05
             self.trajectory_planner.update_table2_collision()
             self.trajectory_planner.update_table1_collision()
-            target_block.tray_place_pose = self.compute_grasp_pose_offset(target_block.arm_view_estimated_pose)
+            target_block.tray_place_pose = self.compute_grasp_pose_offset(target_block.tabletop_arm_view_estimated_pose)
 
             result = self.trajectory_planner.place(target_block)
             rospy.logwarn("place result: " + str(result))
@@ -797,7 +800,7 @@ class TaskPlanner:
         while not result or result < 0:
             rospy.logwarn("target block: " + str(target_block))
 
-            target_block.grasp_pose = self.compute_grasp_pose_offset(target_block.tray_place_pose)
+            target_block.grasp_pose = self.compute_grasp_pose_offset(target_block.traytop_arm_view_estimated_pose)
 
             rospy.logwarn("target block pose : " + str(target_block.grasp_pose))
             self.trajectory_planner.set_default_tables_z()
@@ -807,8 +810,6 @@ class TaskPlanner:
             result = self.trajectory_planner.pick(target_block,"table2")
             rospy.logwarn("pick result: " + str(result))
 
-            target_block.tray.blocks.remove(target_block)
-            target_block.tray = None
 
     @tasync("PICK BLOCK FROM TABLE AND MOVE TO TRAY")
     def pick_block_on_table_and_place_on_tray(self, target_block, target_tray):
@@ -817,7 +818,7 @@ class TaskPlanner:
         :return: 
         """
 
-        # original_block_pose = copy.deepcopy(target_block.final_pose)
+        # original_block_pose = copy.deepcopy(target_block.gazebo_pose)
 
         # original_block_pose = copy.deepcopy(target_block.arm_view_estimated_pose)
 
@@ -832,6 +833,12 @@ class TaskPlanner:
             rospy.sleep(0.5)
 
             self.moveit_tray_place(target_block, target_tray).result()
+
+            target_tray.notify_contains_block(target_block)
+            self.environment_estimation.table.notify_block_removed(target_block)
+
+            rospy.logwarn("pick and place finished. table blocks: "+ str(self.environment_estimation.table.blocks))
+            rospy.logwarn("pick and place finished. target tray blocks: "+ str(target_tray.notify_contains_block))
 
         except:
             self.create_wait_forever_task().result()
@@ -870,13 +877,28 @@ class TaskPlanner:
 
         for target_tray in self.environment_estimation.get_trays():
             for target_block in target_tray.blocks:
+
+                if not demo_constants.SIMULATE_TRAY_BLOCK_DETECTION:
+                    detected = self.create_move_top_block_view_and_detect(target_block, "tray_place_pose", additional_z_offset=0.1, CUBE_SIZE=95).result()
+                else:
+                    rospy.sleep(1.0)
+                    self.environment_estimation.update()
+                    target_block.traytop_arm_view_estimated_pose = target_block.gazebo_pose
+                    target_block.traytop_arm_view_estimated_pose.orientation.x = 0
+                    target_block.traytop_arm_view_estimated_pose.orientation.y = 0
+                    target_block.traytop_arm_view_estimated_pose.orientation.z = 0
+                    target_block.traytop_arm_view_estimated_pose.orientation.w = 1.0
+
                 self.moveit_traytop_pick(target_block).result()
                 self.moveit_tabletop_place(target_block).result()
+
+                target_block.tray.blocks.remove(target_block)
+                target_block.tray = None
 
                 # target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index) \
                 #    .result()
 
-                # self.create_pick_task(copy.deepcopy(target_block.final_pose),
+                # self.create_pick_task(copy.deepcopy(target_block.gazebo_pose),
                 #                      approach_speed=0.0001,
                 #                      approach_time=2.0,
                 #                      meet_time=3.0,
@@ -885,7 +907,7 @@ class TaskPlanner:
 
                 # place_pose = self.compute_grasp_pose_offset(target_block.grasp_pose)
                 #place_pose = target_block.grasp_pose
-                # rospy.logerr("place vs: "+ str(target_block.final_pose) +"\n"+ str(place_pose))
+                # rospy.logerr("place vs: "+ str(target_block.gazebo_pose) +"\n"+ str(place_pose))
 
                 #self.create_place_task(copy.deepcopy(place_pose),
                 #                       approach_speed=0.0001,
@@ -906,25 +928,39 @@ class TaskPlanner:
         return self.environment_estimation.table.blocks
 
     @tasync("LOCATE ARMVIEW TO BLOCK ESTIMATION")
-    def create_move_top_block_view_and_detect(self, block):
+    def create_move_top_block_view_and_detect(self, block, source="headview_pose_estimation", additional_z_offset=0.0, CUBE_SIZE=150):
         """
         :return: 
         """
+        tabletop = True
+        if source == "headview_pose_estimation":
+            tabletop=True
+        elif source == "tray_place_pose":
+            tabletop=False
 
-        rospy.loginfo("trying to estimate pose of block: " + str(block))
-        top_view_pose = copy.deepcopy(block.headview_pose_estimation)
+        if tabletop:
+            rospy.loginfo("trying to estimate pose of block: " + str(block))
+            top_view_pose = copy.deepcopy(block.headview_pose_estimation)
+        else:
+            rospy.loginfo("trying to estimate pose of block: " + str(block))
+            top_view_pose = copy.deepcopy(block.tray_place_pose)
+            top_view_pose.orientation.x = 0
+            top_view_pose.orientation.y = 0
+            top_view_pose.orientation.z = 0
+            top_view_pose.orientation.w = 1
+
         # chose z plane
-        top_view_pose.position.z = 0.05
+        top_view_pose.position.z = demo_constants.ARM_TOP_VIEW_Z_OFFSET + additional_z_offset
 
         poseaux = top_view_pose  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
-        poseauxhomo = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
-        poseauxhomo = utils.mathutils.composition(poseauxhomo, utils.mathutils.rot_y(math.pi / 2.0))
-        poseaux = utils.mathutils.homotransform_to_pose_msg(poseauxhomo)
+        topview_homo_pose = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
+        topview_homo_pose = utils.mathutils.composition(topview_homo_pose, utils.mathutils.rot_y(math.pi / 2.0))
+        poseaux = utils.mathutils.homotransform_to_pose_msg(topview_homo_pose)
 
         self.create_move_XY(poseaux).result()
         # individual processing algorithm
 
-        estimated_cube_pose = self.environment_estimation.compute_block_pose_estimation_from_arm_camera()
+        estimated_cube_pose = self.environment_estimation.compute_block_pose_estimation_from_arm_camera(CUBE_SIZE=CUBE_SIZE)
 
         if estimated_cube_pose is None:
             rospy.logerr("cube on table not detected")
@@ -938,7 +974,11 @@ class TaskPlanner:
         else:
             rospy.logwarn("CUBE POSE DETECTED")
 
-        block.arm_view_estimated_pose = estimated_cube_pose
+        if tabletop:
+            block.tabletop_arm_view_estimated_pose = estimated_cube_pose
+        else:
+            block.traytop_arm_view_estimated_pose = estimated_cube_pose
+
         return True
 
     @tasync("OBSERVE ALL CUBES")
@@ -976,7 +1016,7 @@ class TaskPlanner:
 
         target_block, target_tray = self.create_detect_block_poses_task(blocks, btarget).result()
 
-        self.create_pick_task(target_block.final_pose, approach_speed=0.0001, approach_time=2.0,
+        self.create_pick_task(target_block.gazebo_pose, approach_speed=0.0001, approach_time=2.0,
                               meet_time=3.0,
                               retract_time=1.0,
                               hover_distance=None).result()
@@ -984,7 +1024,7 @@ class TaskPlanner:
         self.current_in_hand_block = target_block
         self.current_in_hand_block_target_tray = target_tray
 
-        # self.create_pick_task(btarget.final_pose)
+        # self.create_pick_task(btarget.gazebo_pose)
         return target_block
 
     @tasync("PICK BY COLOR AND PUT TRAY")
@@ -1064,19 +1104,17 @@ class TaskPlanner:
                 blocks_count = len(blocks)
                 continue
 
-            # self.create_go_home_task().result()
-
-            # rospy.logwarn(" -- NEW TARGET BLOCK INDEX: %d" % target_block_index)
-
             # concurrency issue, what if we lock the objectdetection update?
-
             self.pick_block_on_table_and_place_on_tray(target_block, target_tray).result()
-            target_tray.notify_contains_block(target_block)
-            self.environment_estimation.table.notify_block_removed(target_block)
+
             blocks_count = len(blocks)
 
             # rospy.logwarn("target block index: " + str(target_block_index))
 
+
+    @tasync("DISABLE ROBOT")
+    def robot_say(self, msg):
+        rospy.logwarn("ROBOT SAYS: "+ str(msg))
 
     @tasync("DISABLE ROBOT")
     def disable_robot_task(self):
@@ -1133,10 +1171,14 @@ class TaskPlanner:
             self.create_move_all_cubes_to_trays(blocks).result()
 
             # self.reset_cycle()
+            self.robot_say("I FINISHED SORTING THE BLOCKS").result()
+            rospy.sleep(3)
+            self.robot_say("NOW I WILL PUT THEM BACK ON THE TABLE").result()
 
             self.pick_all_pieces_from_tray_and_put_on_table().result()
 
             self.delay_task(1).result()
+
 
         self.create_wait_forever_task().result()
 
