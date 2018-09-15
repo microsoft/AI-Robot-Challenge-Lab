@@ -167,6 +167,9 @@ class TrajectoryPlanner:
         table1pose.header.frame_id = "world"
         self.scene.add_box("table1", table1pose, size=self.tableshape)
 
+        self.update_table_edges_collision(table1pose, 0.15,"table1",self.table1_z)
+
+
     def update_table2_collision(self):
         table2pose = geometry_msgs.msg.PoseStamped()
         table2pose.pose = Pose(position=Point(x=0.0, y=1.0, z=self.table2_z))
@@ -264,7 +267,7 @@ class TrajectoryPlanner:
         self.scene.add_box("backwall", xwallpose, size=backwall)
 
         postxwallpose = geometry_msgs.msg.PoseStamped()
-        postxwallpose.pose = Pose(position=Point(x=-0.6, y=0.0, z=0.0))
+        postxwallpose.pose = Pose(position=Point(x=-0.5, y=0.0, z=0.0))
         postxwallpose.pose.orientation.w = 1.0
         postxwallpose.header.stamp = rospy.Time.now()
         postxwallpose.header.frame_id = self.robot.get_planning_frame()
@@ -285,7 +288,7 @@ class TrajectoryPlanner:
         self.scene.add_box("traywall", traywall, size=ywall)
 
         frontsidewall = geometry_msgs.msg.PoseStamped()
-        frontsidewall.pose = Pose(position=Point(x=-0.0, y=-0.6, z=0.0))
+        frontsidewall.pose = Pose(position=Point(x=-0.0, y=-0.55, z=0.0))
         frontsidewall.pose.orientation.w = 1.0
         frontsidewall.header.stamp = rospy.Time.now()
         frontsidewall.header.frame_id = self.robot.get_planning_frame()
