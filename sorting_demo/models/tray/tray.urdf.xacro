@@ -46,6 +46,9 @@
             </friction>
           </surface>
         </collision>
+
+        <static>true</static>
+
     </gazebo>
 
     <xacro:if value="${xPos != 0 or yPos != 0}">

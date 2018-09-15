@@ -245,7 +245,7 @@ class TrajectoryPlanner:
         self.update_ceiling_obstacle()
 
         xwallpose = geometry_msgs.msg.PoseStamped()
-        xwallpose.pose = Pose(position=Point(x=-0.2, y=0.0, z=0.0))
+        xwallpose.pose = Pose(position=Point(x=-0.25, y=0.0, z=0.0))
         xwallpose.pose.orientation.w = 1.0
         xwallpose.header.stamp = rospy.Time.now()
         xwallpose.header.frame_id = self.robot.get_planning_frame()
