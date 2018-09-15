@@ -140,7 +140,7 @@ def get_blobs_info(cv_image):
         # Collect data
         blob_info[current_hue] = contour_centroids
 
-    #cv2.imshow("Convex contours", cv_image_contours_debug)
+    cv2.imwrite("/tmp/head_contours.jpg", cv_image_contours_debug)
 
     return blob_info
 

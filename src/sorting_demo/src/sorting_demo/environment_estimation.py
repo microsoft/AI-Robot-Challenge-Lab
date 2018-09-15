@@ -13,6 +13,7 @@ from concepts.block import BlockState
 from concepts.tray import TrayState
 from concepts.table import Table
 
+
 from cv_detection_head import CameraHelper, get_blobs_info
 
 from cv_detection_right_hand import get_cubes_z_rotation
@@ -76,6 +77,8 @@ class EnvironmentEstimation:
             return None
 
     def compute_block_pose_estimation_from_arm_camera(self):
+        #get latest image from topic
+        rospy.sleep(0.3)
         # Take picture
         img_data = self.hand_camera_helper.take_single_picture()
 
@@ -141,14 +144,15 @@ class EnvironmentEstimation:
             self.tf_broacaster.sendTransform(projected, poseq, rospy.Time(0), "estimated_cube_1", "base")
             rospy.logwarn(projected)
 
-            cv2.imshow("cube detection", cv_image)
-            cv2.waitKey(0)
+            #cv2.imshow("cube detection", cv_image)
+            #cv2.waitKey(0)
 
             return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
                         orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3]))
         except Exception as ex:
-            cv2.imshow("erroneus cube detection", cv_image)
-            cv2.waitKey(0)
+            rospy.logwarn("erroneous cube detection")
+            #cv2.imshow("erroneus cube detection", cv_image)
+            #cv2.waitKey(0)
             return None
 
     def compute_block_pose_estimations_from_head_camera(self):
@@ -161,7 +165,9 @@ class EnvironmentEstimation:
 
             # Convert to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
+            cv2.imwrite("/tmp/last_head_picture.jpg",cv_image)
 
+            rospy.logwarn("processing head camera image to find blocks")
             blobs_info = get_blobs_info(cv_image)
 
             index = 0
@@ -195,6 +201,21 @@ class EnvironmentEstimation:
 
                 rospy.logwarn("blob identified: " + str(block))
 
+            rospy.logwarn("Table blocks:")
+            for b in self.table.blocks:
+                rospy.logwarn(b)
+
+            self.blocks = self.table.blocks
+
+            for tray in self.trays:
+
+                rospy.logwarn("Tray blocks:")
+                for b in tray.blocks:
+                    rospy.logwarn(b)
+
+                self.blocks = self.blocks + tray.blocks
+
+            rospy.logwarn("All known blocks:")
             for b in self.blocks:
                 rospy.logwarn(b)
         finally:
@@ -251,7 +272,7 @@ class EnvironmentEstimation:
                     item = self.get_tray(name)
                     # item = None
                     if item is None:
-                        item = TrayState(id=name, pose=pose)
+                        item = TrayState(id=name, pose=pose, TRAY_SURFACE_THICKNESS= demo_constants.TRAY_SURFACE_THICKNESS)
                         item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/", "")
                     else:
                         item.pose = pose

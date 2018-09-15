@@ -85,8 +85,8 @@ def load_gazebo_models():
     # Spawn trays
     tray_path = sorting_demo_models_path + "tray/tray.urdf.xacro"
 
-    tray_poses = [Pose(position=Point(x=-0.2, y=0.7, z=0.9)),
-                  Pose(position=Point(x=0.05, y=0.7, z=0.9)),
+    tray_poses = [Pose(position=Point(x=-0.3, y=0.7, z=0.9)),
+                  Pose(position=Point(x=0.0, y=0.7, z=0.9)),
                   Pose(position=Point(x=0.3, y=0.7, z=0.9))]
 
     for (i, pose) in enumerate(tray_poses):
@@ -98,14 +98,14 @@ def load_gazebo_models():
     block_path = sorting_demo_models_path + "block/block.urdf.xacro"
 
     block_poses = []
-    k = 3
+    k = 2
     for i in xrange(k):
         for j in xrange(k):
             q = tf.transformations.quaternion_from_euler(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi),
                                                          random.uniform(0, 2 * math.pi))
 
 
-            block_poses.append(Pose(position=Point(x=0.65 + j * 0.12 + random.uniform(-1, 1) * 0.03,
+            block_poses.append(Pose(position=Point(x=0.45 + j * 0.12 + random.uniform(-1, 1) * 0.03,
                                                    y=-0.15 + i * 0.15 + random.uniform(-1, 1) * 0.03, z=0.7725),
                                     orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
 
