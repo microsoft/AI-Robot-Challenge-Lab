@@ -760,7 +760,9 @@ class TaskPlanner:
             self.trajectory_planner.update_table1_collision()
             target_block.tray = target_tray
             target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose())
-            result = self.trajectory_planner.place(target_block)
+            target_block.place_pose = target_block.tray_place_pose
+
+            result = self.trajectory_planner.place_block(target_block)
             rospy.logwarn("place result: " + str(result))
 
     @tasync("MOVEIT TABLETOP PICK")
@@ -776,7 +778,7 @@ class TaskPlanner:
             self.trajectory_planner.set_default_tables_z()
             self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table1_collision()
-            result = self.trajectory_planner.pick(target_block,"table1")
+            result = self.trajectory_planner.pick_block(target_block, "table1")
             rospy.logwarn("pick result: " + str(result))
 
 
@@ -788,9 +790,10 @@ class TaskPlanner:
             self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table2_collision()
             self.trajectory_planner.update_table1_collision()
-            target_block.tray_place_pose = self.compute_grasp_pose_offset(target_block.tabletop_arm_view_estimated_pose)
+            target_block.table_place_pose = self.compute_grasp_pose_offset(target_block.tabletop_arm_view_estimated_pose)
+            target_block.place_pose= target_block.table_place_pose
 
-            result = self.trajectory_planner.place(target_block)
+            result = self.trajectory_planner.place_block(target_block)
             rospy.logwarn("place result: " + str(result))
 
     @tasync("MOVEIT TRAYTOP PICK")
@@ -807,7 +810,7 @@ class TaskPlanner:
             self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table2_collision()
 
-            result = self.trajectory_planner.pick(target_block,"table2")
+            result = self.trajectory_planner.pick_block(target_block, "table2")
             rospy.logwarn("pick result: " + str(result))
 
 
@@ -876,7 +879,7 @@ class TaskPlanner:
         self.environment_estimation.update()
 
         for target_tray in self.environment_estimation.get_trays():
-            for target_block in target_tray.blocks:
+            for target_block in reversed(target_tray.blocks): #you have to pop in the inverse order since adding object is pushing back the block queue
 
                 if not demo_constants.SIMULATE_TRAY_BLOCK_DETECTION:
                     detected = self.create_move_top_block_view_and_detect(target_block, "tray_place_pose", additional_z_offset=0.1, CUBE_SIZE=95).result()
@@ -889,7 +892,13 @@ class TaskPlanner:
                     target_block.traytop_arm_view_estimated_pose.orientation.z = 0
                     target_block.traytop_arm_view_estimated_pose.orientation.w = 1.0
 
+                    homopose = utils.mathutils.get_homo_matrix_from_pose_msg(target_block.traytop_arm_view_estimated_pose)
+                    rotz = utils.mathutils.rot_z(math.pi/2)
+                    rotatedhomopose = utils.mathutils.composition(homopose,rotz)
+                    target_block.traytop_arm_view_estimated_pose = utils.mathutils.homotransform_to_pose_msg(rotatedhomopose)
+
                 self.moveit_traytop_pick(target_block).result()
+
                 self.moveit_tabletop_place(target_block).result()
 
                 target_block.tray.blocks.remove(target_block)

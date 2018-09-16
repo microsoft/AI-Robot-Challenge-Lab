@@ -46,14 +46,20 @@ def homotransform_to_pose_msg(homotransform):
         position=Point(x=trans[0], y=trans[1], z=trans[2]),
         orientation=Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3]))
 
+
 def composition(parent, child):
-    return numpy.matmul(parent,child)
+    return numpy.matmul(parent, child)
+
 
 def rot_y(pitch):
-    return [[numpy.cos(pitch), 0, numpy.sin(pitch), 0], [0, 1, 0, 0], [-numpy.sin(pitch), 0, numpy.cos(pitch), 0], [0, 0, 0, 1]]
+    return [[numpy.cos(pitch), 0, numpy.sin(pitch), 0], [0, 1, 0, 0], [-numpy.sin(pitch), 0, numpy.cos(pitch), 0],
+            [0, 0, 0, 1]]
+
 
 def rot_z(yaw):
     return [[numpy.cos(yaw), -numpy.sin(yaw), 0, 0], [numpy.sin(yaw), numpy.cos(yaw), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 
+
 def rot_x(roll):
-    return [[1, 0, 0, 0], [0, numpy.cos(roll), -numpy.sin(roll), 0], [0, numpy.sin(roll), numpy.cos(roll), 0], [0, 0, 0, 1]]
+    return [[1, 0, 0, 0], [0, numpy.cos(roll), -numpy.sin(roll), 0], [0, numpy.sin(roll), numpy.cos(roll), 0],
+            [0, 0, 0, 1]]

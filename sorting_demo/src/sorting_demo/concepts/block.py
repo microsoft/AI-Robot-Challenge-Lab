@@ -13,9 +13,13 @@ class BlockState:
         search = BlockState.regex.search(id)
         self.num = int(search.group(1))
         self.gazebo_pose = None
+        self.grasp_pose = None
+        self.place_pose = None
+
+
         self.table_grasp_pose = None
         self.tray_place_pose = None
-        self.table_grasp_pose = None
+        self.table_place_pose = None
 
         # the 2d blob point estimabion based on the head_image processing
         self.hue_estimation = None
@@ -27,7 +31,6 @@ class BlockState:
         self.headview_pose_estimation = None
 
         self.tabletop_arm_view_estimated_pose = None
-
         self.traytop_arm_view_estimated_pose =None
 
         self.tray = None
