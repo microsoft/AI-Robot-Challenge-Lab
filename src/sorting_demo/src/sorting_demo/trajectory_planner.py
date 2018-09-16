@@ -17,7 +17,6 @@ class TrajectoryPlanner:
         """
         
         """
-
         self.ceilheight = 0.75
         rospy.sleep(0.4)
         moveit_commander.roscpp_initialize(sys.argv)
@@ -70,9 +69,7 @@ class TrajectoryPlanner:
         # commit
         rospy.sleep(0.2)
 
-    def pick(self, block, surface):
-
-
+    def pick_block(self, block, surface):
         target_pose = block.grasp_pose
 
         self.group.set_num_planning_attempts(300)
@@ -113,16 +110,13 @@ class TrajectoryPlanner:
 
         return self.group.pick("block" + str(block_index), graps)
 
-    def place(self, block):
-
-
+    def place_block(self, block):
         self.group.set_num_planning_attempts(500)
         self.update_environment_obstacles()
 
-
         place_location = moveit_msgs.msg.PlaceLocation()
         place_location.place_pose.header.frame_id = "world"
-        place_location.place_pose.pose = block.tray_place_pose
+        place_location.place_pose.pose = block.place_pose
 
         place_location.pre_place_approach.direction.header.frame_id = "world"
         place_location.pre_place_approach.direction.vector.z = -1.0

@@ -103,7 +103,7 @@ def load_gazebo_models():
     block_path = sorting_demo_models_path + "block/block.urdf.xacro"
 
     block_poses = []
-    k = 3
+    k = 2
     for i in xrange(k):
         for j in xrange(k):
             q = tf.transformations.quaternion_from_euler(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi),
