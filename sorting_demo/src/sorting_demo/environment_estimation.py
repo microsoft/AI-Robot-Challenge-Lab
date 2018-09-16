@@ -140,6 +140,14 @@ class EnvironmentEstimation:
             while final_cube_yaw_angle < -math.pi / 4:
                 final_cube_yaw_angle += math.pi / 2
 
+            # select the other grasping
+            if not graspA and graspB:
+                rospy.logwarn("Swiching grasping orientation for current block (grasping clearance)")
+                if final_cube_yaw_angle >0:
+                    final_cube_yaw_angle -= math.pi / 2
+                else:
+                    final_cube_yaw_angle += math.pi / 2
+
             projected = self.hand_camera_helper.project_point_on_table(cube[0])
             poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
 
