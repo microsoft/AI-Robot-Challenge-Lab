@@ -54,6 +54,7 @@ class TrajectoryPlanner:
 
     def register_box(self, block):
         if not block in self.registered_blocks:
+            block.perception_id = "block"+ str(len(self.registered_blocks))
             self.registered_blocks.append(block)
             rospy.sleep(0.1)
 
@@ -70,9 +71,14 @@ class TrajectoryPlanner:
         rospy.sleep(0.2)
 
     def pick_block(self, block, surface):
+        self.group.set_num_planning_attempts(10)
+        self.group.set_planning_time(1)
+
+        pathconstraint = self.joint_constraints()
+        self.group.set_path_constraints(pathconstraint)
+
         target_pose = block.grasp_pose
 
-        self.group.set_num_planning_attempts(300)
         self.update_environment_obstacles()
         block_index = self.update_block(block)
         self.group.set_support_surface_name(surface)
@@ -111,7 +117,9 @@ class TrajectoryPlanner:
         return self.group.pick("block" + str(block_index), graps)
 
     def place_block(self, block):
-        self.group.set_num_planning_attempts(500)
+        self.group.set_num_planning_attempts(10)
+        self.group.set_planning_time(1)
+
         self.update_environment_obstacles()
 
         place_location = moveit_msgs.msg.PlaceLocation()
@@ -190,6 +198,20 @@ class TrajectoryPlanner:
             newshape = (
             self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight * 0.5)
             self.scene.add_box("table2_edgey_" + str(i), edgeyi, size=newshape)
+
+
+        splits = 2
+        for i in xrange(1, splits):
+            edgexi = geometry_msgs.msg.PoseStamped()
+            edgexi.pose = Pose(
+                position=Point(x= 0.0, y=1.0 - self.tableshape[1] * 0.5 + i * self.tableshape[1] / float(splits), z=self.table2_z + edgeheight * 0.5))
+            edgexi.pose.orientation.w = 1.0
+            edgexi.header.stamp = rospy.Time.now()
+            edgexi.header.frame_id = "world"
+
+            newshape = (
+            self.tableshape[0] , self.tableshape[1] * 0.01, self.tableshape[2] + edgeheight * 0.5)
+            self.scene.add_box("table2_edgex_" + str(i), edgexi, size=newshape)
 
     def update_table_edges_collision(self, basepose, edgeheight,tablename, table_z):
         edgex = copy.deepcopy(basepose)

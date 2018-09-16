@@ -35,12 +35,14 @@ class BlockState:
 
         self.tray = None
 
+        self.perception_id = None
+
 
     def __str__(self):
         return "[Block estpos = %s]" % str(self.headview_pose_estimation)
 
     def get_state(self):
-        return {"id": self.id, "table_pose": message_converter.convert_ros_message_to_dictionary(self.gazebo_pose),
+        return {"id": self.id, "perception_id": self.perception_id , "table_pose": message_converter.convert_ros_message_to_dictionary(self.gazebo_pose),
                 "color": self.color}
 
     @staticmethod
