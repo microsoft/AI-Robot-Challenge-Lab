@@ -30,10 +30,13 @@ def load_xacro_file(file_path, mappings):
     return urdf_xml
 
 
-def spawn_xacro_model(name, path, pose, reference_frame, mappings):
+def spawn_xacro_urdf_model(name, path, pose, reference_frame, mappings):
     description_xml = load_xacro_file(path, mappings)
     spawn_urdf(name, description_xml, pose, reference_frame)
 
+def spawn_xacro_sdf_model(name, path, pose, reference_frame, mappings):
+    description_xml = load_xacro_file(path, mappings)
+    spawn_sdf(name, description_xml, pose, reference_frame)
 
 def spawn_urdf_model(name, path, pose, reference_frame):
     description_xml = ''
@@ -43,19 +46,21 @@ def spawn_urdf_model(name, path, pose, reference_frame):
     spawn_urdf(name, description_xml, pose, reference_frame)
 
 
-def spawn_sdf_model(name, path, pose, reference_frame):
-    # Load Model SDF
-    description_xml = ''
-    with open(path, "r") as model_file:
-        description_xml = model_file.read().replace('\n', '')
-
-    # Spawn Model SDF
+def spawn_sdf(name, description_xml, pose, reference_frame):
     rospy.wait_for_service('/gazebo/spawn_sdf_model')
     try:
         spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
         resp_sdf = spawn_sdf(name, description_xml, "/", pose, reference_frame)
     except rospy.ServiceException as e:
         rospy.logerr("Spawn SDF service call failed: {0}".format(e))
+
+def spawn_sdf_model(name, path, pose, reference_frame):
+    # Load Model SDF
+    description_xml = ''
+    with open(path, "r") as model_file:
+        description_xml = model_file.read().replace('\n', '')
+        spawn_sdf(name, description_xml, pose,reference_frame)
+
 
 
 def load_gazebo_models():
@@ -91,7 +96,7 @@ def load_gazebo_models():
 
     for (i, pose) in enumerate(tray_poses):
         name = "tray{}".format(i)
-        spawn_xacro_model(name, tray_path, pose, world_reference_frame, {})
+        spawn_xacro_urdf_model(name, tray_path, pose, world_reference_frame, {})
         model_list.append(name)
 
     # Spawn blocks
@@ -128,7 +133,7 @@ def load_gazebo_models():
         mappings = {"edge_length" : str(CUBE_EDGE_LENGTH)}
         mappings.update(color_mappings)
 
-        spawn_xacro_model(name, block_path, pose, world_reference_frame, mappings)
+        spawn_xacro_urdf_model(name, block_path, pose, world_reference_frame, mappings)
         model_list.append(name)
 
     return model_list, block_poses

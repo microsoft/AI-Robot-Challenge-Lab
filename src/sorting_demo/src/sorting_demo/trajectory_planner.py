@@ -194,7 +194,7 @@ class TrajectoryPlanner:
             edgeyi.header.frame_id = "world"
 
             newshape = (
-            self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight + edgeheight * 0.5)
+            self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight * 0.5)
             self.scene.add_box("table2_edgey_" + str(i), edgeyi, size=newshape)
 
     def update_table_edges_collision(self, basepose, edgeheight,tablename, table_z):
@@ -254,14 +254,14 @@ class TrajectoryPlanner:
         """
         :return: 
         """
-        backwall = (0.01, 0.50, 1.4)
+        backwall = (0.01, 0.6, 1.4)
         largexwall = (0.01, 2.0, 1.4)
         ywall = (2.0, 0.01, 1.4)
 
         self.update_ceiling_obstacle()
 
         xwallpose = geometry_msgs.msg.PoseStamped()
-        xwallpose.pose = Pose(position=Point(x=-0.25, y=-0.25, z=0.0))
+        xwallpose.pose = Pose(position=Point(x=-0.4, y=-0.25, z=0.0))
         xwallpose.pose.orientation.w = 1.0
         xwallpose.header.stamp = rospy.Time.now()
         xwallpose.header.frame_id = self.robot.get_planning_frame()
