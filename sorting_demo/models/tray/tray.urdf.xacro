@@ -10,7 +10,7 @@
   <xacro:macro name="tray_part" params="name width length height mass material xPos:=0 yPos:=0">
     <link name="${name}">
       <inertial>
-        <mass value="${tray_density * width * length * height}" />
+        <mass value="${tray_density * width * length * height*1000.0}" />
 
         <inertia  ixx="${(1/12) * tray_density * width * length * height * (length**2 + height**2)}" ixy="0.0"  ixz="0.0"
                   iyy="${(1/12) * tray_density * width * length * height * (width**2 + height**2)}"  iyz="0.0"
@@ -46,8 +46,11 @@
             </friction>
           </surface>
         </collision>
+    </gazebo>
 
-        <is_static>true</is_static>
+
+    <gazebo reference="$tray">
+        <static>true</static>
 
     </gazebo>
 
