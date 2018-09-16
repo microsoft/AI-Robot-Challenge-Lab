@@ -314,6 +314,9 @@ class TrajectoryPlanner:
         rospy.sleep(0.1)
 
 
+    def clear_attached_object(self, block):
+        self.group.detach_object(block.perception_id)
+
     def joint_constraints(self):
         constraints = moveit_msgs.msg.Constraints()
 

@@ -28,6 +28,16 @@
             <size>0.56 0.56 0.04</size>
           </box>
         </geometry>
+
+       <surface>
+        <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>false</use_patch_radius>
+            <surface_radius>0.05</surface_radius>
+          </torsional>
+        </friction>
+      </surface>
       </collision>
 
       <visual name="visual">

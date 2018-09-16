@@ -32,7 +32,7 @@ class TaskPlanner:
     def __init__(self):
         """
         """
-        limb = 'right'
+        limbname = 'right'
         self._hover_distance = 0.1  # meters
         self.place_hover_distance = 0.15
 
@@ -40,7 +40,7 @@ class TaskPlanner:
         self.environment_estimation = EnvironmentEstimation()
 
         self.trajectory_planner = TrajectoryPlanner()
-        self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limb, self._hover_distance)
+        self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limbname, self._hover_distance)
 
         self.tasks = []
         self.executor = ThreadPoolExecutor(max_workers=8)
@@ -814,16 +814,11 @@ class TaskPlanner:
             rospy.logwarn("pick result: " + str(result))
 
     @tasync("PICK BLOCK FROM TABLE AND MOVE TO TRAY")
-    def pick_block_on_table_and_place_on_tray(self, target_block, target_tray):
+    def pick_block_from_table_and_place_to_tray(self, target_block, target_tray):
         """
         :param original_block_poses: 
-        :return: 
+        :return: None if picking failed (probably grasping failed)
         """
-
-        # original_block_pose = copy.deepcopy(target_block.gazebo_pose)
-
-        # original_block_pose = copy.deepcopy(target_block.arm_view_estimated_pose)
-
 
         try:
             self.trajectory_planner.ceilheight = 0.7
@@ -831,6 +826,11 @@ class TaskPlanner:
             self.trajectory_planner.register_box(target_block)
 
             self.moveit_tabletop_pick(target_block).result()
+
+            if self.sawyer_robot._gripper.get_position() < 0.03:
+                rospy.logerr("LOOKS LIKE THE GRASPING FAILED")
+                self.trajectory_planner.clear_attached_object(target_block)
+                return None
 
             rospy.sleep(0.5)
 
@@ -842,7 +842,8 @@ class TaskPlanner:
             rospy.logwarn("pick and place finished. table blocks: " + str(self.environment_estimation.table.blocks))
             rospy.logwarn("pick and place finished. target tray blocks: " + str(target_tray.notify_contains_block))
 
-        except:
+        except Exception as ex:
+            rospy.logerr("Some exception on pick and place: "+ str(ex.message))
             self.create_wait_forever_task().result()
 
         # self.create_wait_forever_task().result()
@@ -1095,6 +1096,14 @@ class TaskPlanner:
 
         return target_block, target_tray
 
+    def reset_and_recompute_head_vision_table_state_estimation(self):
+        rospy.logwarn("RECOMPUTE TABLE STATE ESTIMATION FROM HEAD")
+        self.create_go_vision_head_pose_task().result()
+        blocks = self.create_head_vision_processing_on_table().result()
+        rospy.logwarn("new detected cubes: " + str(blocks))
+        return blocks
+
+
     @tasync("MOVE ALL CUBES TO TRAY")
     def create_move_all_cubes_to_trays(self, blocks):
         """
@@ -1124,16 +1133,21 @@ class TaskPlanner:
                 continue
 
             elif not detected:
-                rospy.logerr("single image cube not detected, recomputing cubes")
-                self.create_go_vision_head_pose_task().result()
-                blocks = self.create_head_vision_processing_on_table().result()
-                rospy.logwarn("new detected cubes: " + str(blocks))
-                # target_block_index = 0
+                rospy.logerr("CUBE NOT DETECTED, recomputing table state estimation...")
+                blocks = self.reset_and_recompute_head_vision_table_state_estimation()
+                current_index =0
                 blocks_count = len(blocks)
                 continue
 
             # concurrency issue, what if we lock the objectdetection update?
-            self.pick_block_on_table_and_place_on_tray(target_block, target_tray).result()
+            grasp = self.pick_block_from_table_and_place_to_tray(target_block, target_tray).result()
+
+            if grasp is None:
+                # grasping failed reset table state
+                current_index = 0
+                blocks = self.reset_and_recompute_head_vision_table_state_estimation()
+                blocks_count = len(blocks)
+                continue
 
             # restart again trying from the first index (because we already removed one)
             current_index = 0
