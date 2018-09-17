@@ -191,7 +191,7 @@ class EnvironmentEstimation:
                     ptinfos.append([huekey, point])
                     index += 1
 
-            self.table.blocks = []
+            detected_blocks = []
 
             for huekey, point2d in ptinfos:
                 projected = self.head_camera_helper.project_point_on_table(point2d)
@@ -201,7 +201,7 @@ class EnvironmentEstimation:
                 if block is None:
                     continue
 
-                self.table.blocks.append(block)
+                detected_blocks.append(block)
 
                 block.headview_proj_estimation = point2d
 
@@ -214,6 +214,7 @@ class EnvironmentEstimation:
                 rospy.logwarn("blob identified: " + str(block))
 
             rospy.logwarn("Table blocks:")
+            self.table.blocks = detected_blocks
             for b in self.table.blocks:
                 rospy.logwarn(b)
 
@@ -271,20 +272,20 @@ class EnvironmentEstimation:
                 pose = links.pose[i]
 
                 if BlockState.is_block(name):
-                    item = self.get_block(name)
+                    item = self.get_block_by_gazebo_id(name)
                     if item is None:
                         # rospy.logwarn("block create name: "+ name)
-                        item = BlockState(id=name, pose=pose)
+                        item = BlockState(gazebo_id=name, pose=pose)
                         item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"].replace("Gazebo/", "")
                     else:
                         item.pose = pose
 
                     blocks.append(item)
                 elif TrayState.is_tray(name):
-                    item = self.get_tray(name)
+                    item = self.get_tray_by_gazebo_id(name)
                     # item = None
                     if item is None:
-                        item = TrayState(id=name, pose=pose, TRAY_SURFACE_THICKNESS= demo_constants.TRAY_SURFACE_THICKNESS)
+                        item = TrayState(gazebo_id=name, pose=pose, TRAY_SURFACE_THICKNESS= demo_constants.TRAY_SURFACE_THICKNESS)
                         item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/", "")
                     else:
                         item.pose = pose
@@ -337,7 +338,7 @@ class EnvironmentEstimation:
                     self.tf_broacaster.sendTransform(trans,
                                                      quat,
                                                      rospy.Time.now(),
-                                                     item.id,
+                                                     item.gazebo_id,
                                                      "world")
 
                     item.gazebo_pose = homotransform_to_pose_msg(transf_homopose)
@@ -370,15 +371,15 @@ class EnvironmentEstimation:
         finally:
             self.mutex.release()
 
-    def get_block(self, id):
+    def get_block_by_gazebo_id(self, gazebo_id):
         """
-        :param id:
+        :param gazebo_id:
         :return:
         """
         try:
             self.mutex.acquire()
 
-            filtered_blocks = [block for block in self.blocks if block.id == id]
+            filtered_blocks = [block for block in self.blocks if block.gazebo_id == gazebo_id]
             if len(filtered_blocks) == 0:
                 return None
             else:
@@ -396,14 +397,14 @@ class EnvironmentEstimation:
         finally:
             self.mutex.release()
 
-    def get_tray(self, id):
+    def get_tray_by_gazebo_id(self, gazebo_id):
         """
-        :param id:
+        :param gazebo_id:
         :return:
         """
         try:
             self.mutex.acquire()
-            filtered_trays = [tray for tray in self.trays if tray.id == id]
+            filtered_trays = [tray for tray in self.trays if tray.gazebo_id == gazebo_id]
             if len(filtered_trays) == 0:
                 return None
             else:

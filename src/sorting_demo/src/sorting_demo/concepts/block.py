@@ -5,12 +5,14 @@ from rospy_message_converter import message_converter
 class BlockState:
     regex = re.compile(r'block(\d+)\.*')
 
-    def __init__(self, id, pose):
-        self.id = id
+    def __init__(self, gazebo_id, pose):
+        self.perception_id = None
+
+        self.gazebo_id = gazebo_id
         self.pose = pose
         self.color = None
         self.homogeneous_transform = None
-        search = BlockState.regex.search(id)
+        search = BlockState.regex.search(gazebo_id)
         self.num = int(search.group(1))
         self.gazebo_pose = None
         self.grasp_pose = None
@@ -35,14 +37,13 @@ class BlockState:
 
         self.tray = None
 
-        self.perception_id = None
 
 
     def __str__(self):
         return "[Block estpos = %s]" % str(self.headview_pose_estimation)
 
     def get_state(self):
-        return {"id": self.id, "perception_id": self.perception_id , "table_pose": message_converter.convert_ros_message_to_dictionary(self.gazebo_pose),
+        return {"id": self.perception_id , "table_pose": message_converter.convert_ros_message_to_dictionary(self.gazebo_pose),
                 "color": self.color}
 
     @staticmethod
