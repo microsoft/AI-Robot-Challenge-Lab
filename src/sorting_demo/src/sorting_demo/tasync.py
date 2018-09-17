@@ -66,10 +66,11 @@ class Task:
         self.name = name
         self.future = future
         self.marked_cancel = False
+        self.resultcancel = None
 
     def cancel(self):
-        marked_cancel = True
-        resultcancel = self.future.cancel()
+        self.marked_cancel = True
+        self.resultcancel = self.future.cancel()
 
     def result(self):
         if self.future is not None:

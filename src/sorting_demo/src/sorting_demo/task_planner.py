@@ -67,6 +67,11 @@ class TaskPlanner:
 
         self.joint_names = ["right_j0", "right_j1", "right_j2", "right_j3", "right_j4", "right_j5", "right_j6"]
 
+    def scheduler_yield(self):
+        rospy.logwarn("scheduler yield")
+        if self.cancel_signal:
+            raise Exception("scheduler cancel")
+
     def has_cancel_signal(self):
         """
 
@@ -150,6 +155,7 @@ class TaskPlanner:
         # self.sawyer_robot._limb.set_joint_position_speed(0.000001)
         result = False
         while not result:
+            self.scheduler_yield()
             result = self.safe_goto_joint_position(targetjoints).result()
 
         rospy.logwarn("Completed!! current joints: " + str(self.sawyer_robot._limb.joint_angles()))
@@ -270,6 +276,9 @@ class TaskPlanner:
         :return: 
         """
         self.create_go_home_task().result()
+        oldvalue = self.trajectory_planner.ceilheight
+        self.trajectory_planner.ceilheight = 2.4
+        self.trajectory_planner.update_ceiling_obstacle()
         joint_angles_A = {'right_j0': 0.0,
                           'right_j1': 0.4,
                           'right_j2': 0.0,
@@ -289,6 +298,9 @@ class TaskPlanner:
         for i in xrange(4):
             self.safe_goto_joint_position(joint_angles_A).result()
             self.safe_goto_joint_position(joint_angles_B).result()
+
+        self.trajectory_planner.ceilheight = oldvalue
+        self.trajectory_planner.update_ceiling_obstacle()
 
     @tasync("GO TO VISION POSE")
     def create_go_vision_head_pose_task(self):
@@ -754,6 +766,7 @@ class TaskPlanner:
     def moveit_tray_place(self, target_block, target_tray):
         result = False
         while not result or result < 0:
+            self.scheduler_yield()
             self.trajectory_planner.set_default_tables_z()
             self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table2_collision()
@@ -770,6 +783,7 @@ class TaskPlanner:
         # self.sawyer_robot.gripper_open()
         result = False
         while not result or result < 0:
+            self.scheduler_yield()
             rospy.logwarn("target block: " + str(target_block))
 
             target_block.grasp_pose = copy.deepcopy(
@@ -785,6 +799,7 @@ class TaskPlanner:
     def moveit_tabletop_place(self, target_block):
         result = False
         while not result or result < 0:
+            self.scheduler_yield()
             self.trajectory_planner.set_default_tables_z()
             self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT
             self.trajectory_planner.update_table2_collision()
@@ -801,8 +816,8 @@ class TaskPlanner:
         # self.sawyer_robot.gripper_open()
         result = False
         while not result or result < 0:
+            self.scheduler_yield()
             rospy.logwarn("target block: " + str(target_block))
-
             target_block.grasp_pose = self.compute_grasp_pose_offset(target_block.traytop_arm_view_estimated_pose)
 
             rospy.logwarn("target block pose : " + str(target_block.grasp_pose))
@@ -1008,6 +1023,7 @@ class TaskPlanner:
         iteration = 0
 
         while iterations_count is None or iteration < iterations_count:
+            self.scheduler_yield()
             for block in blocks:
                 detected = self.create_move_top_block_view_and_detect(block).result()
 
@@ -1031,12 +1047,18 @@ class TaskPlanner:
         blocks = self.environment_estimation.table.get_blocks()
         btarget = [i for i, b in enumerate(blocks) if b.is_color(color)][0]
 
-        target_block, target_tray = self.create_detect_block_poses_task(blocks, btarget).result()
+        res = self.create_detect_block_poses_task(blocks, btarget).result()
+        if res is not None:
+            target_block, target_tray = res
+        else:
+            return None
+
 
         self.create_pick_task(target_block.gazebo_pose, approach_speed=0.0001, approach_time=2.0,
                               meet_time=3.0,
                               retract_time=1.0,
                               hover_distance=None).result()
+
 
         self.current_in_hand_block = target_block
         self.current_in_hand_block_target_tray = target_tray
@@ -1094,7 +1116,7 @@ class TaskPlanner:
             target_block, target_tray = self.create_decision_select_block_and_tray(blocks, target_block_index).result()
             self.delay_task(0.1).result()
 
-        return target_block, target_tray
+        return (target_block, target_tray)
 
     def reset_and_recompute_head_vision_table_state_estimation(self):
         rospy.logwarn("RECOMPUTE TABLE STATE ESTIMATION FROM HEAD")
@@ -1122,7 +1144,11 @@ class TaskPlanner:
         while blocks_count > 0:
             # self.create_go_home_task().result()
 
-            target_block, target_tray = self.create_detect_block_poses_task(blocks, current_index).result()
+            res = self.create_detect_block_poses_task(blocks, current_index).result()
+            if res is not None:
+                target_block, target_tray = res
+            else:
+                return None
 
             self.trajectory_planner.ceilheight = 0.8
             detected = self.create_move_top_block_view_and_detect(target_block).result()
@@ -1135,9 +1161,14 @@ class TaskPlanner:
             elif not detected:
                 rospy.logerr("CUBE NOT DETECTED, recomputing table state estimation...")
                 blocks = self.reset_and_recompute_head_vision_table_state_estimation()
-                current_index =0
-                blocks_count = len(blocks)
-                continue
+
+                if not blocks is None:
+                    current_index =0
+                    blocks_count = len(blocks)
+                    continue
+                else:
+                    rospy.logerr("Autocancelling Move all cubes to tray task?")
+                    self.scheduler_yield()
 
             # concurrency issue, what if we lock the objectdetection update?
             grasp = self.pick_block_from_table_and_place_to_tray(target_block, target_tray).result()
@@ -1146,6 +1177,9 @@ class TaskPlanner:
                 # grasping failed reset table state
                 current_index = 0
                 blocks = self.reset_and_recompute_head_vision_table_state_estimation()
+                if blocks is None:
+                    self.scheduler_yield()
+
                 blocks_count = len(blocks)
                 continue
 
@@ -1184,7 +1218,13 @@ class TaskPlanner:
 
         for i in xrange(1000):
             self.create_go_vision_head_pose_task().result()
+
             blocks = self.create_head_vision_processing_on_table().result()
+
+            if blocks is None:
+                self.scheduler_yield()
+
+
 
             self.create_move_all_cubes_to_trays(blocks).result()
 
