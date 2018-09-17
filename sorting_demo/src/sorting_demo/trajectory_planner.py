@@ -271,8 +271,8 @@ class TrajectoryPlanner:
         :return: 
         """
         backwall = (0.01, 0.6, 1.4)
-        largexwall = (0.01, 2.0, 1.4)
-        ywall = (2.0, 0.01, 1.4)
+        largexwall = (0.01, 2.0, 1.6)
+        ywall = (2.0, 0.04, 1.6)
 
         self.update_ceiling_obstacle()
 

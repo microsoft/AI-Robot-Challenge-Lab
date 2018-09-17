@@ -107,6 +107,16 @@ class RobotTaskFacade:
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
+        @self.app.route("/view")
+        def web_interface():
+            import rospkg
+
+            webviewpath = rospkg.RosPack().get_path('sorting_demo') + "/share/web_view.html"
+            with open(webviewpath, 'r') as myfile:
+                data = myfile.read()
+                return data
+
+
     def run_rest_server(self):
         self.app.run(threaded=True)
 

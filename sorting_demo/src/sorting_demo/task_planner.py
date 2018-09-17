@@ -43,7 +43,7 @@ class TaskPlanner:
         self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limbname, self._hover_distance)
 
         self.tasks = []
-        self.executor = ThreadPoolExecutor(max_workers=8)
+        self.executor = ThreadPoolExecutor(max_workers=10)
 
         self.ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
 
