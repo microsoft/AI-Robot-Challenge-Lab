@@ -11,12 +11,12 @@ from geometry_msgs.msg import Quaternion
 class TrayState:
     regex = re.compile(r'tray(\d+)\.*')
 
-    def __init__(self, id, pose, TRAY_SURFACE_THICKNESS=0.04):
-        self.id = id
+    def __init__(self, gazebo_id, pose, TRAY_SURFACE_THICKNESS=0.04):
+        self.gazebo_id = gazebo_id
         self.pose = pose
         self.gazebo_pose = None
         self.TRAY_SURFACE_THICKNESS =TRAY_SURFACE_THICKNESS
-        search = TrayState.regex.search(id)
+        search = TrayState.regex.search(gazebo_id)
         self.num = int(search.group(1))
         self.blocks = []
 
@@ -25,8 +25,16 @@ class TrayState:
         num = TrayState.regex.search(id)
         return num is not None
 
-    def notify_contains_block(self, block):
+    def notify_place_block(self, block, gripper_state):
+        block.tray = self
         self.blocks.append(block)
+        gripper_state.holding_block = None
+
+
+    def notify_pick_block(self, block, gripper_state):
+        block.tray = None
+        self.blocks.remove(block)
+        gripper_state.holding_block = block
 
     def get_tray_pick_location(self):
         """
@@ -66,11 +74,9 @@ class TrayState:
 
         return copygazebopose
 
-    def reset(self):
-        self.blocks = []
 
     def get_state(self):
-        return {"id": self.id, "pose":  message_converter.convert_ros_message_to_dictionary(self.gazebo_pose), "blocks": [b.get_state() for b in self.blocks]}
+        return {"pose":  message_converter.convert_ros_message_to_dictionary(self.gazebo_pose), "blocks": [b.get_state() for b in self.blocks]}
 
     def __str__(self):
-        return "Tray: "+ str(self.id) +",num: "+str(self.num)+" -> "+ str(len(self.blocks)) + " items"
+        return "Tray: "+ str(self.gazebo_id) + ",num: " + str(self.num) + " -> " + str(len(self.blocks)) + " items"

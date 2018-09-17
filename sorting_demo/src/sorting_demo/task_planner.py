@@ -20,10 +20,7 @@ from robot_funcs import force_joint_limits
 from tasync import Task, tasync
 import tf
 import tf.transformations
-
-import time
-from re import search
-from functools import wraps
+from concepts.gripper_state import GripperState
 
 from trajectory_planner import TrajectoryPlanner
 
@@ -66,6 +63,7 @@ class TaskPlanner:
                                       'right_j6': 0}
 
         self.joint_names = ["right_j0", "right_j1", "right_j2", "right_j3", "right_j4", "right_j5", "right_j6"]
+        self.gripper_state = GripperState()
 
     def scheduler_yield(self):
         rospy.logwarn("scheduler yield")
@@ -778,6 +776,8 @@ class TaskPlanner:
             result = self.trajectory_planner.place_block(target_block)
             rospy.logwarn("place result: " + str(result))
 
+        target_tray.notify_place_block(target_block, self.gripper_state)
+
     @tasync("MOVEIT TABLETOP PICK")
     def moveit_tabletop_pick(self, target_block):
         # self.sawyer_robot.gripper_open()
@@ -795,6 +795,8 @@ class TaskPlanner:
             result = self.trajectory_planner.pick_block(target_block, "table1")
             rospy.logwarn("pick result: " + str(result))
 
+        self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
+
     @tasync("MOVEIT TABLETOP PLACE")
     def moveit_tabletop_place(self, target_block):
         result = False
@@ -810,6 +812,8 @@ class TaskPlanner:
 
             result = self.trajectory_planner.place_block(target_block)
             rospy.logwarn("place result: " + str(result))
+
+        self.environment_estimation.table.notify_gripper_place(target_block,self.gripper_state)
 
     @tasync("MOVEIT TRAYTOP PICK")
     def moveit_traytop_pick(self, target_block):
@@ -828,6 +832,8 @@ class TaskPlanner:
             result = self.trajectory_planner.pick_block(target_block, "table2")
             rospy.logwarn("pick result: " + str(result))
 
+        target_block.tray.notify_pick_block(target_block,self.gripper_state)
+
     @tasync("PICK BLOCK FROM TABLE AND MOVE TO TRAY")
     def pick_block_from_table_and_place_to_tray(self, target_block, target_tray):
         """
@@ -842,20 +848,19 @@ class TaskPlanner:
 
             self.moveit_tabletop_pick(target_block).result()
 
+            rospy.sleep(0.1)
             if self.sawyer_robot._gripper.get_position() < 0.03:
                 rospy.logerr("LOOKS LIKE THE GRASPING FAILED")
                 self.trajectory_planner.clear_attached_object(target_block)
+                self.gripper_state.holding_block = None
                 return None
 
             rospy.sleep(0.5)
 
             self.moveit_tray_place(target_block, target_tray).result()
 
-            target_tray.notify_contains_block(target_block)
-            self.environment_estimation.table.notify_block_removed(target_block)
-
             rospy.logwarn("pick and place finished. table blocks: " + str(self.environment_estimation.table.blocks))
-            rospy.logwarn("pick and place finished. target tray blocks: " + str(target_tray.notify_contains_block))
+            rospy.logwarn("pick and place finished. target tray blocks: " + str(target_tray.blocks))
 
         except Exception as ex:
             rospy.logerr("Some exception on pick and place: "+ str(ex.message))
@@ -921,8 +926,6 @@ class TaskPlanner:
 
                 self.moveit_tabletop_place(target_block).result()
 
-                target_block.tray.blocks.remove(target_block)
-                target_block.tray = None
 
                 # target_block, target_tray = self.create_detect_block_poses_task(blocks, target_block_index) \
                 #    .result()
@@ -1090,8 +1093,8 @@ class TaskPlanner:
                                meet_time=3.0,
                                retract_time=1.0).result()
 
-        self.environment_estimation.table.notify_block_removed(target_block)
-        target_tray.notify_contains_block(target_block)
+        self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
+        target_tray.notify_place_block(target_block, self.gripper_state)
 
     @tasync("REQUEST PUT ALL CONTENTS ON TABLE")
     def put_all_contents_on_table(self):
@@ -1102,7 +1105,6 @@ class TaskPlanner:
         original_blocks_poses = self.environment_estimation.get_original_block_poses()
         rospy.logwarn(original_blocks_poses)
         self.pick_all_pieces_from_tray_and_put_on_table().result()
-        self.create_wait_forever_task().result()
 
     @tasync("DETECT BLOCK POSE")
     def create_detect_block_poses_task(self, blocks, target_block_index):
@@ -1238,21 +1240,23 @@ class TaskPlanner:
 
         self.create_wait_forever_task().result()
 
-    def reset_cycle(self):
-        """
-
-        :return: 
-        """
-        for tray in self.environment_estimation.get_trays():
-            tray.reset()
 
     def get_state(self):
         """
         :return: 
         """
-        return {"table_state": self.environment_estimation.table.get_state(),
+        return {
+                "current_task": self.get_task_stack(),
+                "planner_state": "PAUSED" if self.pause_flag else "RUNNING",
+                "table_state": self.environment_estimation.table.get_state(),
                 "trays": [t.get_state() for t in self.environment_estimation.trays],
-                "current_task": self.get_task_stack()}
+                "gripper": self.gripper_state.get_state()
+                }
+
+
+    def count_pieces_on_table_by_color(self, color):
+        filtered = [b for b in self.environment_estimation.table.blocks if b.get_color().upper() == color.upper()]
+        return len(filtered)
 
     def get_task_stack(self):
         return [t.name for t in self.tasks]

@@ -145,17 +145,15 @@ class RobotTaskFacade:
         :param color: str - "red", "blue", "green"
         :return: 
         """
-        rospy.logerr("To implement. Robot Task: count pieces on table by color!")
-        return 0
+        count = self.task_planner.count_pieces_on_table_by_color(color)
+        return count
 
     def get_current_piece_color(self):
         """
 
         :return: 
         """
-
-        rospy.logerr("To implement. Robot Task: get current piece color!")
-        return "GREEN"
+        return None if self.task_planner.gripper_state.holding_block is None else self.task_planner.gripper_state.holding_block.get_color()
 
     # ---------- lifecycle  ---------------------------
     def pause(self):
@@ -181,7 +179,7 @@ class RobotTaskFacade:
         
         :return: 
         """
-        self.task_planner.create_main_loop_task()
+        self.task_planner.execute_task(self.task_planner.create_main_loop_task)
         return "ACK"
 
     def stop(self):
@@ -243,7 +241,10 @@ class RobotTaskFacade:
         :param color: 
         :return: 
         """
-        self.task_planner.disable_sorting_by_color(color)
+        def lamb():
+            self.task_planner.disable_sorting_by_color(color)
+
+        self.task_planner.execute_task(lamb)
 
     #@route("/enable_sorting_by_color/<color>')")
     def enable_sorting_by_color(self,color):

@@ -25,6 +25,10 @@ function update(resturl, p1="", p2="") {
             var pretty = JSON.stringify(obj, undefined, 4);
             statediv.innerHTML = pretty;
         }
+        else if (this.status ==0)
+        {
+            statediv.innerHTML = "Waiting server response..."
+        }
         else
         {
             statediv.innerHTML = "status:" + this.status  +"\n" + JSON.stringify(this.responseText)
@@ -43,6 +47,8 @@ function update(resturl, p1="", p2="") {
         finalurl = finalurl + "/" + p2
     }
 
+    document.getElementById('note').innerHTML = finalurl
+
     xmlhttp.open("GET", finalurl, true);
     xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xmlhttp.send();
@@ -57,7 +63,7 @@ function update(resturl, p1="", p2="") {
 <h3>Invoke</h3>
 <button type="button" onclick="update('state')">/state</button>
 <button type="button" onclick="update('current_task')">/current_task</button>
-<button type="button" onclick="update('state','green')">/count_table_pieces/[color]</button>
+<button type="button" onclick="update('count_table_pieces','green')">/count_table_pieces/[color]</button>
 <button type="button" onclick="update('current_piece_color')">/current_piece_color</button>
 <button type="button" onclick="update('pause')">/pause</button>
 <button type="button" onclick="update('resume')">/resume</button>
@@ -65,8 +71,8 @@ function update(resturl, p1="", p2="") {
 <button type="button" onclick="update('stop')">/stop</button>
 <button type="button" onclick="update('greet')">/greet</button>
 <button type="button" onclick="update('put_all_contents_on_table')">/put_all_contents_on_table</button>
-<button type="button" onclick="update('state', 'green')">/pick_block_by_color/[color]</button>
-<button type="button" onclick="update('state', 'green','1')">/put_block_into_tray/[color]/[trayid]</button>
+<button type="button" onclick="update('pick_block_by_color', 'green')">/pick_block_by_color/[color]</button>
+<button type="button" onclick="update('put_block_into_tray', 'green','1')">/put_block_into_tray/[color]/[trayid]</button>
 <h3>Params</h3>
 <div>
 p1: <input type="text" value="green"/>
@@ -80,6 +86,7 @@ p2: <input type=text" value="1"/>
 <h2>
 JSON Response:
 </h2>
+    <div id="note"></div>
 <div>
 <textarea id="statediv" cols=100 rows=35></textarea>
 </div>

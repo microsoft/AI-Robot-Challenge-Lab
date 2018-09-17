@@ -72,10 +72,10 @@ class TrajectoryPlanner:
 
     def pick_block(self, block, surface):
         self.group.set_num_planning_attempts(10)
-        self.group.set_planning_time(1)
+        self.group.set_planning_time(3)
 
-        pathconstraint = self.joint_constraints()
-        self.group.set_path_constraints(pathconstraint)
+        #pathconstraint = self.joint_constraints()
+        #self.group.set_path_constraints(pathconstraint)
 
         target_pose = block.grasp_pose
 
@@ -118,7 +118,7 @@ class TrajectoryPlanner:
 
     def place_block(self, block):
         self.group.set_num_planning_attempts(10)
-        self.group.set_planning_time(1)
+        self.group.set_planning_time(3)
 
         self.update_environment_obstacles()
 
