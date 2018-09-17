@@ -10,7 +10,7 @@
 <script>
 
 
-function update(resturl) {
+function update(resturl, p1="", p2="") {
 
     xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
@@ -31,7 +31,19 @@ function update(resturl) {
 
         }
     };
-    xmlhttp.open("GET", "http://localhost:5000/"+ resturl, true);
+
+    finalurl = "http://localhost:5000/"+ resturl
+    if(p1 != "")
+    {
+        finalurl = finalurl + "/" + p1
+    }
+
+    if(p2 != "")
+    {
+        finalurl = finalurl + "/" + p2
+    }
+
+    xmlhttp.open("GET", finalurl, true);
     xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xmlhttp.send();
 }
@@ -45,7 +57,7 @@ function update(resturl) {
 <h3>Invoke</h3>
 <button type="button" onclick="update('state')">/state</button>
 <button type="button" onclick="update('current_task')">/current_task</button>
-<button type="button" onclick="update('state')">/count_table_pieces/[color]</button>
+<button type="button" onclick="update('state','green')">/count_table_pieces/[color]</button>
 <button type="button" onclick="update('current_piece_color')">/current_piece_color</button>
 <button type="button" onclick="update('pause')">/pause</button>
 <button type="button" onclick="update('resume')">/resume</button>
@@ -53,14 +65,14 @@ function update(resturl) {
 <button type="button" onclick="update('stop')">/stop</button>
 <button type="button" onclick="update('greet')">/greet</button>
 <button type="button" onclick="update('put_all_contents_on_table')">/put_all_contents_on_table</button>
-<button type="button" onclick="update('state')">/pick_block_by_color/[color]</button>
-<button type="button" onclick="update('state')">/put_block_into_tray/[color]/[trayid]</button>
+<button type="button" onclick="update('state', 'green')">/pick_block_by_color/[color]</button>
+<button type="button" onclick="update('state', 'green','1')">/put_block_into_tray/[color]/[trayid]</button>
 <h3>Params</h3>
 <div>
-p1: <input type="text"></inputtext>
+p1: <input type="text" value="green"/>
     </div>
 <div>
-p2: <input type="""text"></text>
+p2: <input type=text" value="1"/>
     </div>
 
     </div>
