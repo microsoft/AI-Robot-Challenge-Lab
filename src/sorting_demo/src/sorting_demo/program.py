@@ -23,7 +23,8 @@ def main():
 
     task_facade = task_planner.get_task_facade()
 
-    task_facade.start()
+    task_planner.create_go_home_task(check_obstacles=False).result()
+    #task_facade.start()
 
     task_facade.run_rest_server()
 

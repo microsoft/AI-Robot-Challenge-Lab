@@ -49,7 +49,6 @@ class TaskPlanner:
 
         self.mutex = Lock()
 
-        self.current_in_hand_block = None
         self.current_in_hand_block_target_tray = None
 
         self.task_facade = RobotTaskFacade(self)
@@ -781,6 +780,9 @@ class TaskPlanner:
     @tasync("MOVEIT TABLETOP PICK")
     def moveit_tabletop_pick(self, target_block):
         # self.sawyer_robot.gripper_open()
+        self.trajectory_planner.ceilheight = 0.7
+        self.trajectory_planner.register_box(target_block)
+
         result = False
         while not result or result < 0:
             self.scheduler_yield()
@@ -842,9 +844,6 @@ class TaskPlanner:
         """
 
         try:
-            self.trajectory_planner.ceilheight = 0.7
-
-            self.trajectory_planner.register_box(target_block)
 
             self.moveit_tabletop_pick(target_block).result()
 
@@ -1041,33 +1040,49 @@ class TaskPlanner:
         while not rospy.is_shutdown():
             self.delay_task(10).result()
 
-    @tasync("PICK BY COLOR")
-    def pick_block_on_table_by_color(self, color):
+    @tasync("PLACE TO TRAY REQUEST")
+    def place_block_to_tray(self,tray_index):
+        tray_index = int(tray_index)
+        trayslen = len(self.environment_estimation.trays)
+        rospy.logwarn("request place to tray: %d", tray_index)
+
+        if self.gripper_state.holding_block is not None:
+            rospy.logwarn("gripper holding block:"+ str(self.gripper_state.holding_block.get_state()))
+
+            if tray_index  <trayslen  and tray_index >= 0:
+                target_tray = self.environment_estimation.trays[tray_index]
+                self.moveit_tray_place(self.gripper_state.holding_block, target_tray).result()
+            else:
+                rospy.logwarn(
+                    "Cannot place, incorrect tray id")
+
+        else:
+            rospy.logwarn(
+                "Cannot place block, robot is not holding any block")
+
+    @tasync("PICK BY COLOR REQUEST")
+    def pick_block_from_table_by_color(self, color):
         """
         :param color: 
         :return: 
         """
-        blocks = self.environment_estimation.table.get_blocks()
-        btarget = [i for i, b in enumerate(blocks) if b.is_color(color)][0]
+        self.reset_and_recompute_head_vision_table_state_estimation()
 
-        res = self.create_detect_block_poses_task(blocks, btarget).result()
-        if res is not None:
-            target_block, target_tray = res
+        blocks = self.environment_estimation.table.get_blocks()
+        filtered = [b for i, b in enumerate(blocks) if b.is_color(color)]
+
+        btarget =None
+        if len(filtered)>0:
+            btarget = filtered[0]
         else:
             return None
 
+        res = self.create_move_top_block_view_and_detect(btarget).result()
 
-        self.create_pick_task(target_block.gazebo_pose, approach_speed=0.0001, approach_time=2.0,
-                              meet_time=3.0,
-                              retract_time=1.0,
-                              hover_distance=None).result()
+        if res:
+            self.moveit_tabletop_pick(btarget).result()
 
-
-        self.current_in_hand_block = target_block
-        self.current_in_hand_block_target_tray = target_tray
-
-        # self.create_pick_task(btarget.gazebo_pose)
-        return target_block
+        return btarget
 
     @tasync("PICK BY COLOR AND PUT TRAY")
     def put_block_into_tray_task(self, color, trayid):
@@ -1078,23 +1093,8 @@ class TaskPlanner:
         """
         # self.reset_cycle()
         # decide and select block and pick it
-        target_block = self.pick_block_on_table_by_color(color).result()
-
-        rospy.logwarn("put block into tray: " + str(self.environment_estimation.get_trays()))
-        target_tray = self.environment_estimation.get_tray_by_num(trayid)
-        rospy.logwarn("put block into tray: " + str(target_tray))
-
-        place_location = self.compute_grasp_pose_offset(
-            copy.deepcopy(target_tray.get_tray_place_block_pose()))
-
-        self.create_place_task(place_location,
-                               approach_speed=0.0001,
-                               approach_time=3.0,
-                               meet_time=3.0,
-                               retract_time=1.0).result()
-
-        self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
-        target_tray.notify_place_block(target_block, self.gripper_state)
+        target_block = self.pick_block_from_table_by_color(color).result()
+        self.place_block_to_tray(trayid).result()
 
     @tasync("REQUEST PUT ALL CONTENTS ON TABLE")
     def put_all_contents_on_table(self):
@@ -1215,8 +1215,7 @@ class TaskPlanner:
         This is the main plan of the application
         :return:
         """
-
-        self.create_go_home_task(check_obstacles=False).result()
+        #self.create_go_home_task(check_obstacles=False).result()
 
         for i in xrange(1000):
             self.create_go_vision_head_pose_task().result()
@@ -1270,11 +1269,14 @@ class TaskPlanner:
 
         self.stop()
 
-        fn(*args).result()
+        while len(self.tasks) >0:
+            rospy.sleep(0.5)
+
+        #launch asynchronosuly
+        fn(*args)
 
         self.robot_sayt2s("REQUESTED TASK COMPLETED")
 
-        self.delay_task(1)
 
         # self.create_main_loop_task().result()
 

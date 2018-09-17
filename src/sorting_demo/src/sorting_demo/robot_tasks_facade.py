@@ -88,7 +88,7 @@ class RobotTaskFacade:
         @self.app.route("/put_all_contents_on_table")
         def put_all_contents_on_table():
             try:
-                return flask.json.jsonify(response="ACK", result=self.put_all_contents_on_table)
+                return flask.json.jsonify(response="ACK", result=self.put_all_contents_on_table())
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
@@ -99,6 +99,14 @@ class RobotTaskFacade:
                 return flask.json.jsonify(response="ACK", result=self.pick_block_by_color(color))
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
+
+        @self.app.route("/place_block_to_tray/<trayid>")
+        def place_block_to_tray_id(trayid):
+            try:
+                return flask.json.jsonify(response="ACK", result=self.place_block_to_tray(int(trayid)))
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
+
 
         @self.app.route("/put_block_into_tray/<color>/<trayid>")
         def put_block_into_tray( color, trayid):
@@ -217,7 +225,11 @@ class RobotTaskFacade:
         :return: 
         """
 
-        self.task_planner.execute_task(self.task_planner.pick_block_on_table_by_color, args=[color])
+        self.task_planner.execute_task(self.task_planner.pick_block_from_table_by_color, args=[color])
+        return "ACK"
+
+    def place_block_to_tray(self, trayid):
+        self.task_planner.execute_task(self.task_planner.place_block_to_tray, args=[trayid])
         return "ACK"
 
 
@@ -241,10 +253,8 @@ class RobotTaskFacade:
         :param color: 
         :return: 
         """
-        def lamb():
-            self.task_planner.disable_sorting_by_color(color)
 
-        self.task_planner.execute_task(lamb)
+        self.task_planner.execute_task(lambda: self.task_planner.disable_sorting_by_color(color))
 
     #@route("/enable_sorting_by_color/<color>')")
     def enable_sorting_by_color(self,color):
@@ -253,4 +263,4 @@ class RobotTaskFacade:
         :param color: 
         :return:
         """
-        self.task_planner.enable_sorting_by_color(color)
+        self.task_planner.execute_task(lambda: self.task_planner.enable_sorting_by_color(color))
