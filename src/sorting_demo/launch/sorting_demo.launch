@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- We resume the logic in empty_world.launch, changing the name of the world to be launched -->
+  <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
+    <arg name="electric_gripper" value="true"/>
+  </include>
+
+  <!-- Start the Sawyer pick and place demo -->
+  <node pkg="sorting_demo" type="program.py" name="sorting_demo" />
+
+  <node pkg="sawyer_ik_5d" type="sawyer_ik_5d_node" name="sawyer_ik_5d_node"  output="screen"/>
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find sorting_demo)/config/rviz.rviz"/>
+
+</launch>
