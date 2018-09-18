@@ -13,6 +13,3 @@
 [submodule "submodules/sawyer_moveit"]
 	path = submodules/sawyer_moveit
 	url = git@github.com:pabloinigoblasco/sawyer_moveit.git
-[submodule "sawyer_moveit"]
-	path = sawyer_moveit
-	url = git@github.com:pabloinigoblasco/sawyer_moveit.git
