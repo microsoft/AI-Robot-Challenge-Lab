@@ -3,7 +3,7 @@
 <head>
     <style>
         h1 {}
-        
+
         button {
             color: blue;
             width: 250px;
@@ -19,6 +19,7 @@
             xmlhttp.onreadystatechange = function() {
                 statediv = document.getElementById('statediv')
                 statediv.innerHTML = "hello"
+
 
                 if (this.readyState == 4 && this.status == 200) {
 
@@ -36,7 +37,7 @@
             finalurl = "http://localhost:5000/" + resturl
             if (p1 != "") {
                 e = document.getElementById(p1);
-                param = e.options[e.selectedIndex].text;
+                param = e.options[e.selectedIndex].value;
                 finalurl = finalurl + "/" + param
             }
 
@@ -88,9 +89,9 @@
         <div>
             p2:
             <select id=tray>
-                <option value="0">Tray 1</option>
-                <option value="1">Tray 2</option>
-                <option value="2">Tray 3</option>
+                <option value="0">Tray 0</option>
+                <option value="1">Tray 1</option>
+                <option value="2">Tray 2</option>
             </select>
         </div>
     </div>
