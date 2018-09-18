@@ -10,7 +10,7 @@
   <xacro:macro name="tray_part" params="name width length height mass material xPos:=0 yPos:=0">
     <link name="${name}">
       <inertial>
-        <mass value="${tray_density * width * length * height*1000.0}" />
+        <mass value="${tray_density * width * length * height}" />
 
         <inertia  ixx="${(1/12) * tray_density * width * length * height * (length**2 + height**2)}" ixy="0.0"  ixz="0.0"
                   iyy="${(1/12) * tray_density * width * length * height * (width**2 + height**2)}"  iyz="0.0"
@@ -49,9 +49,8 @@
     </gazebo>
 
 
-    <gazebo reference="$tray">
+    <gazebo>
         <static>true</static>
-
     </gazebo>
 
     <xacro:if value="${xPos != 0 or yPos != 0}">
@@ -65,9 +64,9 @@
   </xacro:macro>
 
   <xacro:tray_part name="${tray_base_name}" width="${tray_width}" length="${tray_length}" height="${tray_thickness}" mass="0.01" material="Gazebo/White" />
-  <xacro:tray_part name="tray_wall0" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/Red" yPos="-1" />
-  <xacro:tray_part name="tray_wall1" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/Red" yPos="1" />
-  <xacro:tray_part name="tray_wall2" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/Blue" xPos="-1" />
-  <xacro:tray_part name="tray_wall3" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/Blue" xPos="1" />
+  <xacro:tray_part name="tray_wall0" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/White" yPos="-1" />
+  <xacro:tray_part name="tray_wall1" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/White" yPos="1" />
+  <xacro:tray_part name="tray_wall2" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/White" xPos="-1" />
+  <xacro:tray_part name="tray_wall3" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/White" xPos="1" />
 
 </robot>

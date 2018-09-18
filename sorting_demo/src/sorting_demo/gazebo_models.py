@@ -90,9 +90,9 @@ def load_gazebo_models():
     # Spawn trays
     tray_path = sorting_demo_models_path + "tray/tray.urdf.xacro"
 
-    tray_poses = [Pose(position=Point(x=-0.3, y=0.7, z=0.9)),
-                  Pose(position=Point(x=0.0, y=0.7, z=0.9)),
-                  Pose(position=Point(x=0.3, y=0.7, z=0.9))]
+    tray_poses = [Pose(position=Point(x=-0.3, y=0.7, z=0.7828)),
+                  Pose(position=Point(x=0.0, y=0.7, z=0.7828)),
+                  Pose(position=Point(x=0.3, y=0.7, z=0.7828))]
 
     for (i, pose) in enumerate(tray_poses):
         name = "tray{}".format(i)
