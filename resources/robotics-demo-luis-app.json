@@ -1,0 +1,97 @@
+{
+  "luis_schema_version": "3.0.0",
+  "versionId": "0.1",
+  "name": "robotics-demo",
+  "desc": "",
+  "culture": "en-us",
+  "intents": [
+    {
+      "name": "MoveArm"
+    },
+    {
+      "name": "MoveGrippers"
+    },
+    {
+      "name": "None"
+    },
+    {
+      "name": "ShowStats"
+    }
+  ],
+  "entities": [],
+  "composites": [],
+  "closedLists": [
+    {
+      "name": "action",
+      "subLists": [
+        {
+          "canonicalForm": "open",
+          "list": []
+        },
+        {
+          "canonicalForm": "close",
+          "list": []
+        }
+      ],
+      "roles": []
+    }
+  ],
+  "patternAnyEntities": [],
+  "regex_entities": [],
+  "prebuiltEntities": [],
+  "model_features": [],
+  "regex_features": [],
+  "patterns": [],
+  "utterances": [
+    {
+      "text": "can you move your arm?",
+      "intent": "MoveArm",
+      "entities": []
+    },
+    {
+      "text": "close the grippers",
+      "intent": "MoveGrippers",
+      "entities": []
+    },
+    {
+      "text": "move arm",
+      "intent": "MoveArm",
+      "entities": []
+    },
+    {
+      "text": "move arm robot",
+      "intent": "MoveArm",
+      "entities": []
+    },
+    {
+      "text": "move your arm in circles",
+      "intent": "MoveArm",
+      "entities": []
+    },
+    {
+      "text": "open grippers",
+      "intent": "MoveGrippers",
+      "entities": []
+    },
+    {
+      "text": "please move your arm",
+      "intent": "MoveArm",
+      "entities": []
+    },
+    {
+      "text": "show me your statistics",
+      "intent": "ShowStats",
+      "entities": []
+    },
+    {
+      "text": "show stats",
+      "intent": "ShowStats",
+      "entities": []
+    },
+    {
+      "text": "wave arm",
+      "intent": "MoveArm",
+      "entities": []
+    }
+  ]
+}
