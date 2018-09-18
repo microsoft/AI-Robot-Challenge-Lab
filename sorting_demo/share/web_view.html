@@ -1,100 +1,105 @@
-
 <html>
-<head>
-
-    <style>
-        h1 {}
-        button {color:blue; width:250px; padding: 5px; margin: 5px; display: block}
-    </style>
-
-<script>
-
-
-function update(resturl, p1="", p2="") {
-
-    xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-        statediv = document.getElementById('statediv')
-        statediv.innerHTML = "hello"
-
-
-        if (this.readyState == 4 && this.status == 200) {
-
-            ugly = this.responseText;
-            var obj = JSON.parse(ugly);
-            var pretty = JSON.stringify(obj, undefined, 4);
-            statediv.innerHTML = pretty;
-        }
-        else if (this.status ==0)
-        {
-            statediv.innerHTML = "Waiting server response..."
-        }
-        else
-        {
-            statediv.innerHTML = "status:" + this.status  +"\n" + JSON.stringify(this.responseText)
-
-        }
-    };
-
-    finalurl = "http://localhost:5000/"+ resturl
-    if(p1 != "")
-    {
-        finalurl = finalurl + "/" + p1
-    }
-
-    if(p2 != "")
-    {
-        finalurl = finalurl + "/" + p2
-    }
-
-    document.getElementById('note').innerHTML = finalurl
-
-    xmlhttp.open("GET", finalurl, true);
-    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xmlhttp.send();
-}
-</script>
-
-
-</head>
-<body onload="update('state')">
-<div style="float:left">
-<h1>REST Endpoints</h1>
-<h2>Invoke</h2>
-    <h3>Observers</h3>
-    <button type="button" onclick="update('state')">/state</button>
-    <button type="button" onclick="update('current_task')">/current_task</button>
-    <button type="button" onclick="update('count_table_pieces','green')">/count_table_pieces/[color]</button>
-    <button type="button" onclick="update('current_piece_color')">/current_piece_color</button>
-    <h3>Lifecycle</h3>
-    <button type="button" onclick="update('pause')">/pause</button>
-    <button type="button" onclick="update('resume')">/resume</button>
-    <button type="button" onclick="update('start')">/start</button>
-    <button type="button" onclick="update('stop')">/stop</button>
-    <h3>Operations Primitives</h3>
-    <button type="button" onclick="update('pick_block_by_color', 'green')">/pick_block_by_color/[color]</button>
-    <button type="button" onclick="update('place_block_to_tray', '1')">/place_block_to_tray/[trayid]</button>
-    <h3>Others</h3>
-    <button type="button" onclick="update('greet')">/greet</button>
-    <button type="button" onclick="update('put_all_contents_on_table')">/put_all_contents_on_table</button>
-    <button type="button" onclick="update('put_block_into_tray', 'green','1')">/put_block_into_tray/[color]/[trayid]</button>
-<h2>Params</h2>
-<div>
-p1: <input type="text" value="green"/>
-    </div>
-<div>
-p2: <input type=text" value="1"/>
-    </div>
-
-    </div>
-<div style="float:left; margin-left:20px">
-<h1>
-JSON Response:
-</h1>
-    <div id="note"></div>
-<div>
-<textarea id="statediv" cols=100 rows=35></textarea>
-</div>
-</div>
-</body>
+   <head>
+      <style>
+         h1 {}
+         button {color:blue; width:250px; padding: 5px; margin: 5px; display: block}
+      </style>
+      <script>
+         function update(resturl, p1="", p2="") {
+         
+             xmlhttp = new XMLHttpRequest();
+             xmlhttp.onreadystatechange = function() {
+                 statediv = document.getElementById('statediv')
+                 statediv.innerHTML = "hello"
+         
+         
+                 if (this.readyState == 4 && this.status == 200) {
+         
+                     ugly = this.responseText;
+                     var obj = JSON.parse(ugly);
+                     var pretty = JSON.stringify(obj, undefined, 4);
+                     statediv.innerHTML = pretty;
+                 }
+                 else if (this.status ==0)
+                 {
+                     statediv.innerHTML = "Waiting server response..."
+                 }
+                 else
+                 {
+                     statediv.innerHTML = "status:" + this.status  +"\n" + JSON.stringify(this.responseText)
+         
+                 }
+             };
+         
+             finalurl = "http://localhost:5000/"+ resturl
+             if(p1 != "")
+             {
+                 e = document.getElementById(p1);
+                 param = e.options[e.selectedIndex].text;
+                 finalurl = finalurl + "/" + param
+             }
+         
+             if(p2 != "")
+             {
+                 e = document.getElementById(p2);
+                 param = e.options[e.selectedIndex].value;
+                 finalurl = finalurl + "/" + param
+             }
+         
+             document.getElementById('note').innerHTML = finalurl
+         
+             xmlhttp.open("GET", finalurl, true);
+             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+             xmlhttp.send();
+         }
+      </script>
+   </head>
+   <body onload="update('state')">
+      <div style="float:left">
+      <h1>REST Endpoints</h1>
+      <h2>Invoke</h2>
+      <h3>Observers</h3>
+      <button type="button" onclick="update('state')">/state</button>
+      <button type="button" onclick="update('current_task')">/current_task</button>
+      <button type="button" onclick="update('count_table_pieces','color')">/count_table_pieces/[color]</button>
+      <button type="button" onclick="update('current_piece_color')">/current_piece_color</button>
+      <h3>Lifecycle</h3>
+      <button type="button" onclick="update('pause')">/pause</button>
+      <button type="button" onclick="update('resume')">/resume</button>
+      <button type="button" onclick="update('start')">/start</button>
+      <button type="button" onclick="update('stop')">/stop</button>
+      <h3>Operations Primitives</h3>
+      <button type="button" onclick="update('pick_block_by_color', 'color')">/pick_block_by_color/[color]</button>
+      <button type="button" onclick="update('place_block_to_tray', 'tray')">/place_block_to_tray/[trayid]</button>
+      <h3>Others</h3>
+      <button type="button" onclick="update('greet')">/greet</button>
+      <button type="button" onclick="update('put_all_contents_on_table')">/put_all_contents_on_table</button>
+      <button type="button" onclick="update('put_block_into_tray', 'color','tray')">/put_block_into_tray/[color]/[trayid]</button>
+      <h2>Params</h2>
+      <div>
+         p1: 
+         <select id=color>
+            <option>Red</option>
+            <option>Green</option>
+            <option>Blue</option>
+         </select>
+      </div>
+      <div>
+         p2: 
+         <select id=tray>
+            <option value="0">Tray 1</option>
+            <option value="1">Tray 2</option>
+            <option value="2">Tray 3</option>
+         </select>
+      </div>
+      <div style="float:left; margin-left:20px">
+         <h1>
+            JSON Response:
+         </h1>
+         <div id="note"></div>
+         <div>
+            <textarea id="statediv" cols=100 rows=35></textarea>
+         </div>
+      </div>
+   </body>
 </html>
