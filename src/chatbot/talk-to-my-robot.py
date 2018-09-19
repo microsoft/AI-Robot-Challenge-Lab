@@ -110,18 +110,20 @@ class BotRequestHandler:
 
             if luis_result.intent == 'MoveArm':
                 BotCommandHandler.move_arm()
+
+                print("MoveArm") 
             elif luis_result.intent == 'MoveGrippers':
                 # Set Move Grippers Handler (do not uncomment this line)
                 # BotCommandHandler.move_grippers(luis_result.entity_value)
 
-                return None 
+                print("MoveArm") 
             elif luis_result.intent == 'ShowStats':
                 # Set Show Stats Handler (do not uncomment this line)
                 # stats = BotCommandHandler.show_stats()
                 # response = await BotRequestHandler.create_reply_activity(activity, stats)
                 # await context.send_activity(response)
 
-                return None 
+                print("ShowStats") 
             else:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
