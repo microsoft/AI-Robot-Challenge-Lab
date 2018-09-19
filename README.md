@@ -1,6 +1,6 @@
 # AI Robot Challenge
 
-The future is the fusion of AI and robotics to enable intelligent, collaborative, assistive, and social robots that augment human ingenuity. If you want to take the AI Robot Challenge but are new to robotics, each day we will present an Intro to Robotics session. In this session, you will learn about the heart of robotics programming using the Robot Operating system (ROS) with Python and how to use Gazebo, the robot simulator. You will also learn how to deploy your code to a real industrial robot. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
+The future is the fusion of AI and robotics to enable intelligent, collaborative, assistive, and social robots that augment human ingenuity. If you want to take the AI Robot Challenge but are new to robotics, each day we will present an Intro to Robotics session. In this session, you will learn about the heart of robotics programming using the Robot Operating system (ROS) with Python and how to use Gazebo, the robot simulator. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
 
 # Introduction to Robotics
 
