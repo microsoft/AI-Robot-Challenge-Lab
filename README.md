@@ -74,41 +74,6 @@ The planning scene feature allows to monitor the state, sensor and world geometr
 
 Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and well make this bot to communicate with a physical robot using natural language and Computer Vision for image recognition.
 
-## Setup your development environment
-
-
-### Get ubuntu 16.04 image
-
-1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
-2. Install the image in a VM.
-  > NOTE You can use any virtualization software to run the image
-3. Make sure to allocate at least 8GB of RAM.
-
-### Run installation script on VM
-
-1. Clone this repo into your **Home** folder by runnning the following command `git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git` from a **Terminal** console.
-1. Navigate to `~/AI-Robot-Challenge-Lab/setup` in a Terminal window.
-1. Run the following command: `chmod +x robot-challenge-setup.sh`.
-1. Run the shell script with the following command `./robot-challenge-setup.sh`.
-
-### Setup and launch the simulator
-
-1. Open a Terminal and navigate to `~/AI-Robot-Challenge-Lab/src`.
-2. Initialize git submodules:
-    * `git submodule init`
-    * `git submodule update`
-3. Move to the parent directory: 
-    * `cd ..`
-4. Run the following command:
-    * `rosdep install --from-paths src --ignore-src -r -y`
-5. Build the code: 
-    * `catkin build`
-6. Run the following commands to launch the simulator:
-  ```
-  cd $HOME/ros_ws && ./intera.sh sim
-  cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
-  ```
-
 ## Setup your Azure resources
 
 ### Setup your Azure subscription
@@ -214,6 +179,40 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 1. Copy the **Key 1** value into **Notepad**.
 
      > NOTE: We'll need this key later on.
+
+## Setup your development environment
+
+### Get ubuntu 16.04 image
+
+1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
+2. Install the image in a VM.
+  > NOTE You can use any virtualization software to run the image
+3. Make sure to allocate at least 8GB of RAM.
+
+### Run installation script on VM
+
+1. Clone this repo into your **Home** folder by runnning the following command `git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git` from a **Terminal** console.
+1. Navigate to `~/AI-Robot-Challenge-Lab/setup` in a Terminal window.
+1. Run the following command: `chmod +x robot-challenge-setup.sh`.
+1. Run the shell script with the following command `./robot-challenge-setup.sh`.
+
+### Setup and launch the simulator
+
+1. Open a Terminal and navigate to `~/AI-Robot-Challenge-Lab/src`.
+2. Initialize git submodules:
+    * `git submodule init`
+    * `git submodule update`
+3. Move to the parent directory: 
+    * `cd ..`
+4. Run the following command:
+    * `rosdep install --from-paths src --ignore-src -r -y`
+5. Build the code: 
+    * `catkin build`
+6. Run the following commands to launch the simulator:
+  ```
+  cd $HOME/ros_ws && ./intera.sh sim
+  cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
+  ```
 
 # Bringing Your Robot to Life 
 
