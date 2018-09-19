@@ -3,13 +3,25 @@
 <head>
     <style>
         h1 {}
-
+        
         button {
             color: blue;
             width: 250px;
             padding: 5px;
             margin: 5px;
             display: block
+        }
+        
+        .column {
+            float: left;
+            width: 20%;
+        }
+        /* Clear floats after the columns */
+        
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
         }
     </style>
     <script>
@@ -19,12 +31,15 @@
             xmlhttp.onreadystatechange = function() {
                 statediv = document.getElementById('statediv')
                 statediv.innerHTML = "hello"
-
-
                 if (this.readyState == 4 && this.status == 200) {
-
                     ugly = this.responseText;
                     var obj = JSON.parse(ugly);
+                    updatePlanner(obj.result)
+                    updateGrip(obj.result)
+                    updateTable(obj.result)
+                    updateTrays(obj.result.trays)
+                        // Restore json result
+                    obj = JSON.parse(ugly);
                     var pretty = JSON.stringify(obj, undefined, 4);
                     statediv.innerHTML = pretty;
                 } else if (this.status == 0) {
@@ -53,66 +68,135 @@
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xmlhttp.send();
         }
+
+        function updateTable(result) {
+            blocks = result.table_state.blocks;
+            for (i in blocks) {
+                var block = blocks[i];
+                // Clean response
+                delete block["table_pose"];
+            }
+
+            document.getElementById('tablestate').innerHTML = JSON.stringify(blocks, undefined, 4);
+        }
+
+        function updateGrip(result) {
+            gripstate = result.gripper;
+            if (gripstate != null) {
+                delete gripstate["table_pose"]
+                document.getElementById('gripstate').innerHTML = JSON.stringify(gripstate, undefined, 4);
+            }
+        }
+
+        function updatePlanner(result) {
+            plannerstate = result.planner_state;
+
+            task = JSON.stringify(result.current_task, undefined, 4);
+            document.getElementById('plannerstate').innerHTML = plannerstate + " : " + task;
+        }
+
+        function updateTrays(trays) {
+            blocks = trays.blocks;
+            updateTray("tray1", trays[0]);
+            updateTray("tray2", trays[1]);
+            updateTray("tray3", trays[2]);
+        }
+
+        function updateTray(key, tray) {
+            text = "no block";
+
+            if (tray != null) {
+                delete tray["pose"];
+                for (i in tray.blocks) {
+                    var block = tray.blocks[i];
+                    // Clean response
+                    delete block["table_pose"];
+                }
+                text = JSON.stringify(tray, undefined, 4);
+            }
+
+            document.getElementById(key).innerHTML = text;
+        }
     </script>
 </head>
 
 <body onload="update('state')">
-    <div style="float:left">
-        <h1>REST Endpoints</h1>
-        <h2>Invoke</h2>
-        <h3>Observers</h3>
-        <button type="button" onclick="update('state')">/state</button>
-        <button type="button" onclick="update('current_task')">/current_task</button>
-        <button type="button" onclick="update('count_table_pieces','color')">/count_table_pieces/[color]</button>
-        <button type="button" onclick="update('current_piece_color')">/current_piece_color</button>
-        <h3>Lifecycle</h3>
-        <button type="button" onclick="update('pause')">/pause</button>
-        <button type="button" onclick="update('resume')">/resume</button>
-        <button type="button" onclick="update('start')">/start</button>
-        <button type="button" onclick="update('stop')">/stop</button>
-        <h3>Operations Primitives</h3>
-        <button type="button" onclick="update('pick_block_by_color', 'color')">/pick_block_by_color/[color]</button>
-        <button type="button" onclick="update('place_block_to_tray', 'tray')">/place_block_to_tray/[trayid]</button>
-        <h3>Others</h3>
-        <button type="button" onclick="update('greet')">/greet</button>
-        <button type="button" onclick="update('put_all_contents_on_table')">/put_all_contents_on_table</button>
-        <button type="button" onclick="update('put_block_into_tray', 'color','tray')">/put_block_into_tray/[color]/[trayid]</button>
-        <h2>Params</h2>
-        <div>
-            p1:
-            <select id=color>
-                <option>Red</option>
-                <option>Green</option>
-                <option>Blue</option>
-            </select>
-        </div>
-        <div>
-            p2:
-            <select id=tray>
-                <option value="0">Tray 0</option>
-                <option value="1">Tray 1</option>
-                <option value="2">Tray 2</option>
-            </select>
-        </div>
-    </div>
 
-    <div style="float:left; margin-left:20px">
-        <h1>
-               JSON Response:
-            </h1>
-        <div id="note"></div>
-        <div>
-            <textarea id="statediv" cols=100 rows=35></textarea>
+    <div class="row">
+        <div class="column">
+            <h1>REST Endpoints</h1>
+            <h2>Invoke</h2>
+            <h3>Observers</h3>
+            <button type="button" onclick="update('state')">/state</button>
+            <button type="button" onclick="update('current_task')">/current_task</button>
+            <button type="button" onclick="update('count_table_pieces','color')">/count_table_pieces/[color]</button>
+            <button type="button" onclick="update('current_piece_color')">/current_piece_color</button>
+            <h3>Lifecycle</h3>
+            <button type="button" onclick="update('pause')">/pause</button>
+            <button type="button" onclick="update('resume')">/resume</button>
+            <button type="button" onclick="update('start')">/start</button>
+            <button type="button" onclick="update('stop')">/stop</button>
+            <h3>Operations Primitives</h3>
+            <button type="button" onclick="update('pick_block_by_color', 'color')">/pick_block_by_color/[color]</button>
+            <button type="button" onclick="update('place_block_to_tray', 'tray')">/place_block_to_tray/[trayid]</button>
+            <h3>Others</h3>
+            <button type="button" onclick="update('greet')">/greet</button>
+            <button type="button" onclick="update('put_all_contents_on_table')">/put_all_contents_on_table</button>
+            <button type="button" onclick="update('put_block_into_tray', 'color','tray')">/put_block_into_tray/[color]/[trayid]</button>
         </div>
-    </div>
+        <div class="column">
+            <h2>Params</h2>
+            <div>
+                p1:
+                <select id=color>
+                    <option>Red</option>
+                    <option>Green</option>
+                    <option>Blue</option>
+                </select>
+            </div>
+            <div>
+                p2:
+                <select id=tray>
+                    <option value="0">Tray 1</option>
+                    <option value="1">Tray 2</option>
+                    <option value="2">Tray 3</option>
+                </select>
+            </div>
+            <h1> State </h1>
+            <div>
+                <h2>Planer state: </h2>
+                <div id="plannerstate"></div>
+            </div>
+            <div>
+                <h2>Table:</h2>
+                <textarea id="tablestate" rows="40" cols="40"></textarea>
+            </div>
+        </div>
+        <div class="column">
+            <div>
+                <h2>Grip:</h2>
+                <textarea id="gripstate" cols="40" rows="10"></textarea>
+            </div>
+            <div>
+                <h2>Tray 1: </h2>
+                <textarea id="tray1" cols="40"></textarea>
+            </div>
+            <div>
+                <h2>Tray 2:</h2>
+                <textarea id="tray2" cols="40"></textarea>
+            </div>
 
-    <div style="float:left; margin-left:20px">
-        <h1>
-               State:
-            </h1>
-        <div id="note"></div>
-        <div>
-            <textarea id="statediv" cols=100 rows=35></textarea>
+            <div>
+                <h2>Tray 3:</h2>
+                <textarea id="tray3" cols="40"></textarea>
+            </div>
+        </div>
+        <div class="column">
+            <h1>JSON Response:</h1>
+            <div id="note"></div>
+            <div>
+                <textarea id="statediv" cols=100 rows=35></textarea>
+            </div>
         </div>
     </div>
 </body>
