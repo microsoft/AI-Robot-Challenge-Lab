@@ -38,14 +38,16 @@ class ComputerVisionApiService:
         #image_data = BytesIO(requests.get(image_url).content)
         
         try:
-             #Process Image (do not uncomment this line)
-            print('Processing image: {}'.format(image_url))
-            response = requests.post(COMPUTER_VISION_ANALYZE_URL, headers=headers, params=params, data=image_data)
-            response.raise_for_status()
-            analysis = response.json()
-            dominant_color = analysis["color"]["dominantColors"][0]
+            #Process Image (do not uncomment this line)
+            # print('Processing image: {}'.format(image_url))
+            # response = requests.post(COMPUTER_VISION_ANALYZE_URL, headers=headers, params=params, data=image_data)
+            # response.raise_for_status()
+            # analysis = response.json()
+            # dominant_color = analysis["color"]["dominantColors"][0]
             
-            return dominant_color
+            # return dominant_color
+
+            return None #REMOVE this line when you uncomment the line above
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
@@ -79,6 +81,9 @@ class LuisApiService:
             # entity = entities[0] if len(entities) > 0 else None
             
             # return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
+            
+            return None #REMOVE this line when you uncomment the line above
+
         except Exception as e:
             print("[Errno {0}] {1}".format(e.errno, e.strerror))
 
@@ -108,12 +113,15 @@ class BotRequestHandler:
             elif luis_result.intent == 'MoveGrippers':
                 # Set Move Grippers Handler (do not uncomment this line)
                 # BotCommandHandler.move_grippers(luis_result.entity_value)
+
+                return None 
             elif luis_result.intent == 'ShowStats':
                 # Set Show Stats Handler (do not uncomment this line)
                 # stats = BotCommandHandler.show_stats()
                 # response = await BotRequestHandler.create_reply_activity(activity, stats)
                 # await context.send_activity(response)
 
+                return None 
             else:
                 response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction')
                 await context.send_activity(response)
@@ -143,6 +151,8 @@ class BotRequestHandler:
         # else:
         #     response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction or image.')
         #     await context.send_activity(response)
+
+        return None 
 
     def get_image_url(attachments):
         p = re.compile('^image/(jpg|jpeg|png|gif)$')
@@ -196,6 +206,8 @@ class BotCommandHandler:
         # print('done moving grippers . . .')
         # print('returncode: '  + str(process.returncode))
         # print('output: ' + output.decode("utf-8"))
+        
+        return None
 
     def show_stats():
         #Implement Show Stats Command (do not uncomment this line)
@@ -211,7 +223,9 @@ class BotCommandHandler:
         # print('returncode: '  + str(process.returncode))
         # print('output: ' + result + '\n')
         # return result
-    
+
+        return None #REMOVE this line when you uncomment the line above
+
     def move_cube(color):
         #Implement Move Cube Command (do not uncomment this line)
         # print(f'Moving {color} cube...')
@@ -221,11 +235,10 @@ class BotCommandHandler:
         #     print('done moving cube . . .')
         # except Exception as e:
         #     print("[Errno {0}] {1}".format(e.errno, e.strerror))
-    
+        
+        return None 
 
     
-
-
 app = web.Application()
 app.router.add_post('/api/messages', BotRequestHandler.messages)
 
