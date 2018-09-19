@@ -76,24 +76,6 @@ Microsoft Bot Framework and Cognitive Services provide a platform to develop int
 
 ## Setup your environment
 
-### Setup your Azure subscription
-
-This lab **requires** an Azure subscription. If you delete the resources at the end of the session, total charges will be less than $1 so we strongly recommend using an existing subscription if available.
-
-If you need a new Azure subscription, then there are a couple of options to get a free subscription:
-
-1. The easiest way to sign up for an Azure subscription is with VS Dev Essentials and a personal Microsoft account (like @outlook.com). This does require a credit card; however, there is a spending limit in the subscription so it won't be charged unless you explicitly remove the limit.
-    * Open Microsoft Edge and go to the [Microsoft VS Dev Essentials site](https://visualstudio.microsoft.com/dev-essentials/).
-    * Click **Join or access now**.
-    * Sign in using your personal Microsoft account.
-    * If prompted, click Confirm to agree to the terms and conditions.
-    * Find the Azure tile and click the **Activate** link.
-1. Alternatively, if the above isn't suitable, you can sign up for a free Azure trial.
-    * Open Microsoft Edge and go to the [free Azure trial page](https://azure.microsoft.com/en-us/free/).
-    * Click **Start free**.
-    * Sign in using your personal Microsoft account.
-1. Complete the Azure sign up steps and wait for the subscription to be provisioned. This usually only takes a couple of minutes.
-
 
 ### Get ubuntu 16.04 image
 
@@ -127,11 +109,27 @@ If you need a new Azure subscription, then there are a couple of options to get 
   cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
   ```
 
-### Setup Language Understanding
+### Setup your Azure subscription
+
+This lab **requires** an Azure subscription. If you delete the resources at the end of the session, total charges will be less than $1 so we strongly recommend using an existing subscription if available.
+
+If you need a new Azure subscription, then there are a couple of options to get a free subscription:
+
+1. The easiest way to sign up for an Azure subscription is with VS Dev Essentials and a personal Microsoft account (like @outlook.com). This does require a credit card; however, there is a spending limit in the subscription so it won't be charged unless you explicitly remove the limit.
+    * Open Microsoft Edge and go to the [Microsoft VS Dev Essentials site](https://visualstudio.microsoft.com/dev-essentials/).
+    * Click **Join or access now**.
+    * Sign in using your personal Microsoft account.
+    * If prompted, click Confirm to agree to the terms and conditions.
+    * Find the Azure tile and click the **Activate** link.
+1. Alternatively, if the above isn't suitable, you can sign up for a free Azure trial.
+    * Open Microsoft Edge and go to the [free Azure trial page](https://azure.microsoft.com/en-us/free/).
+    * Click **Start free**.
+    * Sign in using your personal Microsoft account.
+1. Complete the Azure sign up steps and wait for the subscription to be provisioned. This usually only takes a couple of minutes.
+
+### Setup Language Understanding resources
 
 Language Understanding (LUIS) allows your bot to understand what a person wants in their own words. LUIS uses machine learning to allow developers to build applications that can receive user input in natural language and extract meaning from it.
-
-### Create a LUIS subscription
 
 While LUIS has a standalone portal for building the model, it uses Azure for subscription management.
 
@@ -155,43 +153,44 @@ Create the LUIS resource in Azure:
 
     > NOTE: We'll need this key later on.
 
-### Create a new LUIS App
-
 Before calling LUIS, we need to train it with the kinds of phrases we expect our users to send.
 
 1. Login to the [LUIS portal](https://www.luis.ai).
 
     > NOTE: Use the same credentials as you used for logging into Azure.
-1. **Scroll down** to the bottom of the welcome page.
-1. Click **Create new app**.
-1. Select **United States** from the country list.
-1. Check the **I agree** checkbox.
-1. Click the **Continue** button.
-1. From `My Apps`, click **Import new app**.
-1. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
-1. Click on the **Done** button.
-1. **Wait** for the import to complete.
-1. Click on the **Train** button and wait for it to finish.
-1. Click the **Test** button to open the test panel.
-1. **Type** `move arm` and press enter.
+
+2. **Scroll down** to the bottom of the welcome page.
+3. Click **Create new app**.
+4. Select **United States** from the country list.
+5. Check the **I agree** checkbox.
+6. Click the **Continue** button.
+7. From `My Apps`, click **Import new app**.
+8. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
+9. Click on the **Done** button.
+10. **Wait** for the import to complete.
+11. Click on the **Train** button and wait for it to finish.
+12. Click the **Test** button to open the test panel.
+13. **Type** `move arm` and press enter.
 
     > NOTE: It should return the `MoveArm` intent.
 
-1. Click on the **Manage** option.
-1. **Copy** the LUIS `Application ID` to Notepad.
+14. Click on the **Manage** option.
+15. **Copy** the LUIS `Application ID` to Notepad.
+
     > NOTE: We'll need this App ID later on.
-1. Click the **Keys and Endpoints** option.
-1. Click on **+ Assign resource**. You might need to scroll down to find the option.
+    
+16. Click the **Keys and Endpoints** option.
+17. Click on **+ Assign resource**. You might need to scroll down to find the option.
     * Select the only **tenant**.
     * Select your  **subscription**.
     * Select the **key** of your Luis resource.
     * Click on **Assign resource**.
-1. Publish your application:
+18. Publish your application:
     * Click the **Publish** button.
     * Click on the **Publish** button next to the *Production* slot.
     * Wait for the process to finish.
 
-### Create a Computer Vision subscription
+### Setup Computer Vision Resources
 The cloud-based Computer Vision service provides developers with access to advanced algorithms for processing images and returning information. Computer Vision algorithms can analyze the content of an image in different ways, depending on the visual features you're interested in. For instance, in this lab we will be analyzing images to identify a dominant color for our robot to process.
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
