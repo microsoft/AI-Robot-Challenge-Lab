@@ -98,9 +98,9 @@ If you need a new Azure subscription, then there are a couple of options to get 
 ### Get ubuntu 16.04 image
 
 1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
-1. Install the image in a VM.
+2. Install the image in a VM.
   > NOTE You can use any virtualization software to run the image
-1. Make sure to allocate at least 8GB of RAM.
+3. Make sure to allocate at least 8GB of RAM.
 
 ### Run installation script on VM
 
