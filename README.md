@@ -289,12 +289,12 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 > NOTE: If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
 
 2. Open the **Bot Framework Emulator** app.
-1. Click **Open Bot** and select the file `SawyerBot.bot` from your **~/AI-Robot-Challenge-Lab/src/chatbot** directory.
+3. Click **Open Bot** and select the file `SawyerBot.bot` from your **~/AI-Robot-Challenge-Lab/src/chatbot** directory.
 
 > NOTE: The V4 Bot Emulator gives us the ability to create Bot configuration files for simpler connectivity when debugging.
-3. **Type** `move your arm` and press enter.
-4. Return to **Gazebo** and wait for the simulator to move the arm.
-5. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+4. **Type** `move your arm` and press enter.
+5. Return to **Gazebo** and wait for the simulator to move the arm.
+6. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
 
 
 ### Make the grippers move
