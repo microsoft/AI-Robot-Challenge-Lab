@@ -137,7 +137,7 @@ While LUIS has a standalone portal for building the model, it uses Azure for sub
 
 Create the LUIS resource in Azure:
 
-1. Return to the Azure Portal (++portal.azure.com++).
+1. Go to the [Azure Portal](portal.azure.com) and log in with your credentials.
 1. Click **Create Resource [+]**  from the left menu and search for **Language Understanding**.
 1. **Select** the first result and then click the **Create** button.
 1. Provide the required information:
