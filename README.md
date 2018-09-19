@@ -137,7 +137,7 @@ While LUIS has a standalone portal for building the model, it uses Azure for sub
 
 Create the LUIS resource in Azure:
 
-1. Go to the [Azure Portal](portal.azure.com) and log in with your credentials.
+1. Go to the [Azure Portal](https://portal.azure.com) and log in with your credentials.
 1. Click **Create Resource [+]**  from the left menu and search for **Language Understanding**.
 1. **Select** the first result and then click the **Create** button.
 1. Provide the required information:
@@ -159,7 +159,7 @@ Create the LUIS resource in Azure:
 
 Before calling LUIS, we need to train it with the kinds of phrases we expect our users to use.
 
-1. Login to the [LUIS portal](www.luis.ai).
+1. Login to the [LUIS portal](https://www.luis.ai).
 
     > NOTE: Use the same credentials as you used for logging into Azure.
 1. **Scroll down** to the bottom of the welcome page.
@@ -366,7 +366,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
 
-1. Return to the [Azure Portal](portal.azure.com).
+1. Return to the [Azure Portal](https://portal.azure.com).
 1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
 1. **Select** the first result and then click the **Create** button.
 1. Provide the required information:
