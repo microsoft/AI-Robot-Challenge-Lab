@@ -74,7 +74,7 @@ The planning scene feature allows to monitor the state, sensor and world geometr
 
 Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and well make this bot to communicate with a physical robot using natural language and Computer Vision for image recognition.
 
-## Setup your environment
+## Setup your development environment
 
 
 ### Get ubuntu 16.04 image
@@ -108,6 +108,8 @@ Microsoft Bot Framework and Cognitive Services provide a platform to develop int
   cd $HOME/ros_ws && ./intera.sh sim
   cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
   ```
+
+## Setup your Azure resources
 
 ### Setup your Azure subscription
 
@@ -178,7 +180,7 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 15. **Copy** the LUIS `Application ID` to Notepad.
 
     > NOTE: We'll need this App ID later on.
-    
+
 16. Click the **Keys and Endpoints** option.
 17. Click on **+ Assign resource**. You might need to scroll down to find the option.
     * Select the only **tenant**.
