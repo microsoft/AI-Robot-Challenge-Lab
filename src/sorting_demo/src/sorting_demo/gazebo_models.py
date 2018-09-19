@@ -1,9 +1,11 @@
 #!/usr/bin/python
+import math
 import random
 import sys
 
 import rospkg
 import rospy
+import tf
 import xacro
 
 from geometry_msgs.msg import Pose, Point, Quaternion
@@ -28,10 +30,13 @@ def load_xacro_file(file_path, mappings):
     return urdf_xml
 
 
-def spawn_xacro_model(name, path, pose, reference_frame, mappings):
+def spawn_xacro_urdf_model(name, path, pose, reference_frame, mappings):
     description_xml = load_xacro_file(path, mappings)
     spawn_urdf(name, description_xml, pose, reference_frame)
 
+def spawn_xacro_sdf_model(name, path, pose, reference_frame, mappings):
+    description_xml = load_xacro_file(path, mappings)
+    spawn_sdf(name, description_xml, pose, reference_frame)
 
 def spawn_urdf_model(name, path, pose, reference_frame):
     description_xml = ''
@@ -41,19 +46,21 @@ def spawn_urdf_model(name, path, pose, reference_frame):
     spawn_urdf(name, description_xml, pose, reference_frame)
 
 
-def spawn_sdf_model(name, path, pose, reference_frame):
-    # Load Model SDF
-    description_xml = ''
-    with open(path, "r") as model_file:
-        description_xml = model_file.read().replace('\n', '')
-
-    # Spawn Model SDF
+def spawn_sdf(name, description_xml, pose, reference_frame):
     rospy.wait_for_service('/gazebo/spawn_sdf_model')
     try:
         spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
         resp_sdf = spawn_sdf(name, description_xml, "/", pose, reference_frame)
     except rospy.ServiceException as e:
         rospy.logerr("Spawn SDF service call failed: {0}".format(e))
+
+def spawn_sdf_model(name, path, pose, reference_frame):
+    # Load Model SDF
+    description_xml = ''
+    with open(path, "r") as model_file:
+        description_xml = model_file.read().replace('\n', '')
+        spawn_sdf(name, description_xml, pose,reference_frame)
+
 
 
 def load_gazebo_models():
@@ -83,13 +90,13 @@ def load_gazebo_models():
     # Spawn trays
     tray_path = sorting_demo_models_path + "tray/tray.urdf.xacro"
 
-    tray_poses = [Pose(position=Point(x=-0.2, y=0.7, z=0.9)),
-                  Pose(position=Point(x=0.05, y=0.7, z=0.9)),
-                  Pose(position=Point(x=0.3, y=0.7, z=0.9))]
+    tray_poses = [Pose(position=Point(x=-0.3, y=0.7, z=0.7828)),
+                  Pose(position=Point(x=0.0, y=0.7, z=0.7828)),
+                  Pose(position=Point(x=0.3, y=0.7, z=0.7828))]
 
     for (i, pose) in enumerate(tray_poses):
         name = "tray{}".format(i)
-        spawn_xacro_model(name, tray_path, pose, world_reference_frame, {})
+        spawn_xacro_urdf_model(name, tray_path, pose, world_reference_frame, {})
         model_list.append(name)
 
     # Spawn blocks
@@ -99,7 +106,15 @@ def load_gazebo_models():
     k = 3
     for i in xrange(k):
         for j in xrange(k):
-            block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(-1, 1)*0.03 , y= -0.15 + i * 0.15 +random.uniform(-1, 1)*0.03, z=0.7725)))
+            q = tf.transformations.quaternion_from_euler(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi),
+                                                         random.uniform(0, 2 * math.pi))
+
+
+            block_poses.append(Pose(position=Point(x=0.45 + j * 0.15 + random.uniform(-1, 1) * 0.03,
+                                                   y=-0.15 + i * 0.15 + random.uniform(-1, 1) * 0.03, z=0.7725),
+                                    orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
+
+            #block_poses.append(Pose(position=Point(x= 0.45 + j*0.12 +random.uniform(-1, 1)*0.03 , y= -0.15 + i * 0.15 +random.uniform(-1, 1)*0.03, z=0.7725)))
 
     """
     Pose(position=Point(x=0.60, y=0.1265, z=0.7725)),
@@ -118,7 +133,7 @@ def load_gazebo_models():
         mappings = {"edge_length" : str(CUBE_EDGE_LENGTH)}
         mappings.update(color_mappings)
 
-        spawn_xacro_model(name, block_path, pose, world_reference_frame, mappings)
+        spawn_xacro_urdf_model(name, block_path, pose, world_reference_frame, mappings)
         model_list.append(name)
 
     return model_list, block_poses
