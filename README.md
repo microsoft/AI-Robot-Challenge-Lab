@@ -157,7 +157,7 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
     * Click on the **Publish** button next to the *Production* slot.
     * Wait for the process to finish.
 
-### Setup Computer Vision Resources
+### Setup Computer Vision resources
 The cloud-based Computer Vision service provides developers with access to advanced algorithms for processing images and returning information. Computer Vision algorithms can analyze the content of an image in different ways, depending on the visual features you're interested in. For instance, in this lab we will be analyzing images to identify a dominant color for our robot to process.
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
