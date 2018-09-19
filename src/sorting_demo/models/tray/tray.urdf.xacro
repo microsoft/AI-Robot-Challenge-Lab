@@ -48,6 +48,11 @@
         </collision>
     </gazebo>
 
+
+    <gazebo>
+        <static>true</static>
+    </gazebo>
+
     <xacro:if value="${xPos != 0 or yPos != 0}">
       <joint name="joint_${name}" type="fixed">
         <origin xyz="${xPos * (tray_width - tray_thickness) / 2} ${yPos * (tray_length - tray_thickness) / 2} ${(tray_height + tray_thickness) / 2}" />
@@ -59,9 +64,9 @@
   </xacro:macro>
 
   <xacro:tray_part name="${tray_base_name}" width="${tray_width}" length="${tray_length}" height="${tray_thickness}" mass="0.01" material="Gazebo/White" />
-  <xacro:tray_part name="tray_wall0" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/Red" yPos="-1" />
-  <xacro:tray_part name="tray_wall1" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/Red" yPos="1" />
-  <xacro:tray_part name="tray_wall2" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/Blue" xPos="-1" />
-  <xacro:tray_part name="tray_wall3" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/Blue" xPos="1" />
+  <xacro:tray_part name="tray_wall0" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/White" yPos="-1" />
+  <xacro:tray_part name="tray_wall1" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/White" yPos="1" />
+  <xacro:tray_part name="tray_wall2" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/White" xPos="-1" />
+  <xacro:tray_part name="tray_wall3" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/White" xPos="1" />
 
 </robot>

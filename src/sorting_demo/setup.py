@@ -24,5 +24,6 @@ d['packages'] = ['sorting_demo',
                  'intera_joint_trajectory_action',
                  'intera_motion_interface']
 d['package_dir'] = {'': 'src', 'utils': 'src/utils'}
+d['scripts']=['scripts/test_moveit.py']
 
 setup(**d)

@@ -31,6 +31,7 @@ catkin_package(
 
 install(PROGRAMS
    src/sorting_demo/program.py
+   scripts/test_moveit.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

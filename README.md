@@ -284,7 +284,9 @@ Let's add language understanding support to the bot.
 ### Test the 'move your arm' command
 
 The bot emulator provides a convenient way to interact and debug your bot locally. Let's use the emulator to send requests to our bot:
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Review the Explorer from the left pane in **VSCode**. Find the **CHATBOT** node and expand it.
+1. Right click the `talk-to-my-robot.py` file.
+1. Select **Run Python File in Terminal** to execute the bot script.
 
 > NOTE: If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
 
@@ -294,7 +296,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 > NOTE: The V4 Bot Emulator gives us the ability to create Bot configuration files for simpler connectivity when debugging.
 4. **Type** `move your arm` and press enter.
 5. Return to **Gazebo** and wait for the simulator to move the arm.
-6. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+6. **Stop** debugging by clicking the **Trash**(Kill Terminal) button in **VSCode** Terminal.
 
 
 ### Make the grippers move
@@ -329,7 +331,8 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test 'make the grippers move' command
 
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. Select **Run Python File in Terminal** to execute the bot script.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. **Type** `close grippers` and press enter.
@@ -337,7 +340,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Go back to the **Bot Framework Emulator** app.
 1. **Type** `open grippers` and press enter.
 1. Return to **Gazebo** and wait for the simulator to move the grippers.
-1. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+6. **Stop** debugging by clicking the **Trash**(Kill Terminal) button in **VSCode** Terminal.
 
 ### Show robot statistics
 
@@ -377,12 +380,13 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test 'show robot statistics' command
 
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. Select **Run Python File in Terminal** to execute the bot script.
 1. Return to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. **Type** `show stats` and press enter.
 1. Wait a few seconds and wait for a response from your bot, it will display the stats in the emulator.
-1. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+6. **Stop** debugging by clicking the **Trash**(Kill Terminal) button in **VSCode** Terminal.
 
 
 ## Making Your Robot Intelligent with Microsoft AI
@@ -461,7 +465,8 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 ### Test the 'move cube' command
 
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. Select **Run Python File in Terminal** to execute the bot script.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. Click the upload button from the left bottom corner to upload an image.
