@@ -2,14 +2,16 @@
 
 <head>
     <style>
-        h1 {}
-        
         button {
             color: blue;
             width: 250px;
             padding: 5px;
             margin: 5px;
             display: block
+        }
+
+        body{
+            background: #f0f0f0;
         }
         
         .column {
@@ -81,11 +83,14 @@
         }
 
         function updateGrip(result) {
-            gripstate = result.gripper;
+            gripstate = result.gripper.holding_block;
+            text = "Grip has no block"
             if (gripstate != null) {
                 delete gripstate["table_pose"]
-                document.getElementById('gripstate').innerHTML = JSON.stringify(gripstate, undefined, 4);
+                text = JSON.stringify(gripstate, undefined, 4);
             }
+
+            document.getElementById('gripstate').innerHTML = text;
         }
 
         function updatePlanner(result) {
@@ -112,7 +117,7 @@
                     // Clean response
                     delete block["table_pose"];
                 }
-                text = JSON.stringify(tray, undefined, 4);
+                text = JSON.stringify(tray.blocks, undefined, 4);
             }
 
             document.getElementById(key).innerHTML = text;
@@ -125,7 +130,6 @@
     <div class="row">
         <div class="column">
             <h1>REST Endpoints</h1>
-            <h2>Invoke</h2>
             <h3>Observers</h3>
             <button type="button" onclick="update('state')">/state</button>
             <button type="button" onclick="update('current_task')">/current_task</button>
@@ -162,7 +166,6 @@
                     <option value="2">Tray 3</option>
                 </select>
             </div>
-            <h1> State </h1>
             <div>
                 <h2>Planer state: </h2>
                 <div id="plannerstate"></div>
@@ -174,28 +177,27 @@
         </div>
         <div class="column">
             <div>
-                <h2>Grip:</h2>
-                <textarea id="gripstate" cols="40" rows="10"></textarea>
-            </div>
-            <div>
                 <h2>Tray 1: </h2>
-                <textarea id="tray1" cols="40"></textarea>
+                <textarea id="tray1" cols="40" rows="10"></textarea>
             </div>
             <div>
                 <h2>Tray 2:</h2>
-                <textarea id="tray2" cols="40"></textarea>
+                <textarea id="tray2" cols="40" rows="10"></textarea>
             </div>
 
             <div>
                 <h2>Tray 3:</h2>
-                <textarea id="tray3" cols="40"></textarea>
+                <textarea id="tray3" cols="40" rows="10"></textarea>
+            </div>
+            <div>
+                <h2>Grip:</h2>
+                <textarea id="gripstate" cols="40" rows="6"></textarea>
             </div>
         </div>
         <div class="column">
-            <h1>JSON Response:</h1>
             <div id="note"></div>
             <div>
-                <textarea id="statediv" cols=100 rows=35></textarea>
+                <textarea id="statediv" cols=100 rows=60></textarea>
             </div>
         </div>
     </div>
