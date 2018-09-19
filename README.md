@@ -178,15 +178,16 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 1. Go to the **Keys** page.
 1. Copy the **Key 1** value into **Notepad**.
 
-     > NOTE: We'll need this key later on.
+    > NOTE: We'll need this key later on.
 
 ## Setup your development environment
 
-### Get ubuntu 16.04 image
+### Get ubuntu 16.04 64 Bit image
 
-1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
+1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 64 Bit image.
+    > The VM must be 64 bit!
 2. Install the image in a VM.
-  > NOTE You can use any virtualization software to run the image
+    > NOTE You can use any virtualization software to run the image
 3. Make sure to allocate at least 8GB of RAM.
 
 ### Run installation script on VM
