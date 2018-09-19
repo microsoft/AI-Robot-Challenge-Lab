@@ -157,7 +157,7 @@ Create the LUIS resource in Azure:
 
 ### Create a new LUIS App
 
-Before calling LUIS, we need to train it with the kinds of phrases we expect our users to use.
+Before calling LUIS, we need to train it with the kinds of phrases we expect our users to send.
 
 1. Login to the [LUIS portal](https://www.luis.ai).
 
@@ -190,6 +190,29 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
     * Click the **Publish** button.
     * Click on the **Publish** button next to the *Production* slot.
     * Wait for the process to finish.
+
+### Create a Computer Vision subscription
+The cloud-based Computer Vision service provides developers with access to advanced algorithms for processing images and returning information. Computer Vision algorithms can analyze the content of an image in different ways, depending on the visual features you're interested in. For instance, in this lab we will be analyzing images to identify a dominant color for our robot to process.
+
+The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
+
+1. Return to the [Azure Portal](https://portal.azure.com).
+1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
+1. **Select** the first result and then click the **Create** button.
+1. Provide the required information:
+    * Name: `robotics-computer-vision-<your initials>`.
+    * Select your preferred subscription.
+    * Select the location: `West US`.
+    * Select the the Pricing tier: `F0 (20 Calls per minute, 5k Calls per month)`.
+    * Select the previously created resource group: `robotics-lab-<your initials>`.
+1. Click **Create** to create the resource and deploy it. This step might take a few moments.
+1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
+1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-computer-vision-<your initials>`).
+1. **Click** on the resource.
+1. Go to the **Keys** page.
+1. Copy the **Key 1** value into **Notepad**.
+
+     > NOTE: We'll need this key later on.
 
 # Bringing Your Robot to Life 
 
@@ -362,29 +385,8 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 We will use Computer Vision to extract information from an image and the Intera SDK to send commands to our robot. For this scenario we'll extract the dominant color from an image and the robot will pickup a cube of the color specified.
 
-### Create a Computer Vision subscription
 
-The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
-
-1. Return to the [Azure Portal](https://portal.azure.com).
-1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
-1. **Select** the first result and then click the **Create** button.
-1. Provide the required information:
-    * Name: `robotics-computer-vision-<your initials>`.
-    * Select your preferred subscription.
-    * Select the location: `West US`.
-    * Select the the Pricing tier: `F0 (20 Calls per minute, 5k Calls per month)`.
-    * Select the previously created resource group: `robotics-lab-<your initials>`.
-1. Click **Create** to create the resource and deploy it. This step might take a few moments.
-1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
-1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-computer-vision-<your initials>`).
-1. **Click** on the resource.
-1. Go to the **Keys** page.
-1. Copy the **Key 1** value into **Notepad**.
-
-    > NOTE We'll need this key in the next step.
-
-### Add Computer Vision key to your script
+### Add Computer Vision to your script
 
 1. Return to **Visual Studio Code**.
 1. Open the **talk-to-my-robot.py** file.
