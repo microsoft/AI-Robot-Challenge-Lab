@@ -250,6 +250,7 @@ Let's add language understanding support to the bot.
 
 * Search for the `#Post Utterance Request Headers and Params` comment and then uncomment the following line: 
 ```python
+
     headers = {'Ocp-Apim-Subscription-Key': LUIS_SUBSCRIPTION_KEY}
     params = {
         # Query parameter
@@ -273,6 +274,8 @@ Let's add language understanding support to the bot.
 
     return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
 ```
+* Delete the line containing `return None` below the above code.
+
 > NOTE: Check your indentation to avoid python compilation errors.
 
 11. Save the **talk-to-my-robot.py** file.
@@ -366,6 +369,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
     print('output: ' + result + '\n')
     return result
 ```
+* Delete the line containing `return None` below the above code.
 
 > NOTE: Check your indentation to avoid python compilation errors.
 
@@ -437,6 +441,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 
     return dominant_color
 ```
+* Delete the line containing `return None` below the above code.
 
 7. Go to the `BotCommandHandler` class.
 * Search for the `#Move Cube Command` comment and then uncomment the following line: 
