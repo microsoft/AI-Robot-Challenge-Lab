@@ -396,7 +396,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 1. Open the **talk-to-my-robot.py** file.
 1. Search for the `#Settings` comment update the Computer Vision **Key** you previously obtained:
 
-    `COMPUTER_VISION_SUBSCRIPTION_KEY = = 'UPDATE_THIS_KEY'`
+    `COMPUTER_VISION_SUBSCRIPTION_KEY = 'UPDATE_THIS_KEY'`
 
 3. Go to the `BotRequestHandler` class.
 
