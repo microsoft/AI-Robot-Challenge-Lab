@@ -99,7 +99,7 @@ If you need a new Azure subscription, then there are a couple of options to get 
 
 1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
 1. Install the image in a VM.
-  > [!NOTE] You can use any virtualization software to run the image
+  > NOTE You can use any virtualization software to run the image
 1. Make sure to allocate at least 8GB of RAM.
 
 ### Run installation script on VM
@@ -153,7 +153,7 @@ Create the LUIS resource in Azure:
 1. Go to the **Keys** page.
 1. Copy the **Key 1** value into **Notepad**.
 
-    > [!NOTE] We'll need this key later on.
+    > NOTE: We'll need this key later on.
 
 ### Create a new LUIS App
 
@@ -161,7 +161,7 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 
 1. Login to the [LUIS portal](www.luis.ai).
 
-    > [!NOTE] Use the same credentials as you used for logging into Azure.
+    > NOTE: Use the same credentials as you used for logging into Azure.
 1. **Scroll down** to the bottom of the welcome page.
 1. Click **Create new app**.
 1. Select **United States** from the country list.
@@ -175,7 +175,21 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 1. Click the **Test** button to open the test panel.
 1. **Type** `move arm` and press enter.
 
-    > [!NOTE] It should return the `MoveArm` intent.
+    > NOTE: It should return the `MoveArm` intent.
+
+1. Click on the **Manage** option.
+1. **Copy** the LUIS `Application ID` to Notepad.
+    > NOTE: We'll need this App ID later on.
+1. Click the **Keys and Endpoints** option.
+1. Click on **+ Assign resource**. You might need to scroll down to find the option.
+    * Select the only **tenant**.
+    * Select your  **subscription**.
+    * Select the **key** of your Luis resource.
+    * Click on **Assign resource**.
+1. Publish your application:
+    * Click the **Publish** button.
+    * Click on the **Publish** button next to the *Production* slot.
+    * Wait for the process to finish.
 
 # Bringing Your Robot to Life 
 
@@ -188,93 +202,106 @@ We created a basic bot using the SDK V4, we'll run it locally using the Bot Fram
 Let's add language understanding support to the bot.
 
 1. Open **Visual Studio Code**.
-1. Click on **Open Folder** and select the `~/AI-Robot-Challenge-Lab/src/chatbot` folder that you extracted earlier.
-1. Click on `talk-to-my-robot.py` to open the bot python script.
-1. If prompted to install the Python Extension select Install, once installed, select **Reload** to activate the extension.
-1. Click on **View -> Command Palette** from the top menu and type `Python:Select Interpreter`. You should see python 3.6 in the options, select this version.
-1. Go to the `BotRequestHandler` class.
-1. Modify the method `handle_message`, replace this line
-  ```python
-  luis_result = LuisResponse('None')
-  ```
+2. Click on **Open Folder** and select the `~/AI-Robot-Challenge-Lab/src/chatbot` folder that you extracted earlier.
+3. Click on `talk-to-my-robot.py` to open the bot python script.
+4. If prompted to install the Python Extension select Install, once installed, select **Reload** to activate the extension.
+5. Click on **View -> Command Palette** from the top menu and type `Python:Select Interpreter`. You should see python 3.6 in the options, select this version.
+6. Search for the `#Settings` comment. Update the LUIS **App ID** and **Key** you previously obtained:
 
-  with
-  ```python
-  luis_result = LuisApiService.post_utterance(activity.text)
-  ```
-  > [!NOTE] This method is the entry point of the bot messages, here we can see how we get the incoming request, then send it to LUIS and use the intent result to trigger specific operations, in this case it already provides support to handle the **MoveArm** intent.
-1. Go to the `LuisApiService` class.
-1. Modify the method `post_utterance`:
-    * Add the following code after the line `Request headers and parameters`
-      ```python
-      headers = {'Ocp-Apim-Subscription-Key': LUIS_SUBSCRIPTION_KEY}
-      params = {
-          # Query parameter
-          'q': message,
-          # Optional request parameters, set to default values
-          'timezoneOffset': '0',
-          'verbose': 'false',
-          'spellCheck': 'false',
-          'staging': 'false',
-      }
-      ```
-    * Replace the line `return None` with the following code snippet
-      ```python
-      r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
-      topScoreIntent = r.json()['topScoringIntent']
-      entities = r.json()['entities']
-      intent = topScoreIntent['intent'] if topScoreIntent['score'] > 0.5 else 'None' 
-      entity = entities[0] if len(entities) > 0 else None
-      
-      return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
-      ```
-      > [!ALERT] Check your indentation to avoid python compilation errors.
-1. Save the **talk-to-my-robot.py** file.
+    `LUIS_APP_ID = 'UPDATE_THIS_KEY'`
+
+    `LUIS_SUBSCRIPTION_KEY = 'UPDATE_THIS_KEY'`
+
+7. Go to the `BotRequestHandler` class.
+8. Modify the `handle_message` method: 
+
+
+* Search for the **#Get LUIS result** comment and uncomment the following line:
+
+    ``luis_result = LuisApiService.post_utterance(activity.text)``
+
+> NOTE: This method is the entry point of the bot messages, here we can see how we get the incoming request, then send it to LUIS and use the intent result to trigger specific operations, in this case it already provides support to handle the **MoveArm** intent.
+
+9. Go to the `LuisApiService` class.
+10. Modify the `post_utterance` method:
+
+* Search for the `#Post Utterance Request Headers and Params` comment and then uncomment the following line: 
+```python
+    headers = {'Ocp-Apim-Subscription-Key': LUIS_SUBSCRIPTION_KEY}
+    params = {
+        # Query parameter
+        'q': message,
+        # Optional request parameters, set to default values
+        'timezoneOffset': '0',
+        'verbose': 'false',
+        'spellCheck': 'false',
+        'staging': 'false',
+    }
+```
+
+* Search for the `#LUIS Response` comment and then uncomment the following line: 
+
+```python
+    r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
+    topScoreIntent = r.json()['topScoringIntent']
+    entities = r.json()['entities']
+    intent = topScoreIntent['intent'] if topScoreIntent['score'] > 0.5 else 'None' 
+    entity = entities[0] if len(entities) > 0 else None
+
+    return LuisResponse(intent, entity['entity'], entity['type']) if entity else LuisResponse(intent)
+```
+> NOTE: Check your indentation to avoid python compilation errors.
+
+11. Save the **talk-to-my-robot.py** file.
 
 
 ### Test the 'move your arm' command
 
 The bot emulator provides a convenient way to interact and debug your bot locally. Let's use the emulator to send requests to our bot:
 1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
-1. Open the **Bot Framework Emulator** app.
-1. Click **Open Bot** and select the file `SawyerBot.bot` from your **chatbot** directory.
 
-    > [!NOTE] Previously we had to provide the bot endpoint to the emulator but now it can read all the configuration from a file.
-1. **Type** `move your arm` and press enter.
-1. Return to **Gazebo** and wait for the simulator to move the arm.
-1. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+> NOTE: If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
+
+2. Open the **Bot Framework Emulator** app.
+1. Click **Open Bot** and select the file `SawyerBot.bot` from your **~/AI-Robot-Challenge-Lab/src/chatbot** directory.
+
+> NOTE: The V4 Bot Emulator gives us the ability to create Bot configuration files for simpler connectivity when debugging.
+3. **Type** `move your arm` and press enter.
+4. Return to **Gazebo** and wait for the simulator to move the arm.
+5. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
 
 
-### Make the grippers open & close
+### Make the grippers move
 
 1. Go to the `BotRequestHandler` class.
-1. Modify the method `handle_message`, after the **if** statement
-    ```python
-    if luis_result.intent == 'MoveArm':
-        BotCommandHandler.move_arm()
-    ```
-    Add the following code snippet
-    ```python
-    elif luis_result.intent == 'MoveGrippers':
-        BotCommandHandler.move_grippers(luis_result.entity_value)
-    ```
-1. Go to the `BotCommandHandler` class.
-1. Replace the method `move_grippers` content with the following code snippet:
-    ```python
+2. Modify the `handle_message` method:
+
+* Search for the `#Set Move Grippers Handler` comment and then uncomment the following line: 
+
+```python
+    BotCommandHandler.move_grippers(luis_result.entity_value)
+```
+
+3. Go to the `BotCommandHandler` class.
+* Search for the `#Implement Move Grippers Command` comment and then uncomment the following line: 
+
+```python
     print(f'{action} grippers... wait a few seconds')
     # launch your python2 script using bash
     python2_command = "python2.7 bot-move-grippers.py -a {}".format(action)  
 
     process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()  # receive output from the python2 script
-  
+
     print('done moving grippers . . .')
     print('returncode: '  + str(process.returncode))
     print('output: ' + output.decode("utf-8"))
-    ```
-1. Save the **talk-to-my-robot.py** file.
+```
+> NOTE: Check your indentation to avoid python compilation errors.
 
-### Test the grippers move
+5. Save the **talk-to-my-robot.py** file.
+
+### Test 'make the grippers move' command
 
 1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
 1. Go back to the **Bot Framework Emulator** app.
@@ -286,24 +313,23 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Return to **Gazebo** and wait for the simulator to move the grippers.
 1. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
 
-### Show stats
+### Show robot statistics
 
 1. Go to the `BotRequestHandler` class.
-1. Modify the method `handle_message`, after the **if** statement
-    ```python
-    if luis_result.intent == 'MoveArm':
-        BotCommandHandler.move_arm()
-    ```
-    Add the following code snippet
-    ```python
-    elif luis_result.intent == 'ShowStats':
-        stats = BotCommandHandler.show_stats()
-        response = await BotRequestHandler.create_reply_activity(activity, stats)
-        await context.send_activity(response)
-    ```
-1. Go to the `BotCommandHandler` class.
-1. Replace the method `show_stats` content with the following code snippet:
-    ```python
+2. Modify the `handle_message` method:
+
+* Search for the `#Set Show Stats Handler` comment and then uncomment the following line: 
+
+```python
+    stats = BotCommandHandler.show_stats()
+    response = await BotRequestHandler.create_reply_activity(activity, stats)
+    await context.send_activity(response)
+```
+3. Go to the `BotCommandHandler` class.
+
+* Search for the `#Set Show Stats Command` comment and then uncomment the following line:
+
+```python
     print('Showing stats... do something')
     # launch your python2 script using bash
     python2_command = "python2.7 bot-stats-node.py"  
@@ -311,15 +337,18 @@ The bot emulator provides a convenient way to interact and debug your bot locall
     process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()  # receive output from the python2 script
     result = output.decode("utf-8")
-  
+
     print('done getting state . . .')
     print('returncode: '  + str(process.returncode))
     print('output: ' + result + '\n')
     return result
-    ```
-1. Save the **talk-to-my-robot.py** file.
+```
 
-### Test the show statistics
+> NOTE: Check your indentation to avoid python compilation errors.
+
+4. Save the **talk-to-my-robot.py** file.
+
+### Test 'show robot statistics' command
 
 1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
 1. Return to the **Bot Framework Emulator** app.
@@ -353,17 +382,20 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 1. Go to the **Keys** page.
 1. Copy the **Key 1** value into **Notepad**.
 
-    > [!NOTE] We'll need this key in the next step.
+    > NOTE We'll need this key in the next step.
 
 ### Add Computer Vision key to your script
 
 1. Return to **Visual Studio Code**.
 1. Open the **talk-to-my-robot.py** file.
-1. Replace the `COMPUTER_VISION_SUBSCRIPTION_KEY` with the subscription key previously obtained.
-1. Go to the `BotRequestHandler` class.
-1. Replace the content of the method `process_image` to extract and process an image from the incoming message:
-    ```python
-    # Check if there is an image
+1. Search for the `#Settings` comment update the Computer Vision **Key** you previously obtained:
+
+    `COMPUTER_VISION_SUBSCRIPTION_KEY = = 'UPDATE_THIS_KEY'`
+
+3. Go to the `BotRequestHandler` class.
+
+* Search for the `#Implement Process Image Method` comment and then uncomment the following line:
+```python
     image_url = BotRequestHandler.get_image_url(activity.attachments)
 
     if image_url:
@@ -374,36 +406,40 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
     else:
         response = await BotRequestHandler.create_reply_activity(activity, 'Please provide a valid instruction or image.')
         await context.send_activity(response)
-    ```
-1. Go to the `ComputerVisionApiService` class.
-1. Modify the method `analyze_image`:
-    * Add the following code after the line `Request headers and parameters`
-      ```python
-      headers = {
-          'Ocp-Apim-Subscription-Key': COMPUTER_VISION_SUBSCRIPTION_KEY,
-          'Content-Type': 'application/octet-stream'
-      }
-      params = {'visualFeatures': 'Color'}
-      ```
-    * Add the following code after the line `Get image bytes content` to get the image content as bytes:
-      ```python
-      image_data = BytesIO(requests.get(image_url).content)
-      ```
-    * Replace the line `return None` with the following code snippet
-      ```python
-      print(f'Processing image: {image_url}')
-      response = requests.post(COMPUTER_VISION_ANALYZE_URL, headers=headers, params=params, data=image_data)
-      response.raise_for_status()
-      analysis = response.json()
-      dominant_color = analysis["color"]["dominantColors"][0]
-      
-      return dominant_color
-      ```
+```
+5. Go to the `ComputerVisionApiService` class.
+6. Modify the `analyze_image` method:
 
-### Add the robot code
+* Search for the `#Analyze Image Request Headers and Parameters` comment and then uncomment the following line:
+```python
+    headers = {
+        'Ocp-Apim-Subscription-Key': COMPUTER_VISION_SUBSCRIPTION_KEY,
+        'Content-Type': 'application/octet-stream'
+    }
+    params = {'visualFeatures': 'Color'}
+```
 
-1. Add the following code snippet to the `move_cube` method (**talk-to-my-robot.py** file):
-    ```python
+* Search for the `#Get Image Bytes Content` comment and then uncomment the following line:
+```python
+    image_data = BytesIO(requests.get(image_url).content)
+```
+
+* Search for the `#Process Image` comment and then uncomment the following line:
+
+```python
+    print(f'Processing image: {image_url}')
+    response = requests.post(COMPUTER_VISION_ANALYZE_URL, headers=headers, params=params, data=image_data)
+    response.raise_for_status()
+    analysis = response.json()
+    dominant_color = analysis["color"]["dominantColors"][0]
+
+    return dominant_color
+```
+
+7. Go to the `BotCommandHandler` class.
+* Search for the `#Move Cube Command` comment and then uncomment the following line: 
+
+```python
     print(f'Moving {color} cube...')
     try:
         r = requests.get(f'{SIM_API_HOST}/put_block_into_tray/{color}/1')
@@ -411,10 +447,12 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
         print('done moving cube . . .')
     except Exception as e:
         print("[Errno {0}] {1}".format(e.errno, e.strerror))
-    ```
-1. Save the **talk-to-my-robot.py** file.
+```
+> NOTE: Check your indentation to avoid python compilation errors.
 
-### Test the move cube command
+8. Save the **talk-to-my-robot.py** file.
+
+### Test the 'move cube' command
 
 1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
 1. Go back to the **Bot Framework Emulator** app.
@@ -424,6 +462,7 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 1. Return to **Gazebo** and wait for the simulator to move the requested cube.
 1. Go back to the **Bot Framework Emulator** app.
 1. Select another image of a different color and check the simulator to verify which cube it moved.
+
 
 
 # Contributing
