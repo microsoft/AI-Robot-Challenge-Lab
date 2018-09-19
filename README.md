@@ -1,6 +1,6 @@
 # AI Robot Challenge
 
-The future is the fusion of AI and robotics to enable intelligent, collaborative, assistive, and social robots that augment human ingenuity. If you want to take the AI Robot Challenge but are new to robotics, each day we will present an Intro to Robotics session. In this session, you will learn about the heart of robotics programming using the Robot Operating system (ROS) with Python and how to use Gazebo, the robot simulator. You will also learn how to deploy your code to a real industrial robot. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
+The future is the fusion of AI and robotics to enable intelligent, collaborative, assistive, and social robots that augment human ingenuity. If you want to take the AI Robot Challenge but are new to robotics, each day we will present an Intro to Robotics session. In this session, you will learn about the heart of robotics programming using the Robot Operating system (ROS) with Python and how to use Gazebo, the robot simulator. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
 
 # Introduction to Robotics
 
@@ -74,7 +74,7 @@ The planning scene feature allows to monitor the state, sensor and world geometr
 
 Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and well make this bot to communicate with a physical robot using natural language and Computer Vision for image recognition.
 
-## Setup your environment
+## Setup your Azure resources
 
 ### Setup your Azure subscription
 
@@ -94,13 +94,100 @@ If you need a new Azure subscription, then there are a couple of options to get 
     * Sign in using your personal Microsoft account.
 1. Complete the Azure sign up steps and wait for the subscription to be provisioned. This usually only takes a couple of minutes.
 
+### Setup Language Understanding resources
+
+Language Understanding (LUIS) allows your bot to understand what a person wants in their own words. LUIS uses machine learning to allow developers to build applications that can receive user input in natural language and extract meaning from it.
+
+While LUIS has a standalone portal for building the model, it uses Azure for subscription management.
+
+Create the LUIS resource in Azure:
+
+1. Go to the [Azure Portal](https://portal.azure.com) and log in with your credentials.
+1. Click **Create Resource [+]**  from the left menu and search for **Language Understanding**.
+1. **Select** the first result and then click the **Create** button.
+1. Provide the required information:
+    * App name: `robotics-luis-<your_initials>`.
+    * Location: `West US`.
+    * Pricing tier: `F0 (5 Calls per second, 10K Calls per month)`.
+    * Create a new resource group with the name: `robotics-lab-<your initials>`.
+    * **Confirm** that you read and understood the terms by **checking** the box.
+1. Click **Create**. This step might take a few seconds.
+1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
+1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-luis-<your initials>`).
+1. **Click** on the resource.
+1. Go to the **Keys** page.
+1. Copy the **Key 1** value into **Notepad**.
+
+    > NOTE: We'll need this key later on.
+
+Before calling LUIS, we need to train it with the kinds of phrases we expect our users to send.
+
+1. Login to the [LUIS portal](https://www.luis.ai).
+
+    > NOTE: Use the same credentials as you used for logging into Azure.
+
+2. **Scroll down** to the bottom of the welcome page.
+3. Click **Create new app**.
+4. Select **United States** from the country list.
+5. Check the **I agree** checkbox.
+6. Click the **Continue** button.
+7. From `My Apps`, click **Import new app**.
+8. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
+9. Click on the **Done** button.
+10. **Wait** for the import to complete.
+11. Click on the **Train** button and wait for it to finish.
+12. Click the **Test** button to open the test panel.
+13. **Type** `move arm` and press enter.
+
+    > NOTE: It should return the `MoveArm` intent.
+
+14. Click on the **Manage** option.
+15. **Copy** the LUIS `Application ID` to Notepad.
+
+    > NOTE: We'll need this App ID later on.
+
+16. Click the **Keys and Endpoints** option.
+17. Click on **+ Assign resource**. You might need to scroll down to find the option.
+    * Select the only **tenant**.
+    * Select your  **subscription**.
+    * Select the **key** of your Luis resource.
+    * Click on **Assign resource**.
+18. Publish your application:
+    * Click the **Publish** button.
+    * Click on the **Publish** button next to the *Production* slot.
+    * Wait for the process to finish.
+
+### Setup Computer Vision resources
+The cloud-based Computer Vision service provides developers with access to advanced algorithms for processing images and returning information. Computer Vision algorithms can analyze the content of an image in different ways, depending on the visual features you're interested in. For instance, in this lab we will be analyzing images to identify a dominant color for our robot to process.
+
+The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
+
+1. Return to the [Azure Portal](https://portal.azure.com).
+1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
+1. **Select** the first result and then click the **Create** button.
+1. Provide the required information:
+    * Name: `robotics-computer-vision-<your initials>`.
+    * Select your preferred subscription.
+    * Select the location: `West US`.
+    * Select the the Pricing tier: `F0 (20 Calls per minute, 5k Calls per month)`.
+    * Select the previously created resource group: `robotics-lab-<your initials>`.
+1. Click **Create** to create the resource and deploy it. This step might take a few moments.
+1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
+1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-computer-vision-<your initials>`).
+1. **Click** on the resource.
+1. Go to the **Keys** page.
+1. Copy the **Key 1** value into **Notepad**.
+
+     > NOTE: We'll need this key later on.
+
+## Setup your development environment
 
 ### Get ubuntu 16.04 image
 
 1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
-1. Install the image in a VM.
+2. Install the image in a VM.
   > NOTE You can use any virtualization software to run the image
-1. Make sure to allocate at least 8GB of RAM.
+3. Make sure to allocate at least 8GB of RAM.
 
 ### Run installation script on VM
 
@@ -126,70 +213,6 @@ If you need a new Azure subscription, then there are a couple of options to get 
   cd $HOME/ros_ws && ./intera.sh sim
   cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
   ```
-
-### Setup Language Understanding
-
-Language Understanding (LUIS) allows your bot to understand what a person wants in their own words. LUIS uses machine learning to allow developers to build applications that can receive user input in natural language and extract meaning from it.
-
-### Create a LUIS subscription
-
-While LUIS has a standalone portal for building the model, it uses Azure for subscription management.
-
-Create the LUIS resource in Azure:
-
-1. Return to the Azure Portal (++portal.azure.com++).
-1. Click **Create Resource [+]**  from the left menu and search for **Language Understanding**.
-1. **Select** the first result and then click the **Create** button.
-1. Provide the required information:
-    * App name: `robotics-luis-<your_initials>`.
-    * Location: `West US`.
-    * Pricing tier: `F0 (5 Calls per second, 10K Calls per month)`.
-    * Create a new resource group with the name: `robotics-lab-<your initials>`.
-    * **Confirm** that you read and understood the terms by **checking** the box.
-1. Click **Create**. This step might take a few seconds.
-1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
-1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-luis-<your initials>`).
-1. **Click** on the resource.
-1. Go to the **Keys** page.
-1. Copy the **Key 1** value into **Notepad**.
-
-    > NOTE: We'll need this key later on.
-
-### Create a new LUIS App
-
-Before calling LUIS, we need to train it with the kinds of phrases we expect our users to use.
-
-1. Login to the [LUIS portal](www.luis.ai).
-
-    > NOTE: Use the same credentials as you used for logging into Azure.
-1. **Scroll down** to the bottom of the welcome page.
-1. Click **Create new app**.
-1. Select **United States** from the country list.
-1. Check the **I agree** checkbox.
-1. Click the **Continue** button.
-1. From `My Apps`, click **Import new app**.
-1. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
-1. Click on the **Done** button.
-1. **Wait** for the import to complete.
-1. Click on the **Train** button and wait for it to finish.
-1. Click the **Test** button to open the test panel.
-1. **Type** `move arm` and press enter.
-
-    > NOTE: It should return the `MoveArm` intent.
-
-1. Click on the **Manage** option.
-1. **Copy** the LUIS `Application ID` to Notepad.
-    > NOTE: We'll need this App ID later on.
-1. Click the **Keys and Endpoints** option.
-1. Click on **+ Assign resource**. You might need to scroll down to find the option.
-    * Select the only **tenant**.
-    * Select your  **subscription**.
-    * Select the **key** of your Luis resource.
-    * Click on **Assign resource**.
-1. Publish your application:
-    * Click the **Publish** button.
-    * Click on the **Publish** button next to the *Production* slot.
-    * Wait for the process to finish.
 
 # Bringing Your Robot to Life 
 
@@ -362,29 +385,8 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 We will use Computer Vision to extract information from an image and the Intera SDK to send commands to our robot. For this scenario we'll extract the dominant color from an image and the robot will pickup a cube of the color specified.
 
-### Create a Computer Vision subscription
 
-The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.
-
-1. Return to the [Azure Portal](portal.azure.com).
-1. Click **Create Resource [+]**  from the left menu and search for **Computer Vision**.
-1. **Select** the first result and then click the **Create** button.
-1. Provide the required information:
-    * Name: `robotics-computer-vision-<your initials>`.
-    * Select your preferred subscription.
-    * Select the location: `West US`.
-    * Select the the Pricing tier: `F0 (20 Calls per minute, 5k Calls per month)`.
-    * Select the previously created resource group: `robotics-lab-<your initials>`.
-1. Click **Create** to create the resource and deploy it. This step might take a few moments.
-1. Once the deployment is complete, you will see a **Deployment succeeded** notification.
-1. Go to **All Resources** in the left pane and **search** for the new resource (`robotics-computer-vision-<your initials>`).
-1. **Click** on the resource.
-1. Go to the **Keys** page.
-1. Copy the **Key 1** value into **Notepad**.
-
-    > NOTE We'll need this key in the next step.
-
-### Add Computer Vision key to your script
+### Add Computer Vision to your script
 
 1. Return to **Visual Studio Code**.
 1. Open the **talk-to-my-robot.py** file.
@@ -478,5 +480,4 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
 
