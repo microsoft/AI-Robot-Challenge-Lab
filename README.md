@@ -126,33 +126,34 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 
     > NOTE: Use the same credentials as you used for logging into Azure.
 
-2. **Scroll down** to the bottom of the welcome page.
-3. Click **Create new app**.
-4. Select **United States** from the country list.
-5. Check the **I agree** checkbox.
-6. Click the **Continue** button.
-7. From `My Apps`, click **Import new app**.
-8. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
-9. Click on the **Done** button.
-10. **Wait** for the import to complete.
-11. Click on the **Train** button and wait for it to finish.
-12. Click the **Test** button to open the test panel.
-13. **Type** `move arm` and press enter.
+2. If this is your first login in this portal, you will receive a welcome message. Follow the next steps access the LUIS dashboard:
+    * **Scroll down** to the bottom of the welcome page.
+    * Click **Create LUIS app**.
+    * Select **United States** from the country list.
+    * Check the **I agree** checkbox.
+    * Click the **Continue** button.
+3. From `My Apps`, click **Import new app**.
+4. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
+5. Click on the **Done** button.
+6. **Wait** for the import to complete.
+7. Click on the **Train** button and wait for it to finish.
+8. Click the **Test** button to open the test panel.
+9. **Type** `move arm` and press enter.
 
     > NOTE: It should return the `MoveArm` intent.
 
-14. Click on the **Manage** option.
-15. **Copy** the LUIS `Application ID` to Notepad.
+10. Click on the **Manage** option.
+11. **Copy** the LUIS `Application ID` to Notepad.
 
     > NOTE: We'll need this App ID later on.
 
-16. Click the **Keys and Endpoints** option.
-17. Click on **+ Assign resource**. You might need to scroll down to find the option.
+12. Click the **Keys and Endpoints** option.
+13. Click on **+ Assign resource**. You might need to scroll down to find the option.
     * Select the only **tenant**.
     * Select your  **subscription**.
     * Select the **key** of your Luis resource.
     * Click on **Assign resource**.
-18. Publish your application:
+14. Publish your application:
     * Click the **Publish** button.
     * Click on the **Publish** button next to the *Production* slot.
     * Wait for the process to finish.
@@ -305,7 +306,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 > NOTE: The V4 Bot Emulator gives us the ability to create Bot configuration files for simpler connectivity when debugging.
 4. **Type** `move your arm` and press enter.
 5. Return to **Gazebo** and wait for the simulator to move the arm.
-6. **Stop** debugging by clicking the **Trash**(Kill Terminal) button in **VSCode** Terminal.
+6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
 
 
 ### Make the grippers move
@@ -349,7 +350,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Go back to the **Bot Framework Emulator** app.
 1. **Type** `open grippers` and press enter.
 1. Return to **Gazebo** and wait for the simulator to move the grippers.
-6. **Stop** debugging by clicking the **Trash**(Kill Terminal) button in **VSCode** Terminal.
+6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
 
 ### Show robot statistics
 
@@ -395,7 +396,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Click **Start Over** to start a new conversation.
 1. **Type** `show stats` and press enter.
 1. Wait a few seconds and wait for a response from your bot, it will display the stats in the emulator.
-6. **Stop** debugging by clicking the **Trash**(Kill Terminal) button in **VSCode** Terminal.
+6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
 
 
 ## Making Your Robot Intelligent with Microsoft AI
