@@ -36,10 +36,10 @@ class RobotTaskFacade:
             except Exception as ex:
                 return flask.json.jsonify(response= "ERR", message = ex.message)
 
-        @self.app.route("/count_table_pieces")
-        def count_pieces_on_table_by_color():
+        @self.app.route("/count_table_pieces/<color>")
+        def count_pieces_on_table_by_color(color):
             try:
-                return flask.json.jsonify(response="ACK", result=self.count_pieces_on_table_by_color())
+                return flask.json.jsonify(response="ACK", result=self.count_pieces_on_table_by_color(color))
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
@@ -88,7 +88,7 @@ class RobotTaskFacade:
         @self.app.route("/put_all_contents_on_table")
         def put_all_contents_on_table():
             try:
-                return flask.json.jsonify(response="ACK", result=self.put_all_contents_on_table)
+                return flask.json.jsonify(response="ACK", result=self.put_all_contents_on_table())
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
@@ -100,12 +100,30 @@ class RobotTaskFacade:
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
 
+        @self.app.route("/place_block_to_tray/<trayid>")
+        def place_block_to_tray_id(trayid):
+            try:
+                return flask.json.jsonify(response="ACK", result=self.place_block_to_tray(int(trayid)))
+            except Exception as ex:
+                return flask.json.jsonify(response="ERR", message=ex.message)
+
+
         @self.app.route("/put_block_into_tray/<color>/<trayid>")
         def put_block_into_tray( color, trayid):
             try:
                 return flask.json.jsonify(response="ACK", result=self.put_block_into_tray(color,int(trayid)))
             except Exception as ex:
                 return flask.json.jsonify(response="ERR", message=ex.message)
+
+        @self.app.route("/view")
+        def web_interface():
+            import rospkg
+
+            webviewpath = rospkg.RosPack().get_path('sorting_demo') + "/share/web_view.html"
+            with open(webviewpath, 'r') as myfile:
+                data = myfile.read()
+                return data
+
 
     def run_rest_server(self):
         self.app.run(threaded=True)
@@ -130,22 +148,20 @@ class RobotTaskFacade:
 
         return task_stack
 
-    def count_pieces_on_table_by_color(self):
+    def count_pieces_on_table_by_color(self, color):
         """
         :param color: str - "red", "blue", "green"
         :return: 
         """
-        rospy.logerr("To implement. Robot Task: count pieces on table by color!")
-        return 0
+        count = self.task_planner.count_pieces_on_table_by_color(color)
+        return count
 
     def get_current_piece_color(self):
         """
 
         :return: 
         """
-
-        rospy.logerr("To implement. Robot Task: get current piece color!")
-        return "GREEN"
+        return None if self.task_planner.gripper_state.holding_block is None else self.task_planner.gripper_state.holding_block.get_color()
 
     # ---------- lifecycle  ---------------------------
     def pause(self):
@@ -171,7 +187,7 @@ class RobotTaskFacade:
         
         :return: 
         """
-        self.task_planner.create_main_loop_task()
+        self.task_planner.execute_task(self.task_planner.create_main_loop_task)
         return "ACK"
 
     def stop(self):
@@ -209,7 +225,11 @@ class RobotTaskFacade:
         :return: 
         """
 
-        self.task_planner.execute_task(self.task_planner.pick_block_on_table_by_color, args=[color])
+        self.task_planner.execute_task(self.task_planner.pick_block_from_table_by_color, args=[color])
+        return "ACK"
+
+    def place_block_to_tray(self, trayid):
+        self.task_planner.execute_task(self.task_planner.place_block_to_tray, args=[trayid])
         return "ACK"
 
 
@@ -233,7 +253,8 @@ class RobotTaskFacade:
         :param color: 
         :return: 
         """
-        self.task_planner.disable_sorting_by_color(color)
+
+        self.task_planner.execute_task(lambda: self.task_planner.disable_sorting_by_color(color))
 
     #@route("/enable_sorting_by_color/<color>')")
     def enable_sorting_by_color(self,color):
@@ -242,4 +263,4 @@ class RobotTaskFacade:
         :param color: 
         :return:
         """
-        self.task_planner.enable_sorting_by_color(color)
+        self.task_planner.execute_task(lambda: self.task_planner.enable_sorting_by_color(color))
