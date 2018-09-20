@@ -309,6 +309,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
 
 
+
 ### Make the grippers move
 
 1. Go to the `BotRequestHandler` class.
