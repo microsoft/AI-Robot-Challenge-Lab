@@ -78,7 +78,7 @@ Microsoft Bot Framework and Cognitive Services provide a platform to develop int
 
 ### Setup your Azure subscription
 
-This lab **requires** an Azure subscription. If you delete the resources at the end of the session, total charges will be less than $1 so we strongly recommend using an existing subscription if available.
+This lab **requires** an Azure subscription.
 
 If you need a new Azure subscription, then there are a couple of options to get a free subscription:
 
@@ -192,12 +192,19 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 
 ### Run installation script on VM
 
-1. Clone this repo into your **Home** folder by runnning the following command `git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git` from a **Terminal** console.
-1. Navigate to `~/AI-Robot-Challenge-Lab/setup` in a Terminal window.
+1. Open Terminal and install git with the following command `sudo apt install git-all`.
+1. Navigate to your home folder `cd`.
+1. Clone this repo into your **Home** folder by runnning the following command `git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git`.
+1. Navigate to `~/AI-Robot-Challenge-Lab/setup`.
 1. Run the following command: `chmod +x robot-challenge-setup.sh`.
 1. Run the shell script with the following command `./robot-challenge-setup.sh`.
+1. Once completed, close the terminal as you need to enable environment variables from the installation.
+
+>NOTE: The installation will take around 30 minutes depending on your connection and OS specifications.
 
 ### Setup and launch the simulator
+
+>Note: You may need to run the following commands as `sudo`.
 
 1. Open a Terminal and navigate to `~/AI-Robot-Challenge-Lab/src`.
 2. Initialize git submodules:
@@ -214,6 +221,7 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
   cd $HOME/ros_ws && ./intera.sh sim
   cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
   ```
+7. Wait until the Sawyer robot simulation appears in the Gazebo window.
 
 # Bringing Your Robot to Life 
 
@@ -249,7 +257,7 @@ Let's add language understanding support to the bot.
 9. Go to the `LuisApiService` class.
 10. Modify the `post_utterance` method:
 
-* Search for the `#Post Utterance Request Headers and Params` comment and then uncomment the following line: 
+* Search for the `#Post Utterance Request Headers and Params` comment and then uncomment the following lines: 
 ```python
 
     headers = {'Ocp-Apim-Subscription-Key': LUIS_SUBSCRIPTION_KEY}
@@ -264,7 +272,7 @@ Let's add language understanding support to the bot.
     }
 ```
 
-* Search for the `#LUIS Response` comment and then uncomment the following line: 
+* Search for the `#LUIS Response` comment and then uncomment the following lines: 
 
 ```python
     r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
@@ -289,7 +297,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Right click the `talk-to-my-robot.py` file.
 1. Select **Run Python File in Terminal** to execute the bot script.
 
-> NOTE: If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
+> NOTE: Dismiss the alert: `Linter pylint is not installed` if prompted. If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
 
 2. Open the **Bot Framework Emulator** app.
 3. Click **Open Bot** and select the file `SawyerBot.bot` from your **~/AI-Robot-Challenge-Lab/src/chatbot** directory.
@@ -312,7 +320,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 ```
 
 3. Go to the `BotCommandHandler` class.
-* Search for the `#Implement Move Grippers Command` comment and then uncomment the following line: 
+* Search for the `#Implement Move Grippers Command` comment and then uncomment the following lines: 
 
 ```python
     print(f'{action} grippers... wait a few seconds')
@@ -348,7 +356,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Go to the `BotRequestHandler` class.
 2. Modify the `handle_message` method:
 
-* Search for the `#Set Show Stats Handler` comment and then uncomment the following line: 
+* Search for the `#Set Show Stats Handler` comment and then uncomment the following lines: 
 
 ```python
     stats = BotCommandHandler.show_stats()
@@ -357,7 +365,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 ```
 3. Go to the `BotCommandHandler` class.
 
-* Search for the `#Set Show Stats Command` comment and then uncomment the following line:
+* Search for the `#Set Show Stats Command` comment and then uncomment the following lines:
 
 ```python
     print('Showing stats... do something')
@@ -405,7 +413,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 3. Go to the `BotRequestHandler` class.
 
-* Search for the `#Implement Process Image Method` comment and then uncomment the following line:
+* Search for the `#Implement Process Image Method` comment and then uncomment the following lines:
 ```python
     image_url = BotRequestHandler.get_image_url(activity.attachments)
 
@@ -421,7 +429,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 5. Go to the `ComputerVisionApiService` class.
 6. Modify the `analyze_image` method:
 
-* Search for the `#Analyze Image Request Headers and Parameters` comment and then uncomment the following line:
+* Search for the `#Analyze Image Request Headers and Parameters` comment and then uncomment the following lines:
 ```python
     headers = {
         'Ocp-Apim-Subscription-Key': COMPUTER_VISION_SUBSCRIPTION_KEY,
@@ -435,7 +443,7 @@ We will use Computer Vision to extract information from an image and the Intera 
     image_data = BytesIO(requests.get(image_url).content)
 ```
 
-* Search for the `#Process Image` comment and then uncomment the following line:
+* Search for the `#Process Image` comment and then uncomment the following lines:
 
 ```python
     print(f'Processing image: {image_url}')
@@ -449,7 +457,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 * Delete the line containing `return None` below the above code.
 
 7. Go to the `BotCommandHandler` class.
-* Search for the `#Move Cube Command` comment and then uncomment the following line: 
+* Search for the `#Move Cube Command` comment and then uncomment the following lines: 
 
 ```python
     print(f'Moving {color} cube...')
