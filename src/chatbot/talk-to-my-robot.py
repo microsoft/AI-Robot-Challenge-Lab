@@ -116,8 +116,7 @@ class BotRequestHandler:
                 # Set Move Grippers Handler (do not uncomment this line)
                 # BotCommandHandler.move_grippers(luis_result.entity_value)
 
-                print("MoveGrippers") 
-
+                print("MoveGrippers")
             elif luis_result.intent == 'ShowStats':
                 # Set Show Stats Handler (do not uncomment this line)
                 # stats = BotCommandHandler.show_stats()
