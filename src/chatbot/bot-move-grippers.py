@@ -37,7 +37,7 @@ def move_gripper(limb, action):
     def clean_shutdown():
         if gripper and original_deadzone:
             gripper.set_dead_zone(original_deadzone)
-        print("Exiting example.")
+        print("Finished.")
     
     try:
         gripper = intera_interface.Gripper(limb + '_gripper')

@@ -23,7 +23,7 @@ Althought there are some Robotics Kits available in the market, ROS is quickly b
 **Other Supported Technologies (reference only)**
 C++ and Lisp
 
-Supports Unix-based systems, primarly Ubuntu and Mac OS X systems, but the community has been adding support to Fedora, Gentoo, Arch Linux and other Linux platforms.
+Supports Unix-based systems, primarily Ubuntu and Mac OS X systems, but the community has been adding support to Fedora, Gentoo, Arch Linux and other Linux platforms.
 
 
 ### **Gazebo**
@@ -44,10 +44,10 @@ RViz is an Open Source 3D visualizer for the Robot Operating System (ROS) framew
 Uses sensors data and custom visualization markers to develop robot capabilities in a 3d environment.
 Features:
   - Motion planning: the process of breaking down a desired movement task into discrete motions that satisfy movement constraints and possibly optimize some aspect of the movement.
-  - Object detection: vizualization and recognition of objects using the camera, for example recognizing cubes of different colors.
+  - Object detection: visualization and recognition of objects using the camera, for example recognizing cubes of different colors.
   - Calibration: geometric camera calibration is used to estimate parameters internal to the camera that affect the image processing.
-  - Debugging
-  - RViz visualization widget
+  - Debugging.
+  - RViz visualization widget.
   - 3D stereo rendering, using 2 connected cameras to display 3D images, it displays a different view to each eye so that the scene appears to have depth.
 RViz provides a CLI tool that lets you execute python or c++ scripts with controls.
 
@@ -72,13 +72,13 @@ The planning scene feature allows to monitor the state, sensor and world geometr
 
 # Getting started  
 
-Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and well make this bot to communicate with a physical robot using natural language and Computer Vision for image recognition.
+Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congnitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and make it communicate with a physical robot using natural language and Computer Vision.
 
 ## Setup your Azure resources
 
 ### Setup your Azure subscription
 
-This lab **requires** an Azure subscription. If you delete the resources at the end of the session, total charges will be less than $1 so we strongly recommend using an existing subscription if available.
+This lab **requires** an Azure subscription.
 
 If you need a new Azure subscription, then there are a couple of options to get a free subscription:
 
@@ -126,33 +126,34 @@ Before calling LUIS, we need to train it with the kinds of phrases we expect our
 
     > NOTE: Use the same credentials as you used for logging into Azure.
 
-2. **Scroll down** to the bottom of the welcome page.
-3. Click **Create new app**.
-4. Select **United States** from the country list.
-5. Check the **I agree** checkbox.
-6. Click the **Continue** button.
-7. From `My Apps`, click **Import new app**.
-8. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
-9. Click on the **Done** button.
-10. **Wait** for the import to complete.
-11. Click on the **Train** button and wait for it to finish.
-12. Click the **Test** button to open the test panel.
-13. **Type** `move arm` and press enter.
+2. If this is your first login in this portal, you will receive a welcome message. Follow the next steps access the LUIS dashboard:
+    * **Scroll down** to the bottom of the welcome page.
+    * Click **Create LUIS app**.
+    * Select **United States** from the country list.
+    * Check the **I agree** checkbox.
+    * Click the **Continue** button.
+3. From `My Apps`, click **Import new app**.
+4. **Select** the base model from `~/AI-Robot-Challenge-Lab/resources/robotics-bot-luis-app.json`.
+5. Click on the **Done** button.
+6. **Wait** for the import to complete.
+7. Click on the **Train** button and wait for it to finish.
+8. Click the **Test** button to open the test panel.
+9. **Type** `move arm` and press enter.
 
     > NOTE: It should return the `MoveArm` intent.
 
-14. Click on the **Manage** option.
-15. **Copy** the LUIS `Application ID` to Notepad.
+10. Click on the **Manage** option.
+11. **Copy** the LUIS `Application ID` to Notepad.
 
     > NOTE: We'll need this App ID later on.
 
-16. Click the **Keys and Endpoints** option.
-17. Click on **+ Assign resource**. You might need to scroll down to find the option.
+12. Click the **Keys and Endpoints** option.
+13. Click on **+ Assign resource**. You might need to scroll down to find the option.
     * Select the only **tenant**.
     * Select your  **subscription**.
     * Select the **key** of your Luis resource.
     * Click on **Assign resource**.
-18. Publish your application:
+14. Publish your application:
     * Click the **Publish** button.
     * Click on the **Publish** button next to the *Production* slot.
     * Wait for the process to finish.
@@ -178,25 +179,33 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 1. Go to the **Keys** page.
 1. Copy the **Key 1** value into **Notepad**.
 
-     > NOTE: We'll need this key later on.
+    > NOTE: We'll need this key later on.
 
 ## Setup your development environment
 
-### Get ubuntu 16.04 image
+### Get ubuntu 16.04 64 Bit image
 
-1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 image.
+1. [Download](http://releases.ubuntu.com/16.04/) an Ubuntu 16.04 64 Bit image.
+    > The VM must be 64 bit!
 2. Install the image in a VM.
-  > NOTE You can use any virtualization software to run the image
+    > NOTE You can use any virtualization software to run the image
 3. Make sure to allocate at least 8GB of RAM.
 
 ### Run installation script on VM
 
-1. Clone this repo into your **Home** folder by runnning the following command `git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git` from a **Terminal** console.
-1. Navigate to `~/AI-Robot-Challenge-Lab/setup` in a Terminal window.
+1. Open Terminal and install git with the following command `sudo apt install git-all`.
+1. Navigate to your home folder `cd`.
+1. Clone this repo into your **Home** folder by runnning the following command `git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git`.
+1. Navigate to `~/AI-Robot-Challenge-Lab/setup`.
 1. Run the following command: `chmod +x robot-challenge-setup.sh`.
 1. Run the shell script with the following command `./robot-challenge-setup.sh`.
+1. Once completed, close the terminal as you need to enable environment variables from the installation.
+
+>NOTE: The installation will take around 30 minutes depending on your connection and OS specifications.
 
 ### Setup and launch the simulator
+
+>Note: You may need to run the following commands as `sudo`.
 
 1. Open a Terminal and navigate to `~/AI-Robot-Challenge-Lab/src`.
 2. Initialize git submodules:
@@ -213,6 +222,7 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
   cd $HOME/ros_ws && ./intera.sh sim
   cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
   ```
+7. Wait until the Sawyer robot simulation appears in the Gazebo window.
 
 # Bringing Your Robot to Life 
 
@@ -248,7 +258,7 @@ Let's add language understanding support to the bot.
 9. Go to the `LuisApiService` class.
 10. Modify the `post_utterance` method:
 
-* Search for the `#Post Utterance Request Headers and Params` comment and then uncomment the following line: 
+* Search for the `#Post Utterance Request Headers and Params` comment and then uncomment the following lines: 
 ```python
 
     headers = {'Ocp-Apim-Subscription-Key': LUIS_SUBSCRIPTION_KEY}
@@ -263,7 +273,7 @@ Let's add language understanding support to the bot.
     }
 ```
 
-* Search for the `#LUIS Response` comment and then uncomment the following line: 
+* Search for the `#LUIS Response` comment and then uncomment the following lines: 
 
 ```python
     r = requests.get('https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/%s' % LUIS_APP_ID, headers=headers, params=params)
@@ -284,9 +294,11 @@ Let's add language understanding support to the bot.
 ### Test the 'move your arm' command
 
 The bot emulator provides a convenient way to interact and debug your bot locally. Let's use the emulator to send requests to our bot:
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Review the Explorer from the left pane in **VSCode**. Find the **CHATBOT** node and expand it.
+1. Right click the `talk-to-my-robot.py` file.
+1. Select **Run Python File in Terminal** to execute the bot script.
 
-> NOTE: If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
+> NOTE: Dismiss the alert: `Linter pylint is not installed` if prompted. If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
 
 2. Open the **Bot Framework Emulator** app.
 3. Click **Open Bot** and select the file `SawyerBot.bot` from your **~/AI-Robot-Challenge-Lab/src/chatbot** directory.
@@ -294,7 +306,8 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 > NOTE: The V4 Bot Emulator gives us the ability to create Bot configuration files for simpler connectivity when debugging.
 4. **Type** `move your arm` and press enter.
 5. Return to **Gazebo** and wait for the simulator to move the arm.
-6. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
+
 
 
 ### Make the grippers move
@@ -309,7 +322,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 ```
 
 3. Go to the `BotCommandHandler` class.
-* Search for the `#Implement Move Grippers Command` comment and then uncomment the following line: 
+* Search for the `#Implement Move Grippers Command` comment and then uncomment the following lines: 
 
 ```python
     print(f'{action} grippers... wait a few seconds')
@@ -329,7 +342,8 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test 'make the grippers move' command
 
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. Select **Run Python File in Terminal** to execute the bot script.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. **Type** `close grippers` and press enter.
@@ -337,14 +351,14 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 1. Go back to the **Bot Framework Emulator** app.
 1. **Type** `open grippers` and press enter.
 1. Return to **Gazebo** and wait for the simulator to move the grippers.
-1. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
 
 ### Show robot statistics
 
 1. Go to the `BotRequestHandler` class.
 2. Modify the `handle_message` method:
 
-* Search for the `#Set Show Stats Handler` comment and then uncomment the following line: 
+* Search for the `#Set Show Stats Handler` comment and then uncomment the following lines: 
 
 ```python
     stats = BotCommandHandler.show_stats()
@@ -353,7 +367,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 ```
 3. Go to the `BotCommandHandler` class.
 
-* Search for the `#Set Show Stats Command` comment and then uncomment the following line:
+* Search for the `#Set Show Stats Command` comment and then uncomment the following lines:
 
 ```python
     print('Showing stats... do something')
@@ -377,12 +391,13 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test 'show robot statistics' command
 
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. Select **Run Python File in Terminal** to execute the bot script.
 1. Return to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. **Type** `show stats` and press enter.
 1. Wait a few seconds and wait for a response from your bot, it will display the stats in the emulator.
-1. **Stop** debugging by clicking the stop button in **VSCode** toolbar.
+6. **Stop** the bot by pressing **CTRL+C** in **VSCode** Terminal.
 
 
 ## Making Your Robot Intelligent with Microsoft AI
@@ -396,11 +411,11 @@ We will use Computer Vision to extract information from an image and the Intera 
 1. Open the **talk-to-my-robot.py** file.
 1. Search for the `#Settings` comment update the Computer Vision **Key** you previously obtained:
 
-    `COMPUTER_VISION_SUBSCRIPTION_KEY = = 'UPDATE_THIS_KEY'`
+    `COMPUTER_VISION_SUBSCRIPTION_KEY = 'UPDATE_THIS_KEY'`
 
 3. Go to the `BotRequestHandler` class.
 
-* Search for the `#Implement Process Image Method` comment and then uncomment the following line:
+* Search for the `#Implement Process Image Method` comment and then uncomment the following lines:
 ```python
     image_url = BotRequestHandler.get_image_url(activity.attachments)
 
@@ -416,7 +431,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 5. Go to the `ComputerVisionApiService` class.
 6. Modify the `analyze_image` method:
 
-* Search for the `#Analyze Image Request Headers and Parameters` comment and then uncomment the following line:
+* Search for the `#Analyze Image Request Headers and Parameters` comment and then uncomment the following lines:
 ```python
     headers = {
         'Ocp-Apim-Subscription-Key': COMPUTER_VISION_SUBSCRIPTION_KEY,
@@ -430,7 +445,7 @@ We will use Computer Vision to extract information from an image and the Intera 
     image_data = BytesIO(requests.get(image_url).content)
 ```
 
-* Search for the `#Process Image` comment and then uncomment the following line:
+* Search for the `#Process Image` comment and then uncomment the following lines:
 
 ```python
     print(f'Processing image: {image_url}')
@@ -444,7 +459,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 * Delete the line containing `return None` below the above code.
 
 7. Go to the `BotCommandHandler` class.
-* Search for the `#Move Cube Command` comment and then uncomment the following line: 
+* Search for the `#Move Cube Command` comment and then uncomment the following lines: 
 
 ```python
     print(f'Moving {color} cube...')
@@ -461,7 +476,8 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 ### Test the 'move cube' command
 
-1. Select **Debug -> Start Without Debugging** then click **Python** to execute the bot script in **VSCode**.
+1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. Select **Run Python File in Terminal** to execute the bot script.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
 1. Click the upload button from the left bottom corner to upload an image.
