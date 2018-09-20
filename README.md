@@ -23,7 +23,7 @@ Althought there are some Robotics Kits available in the market, ROS is quickly b
 **Other Supported Technologies (reference only)**
 C++ and Lisp
 
-Supports Unix-based systems, primarly Ubuntu and Mac OS X systems, but the community has been adding support to Fedora, Gentoo, Arch Linux and other Linux platforms.
+Supports Unix-based systems, primarily Ubuntu and Mac OS X systems, but the community has been adding support to Fedora, Gentoo, Arch Linux and other Linux platforms.
 
 
 ### **Gazebo**
@@ -44,10 +44,10 @@ RViz is an Open Source 3D visualizer for the Robot Operating System (ROS) framew
 Uses sensors data and custom visualization markers to develop robot capabilities in a 3d environment.
 Features:
   - Motion planning: the process of breaking down a desired movement task into discrete motions that satisfy movement constraints and possibly optimize some aspect of the movement.
-  - Object detection: vizualization and recognition of objects using the camera, for example recognizing cubes of different colors.
+  - Object detection: visualization and recognition of objects using the camera, for example recognizing cubes of different colors.
   - Calibration: geometric camera calibration is used to estimate parameters internal to the camera that affect the image processing.
-  - Debugging
-  - RViz visualization widget
+  - Debugging.
+  - RViz visualization widget.
   - 3D stereo rendering, using 2 connected cameras to display 3D images, it displays a different view to each eye so that the scene appears to have depth.
 RViz provides a CLI tool that lets you execute python or c++ scripts with controls.
 
@@ -72,7 +72,7 @@ The planning scene feature allows to monitor the state, sensor and world geometr
 
 # Getting started  
 
-Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and well make this bot to communicate with a physical robot using natural language and Computer Vision for image recognition.
+Microsoft Bot Framework and Cognitive Services provide a platform to develop intelligent bots. Bot Framework allows us to develop bots in different languages and by adding congnitive services to the bot, we are able to make our bot smart and have capabilities like language understanding, image recognition, text recognition, translation and more. In this lab we will create a simple bot and make it communicate with a physical robot using natural language and Computer Vision.
 
 ## Setup your Azure resources
 
