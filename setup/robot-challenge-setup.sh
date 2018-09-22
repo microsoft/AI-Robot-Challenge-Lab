@@ -45,7 +45,7 @@ sudo apt-get -f install libappindicator1 -y
 sudo apt-get -f install -y
 
 TEMP_DEB="$(mktemp)"
-wget -O "$TEMP_DEB" 'https://roboticslabstorage.blob.core.windows.net/github-assets/botframework-emulator_4.0.9-alpha_amd64.deb'
+wget -O "$TEMP_DEB" 'https://roboticslabstorage.blob.core.windows.net/github-assets/botframework-emulator_4.0.15-alpha_amd64.deb'
 sudo dpkg -i "$TEMP_DEB"
 rm -f "$TEMP_DEB"
 # install any unmet dependencies
