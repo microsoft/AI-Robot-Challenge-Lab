@@ -304,6 +304,9 @@ class TaskPlanner:
         """
         :return:
         """
+
+        self.sawyer_robot.gripper_open()
+
         self.trajectory_planner.ceilheight = 0.95
         self.trajectory_planner.update_ceiling_obstacle()
 
