@@ -1037,7 +1037,7 @@ class TaskPlanner:
         locks the taskplanner forever
         :return:
         """
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown() and self.scheduler_yield():
             self.delay_task(10).result()
 
     @tasync("PLACE TO TRAY REQUEST")
