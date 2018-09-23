@@ -304,6 +304,9 @@ class TaskPlanner:
         """
         :return:
         """
+
+        self.sawyer_robot.gripper_open()
+
         self.trajectory_planner.ceilheight = 0.95
         self.trajectory_planner.update_ceiling_obstacle()
 
@@ -992,7 +995,7 @@ class TaskPlanner:
         self.create_move_XY(poseaux).result()
         # individual processing algorithm
 
-        estimated_cube_grasping_pose, graspA, graspB = self.environment_estimation.compute_block_pose_estimation_from_arm_camera(
+        estimated_cube_grasping_pose, available_grasp = self.environment_estimation.compute_block_pose_estimation_from_arm_camera(
             CUBE_SIZE=CUBE_SIZE)
 
         if estimated_cube_grasping_pose is None:
@@ -1001,7 +1004,7 @@ class TaskPlanner:
         else:
             rospy.logwarn("CUBE POSE DETECTED")
 
-        if not graspA and not graspB:
+        if not available_grasp:
             rospy.logerr("there is no available grasping for this piece")
             return False
 
@@ -1037,7 +1040,7 @@ class TaskPlanner:
         locks the taskplanner forever
         :return:
         """
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown() and self.scheduler_yield():
             self.delay_task(10).result()
 
     @tasync("PLACE TO TRAY REQUEST")

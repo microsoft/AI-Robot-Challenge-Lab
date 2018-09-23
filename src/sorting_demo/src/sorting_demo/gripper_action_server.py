@@ -37,7 +37,6 @@ class GripperActionServer(object):
         # Initialize Parameters
         self._timeout = 5.0
 
-
     def _update_feedback(self, position):
         self.feedback_msg.position = self._gripper.get_position()
         self.feedback_msg.effort = self._gripper.get_force()
@@ -46,7 +45,7 @@ class GripperActionServer(object):
 
         self._server.publish_feedback(self.feedback_msg)
 
-    def _command_gripper_update(self, position,is_close_goal):
+    def _command_gripper_update(self, position, is_close_goal):
         if is_close_goal:
             self._gripper.close()
             rospy.logwarn("cmd: close")
@@ -54,25 +53,23 @@ class GripperActionServer(object):
             self._gripper.open()
             rospy.logwarn("cmd: open")
 
-        #self._gripper.set_position(position)
-
+            # self._gripper.set_position(position)
 
     def check_success(self, position, close_goal):
 
-        rospy.logwarn("gripping force: "+ str(self._gripper.get_force()))
-        rospy.logwarn("gripper position: "+ str(self._gripper.get_position()))
-        rospy.logwarn("gripper position deadzone: "+ str(self._gripper.get_dead_zone()))
-
+        rospy.logwarn("gripping force: " + str(self._gripper.get_force()))
+        rospy.logwarn("gripper position: " + str(self._gripper.get_position()))
+        rospy.logwarn("gripper position deadzone: " + str(self._gripper.get_dead_zone()))
 
         if not self._gripper.is_moving():
             success = True
         else:
             success = False
 
-        #success = fabs(self._gripper.get_position() - position) < self._gripper.get_dead_zone()
+        # success = fabs(self._gripper.get_position() - position) < self._gripper.get_dead_zone()
 
 
-        rospy.logwarn("gripping success: "+ str(success))
+        rospy.logwarn("gripping success: " + str(success))
 
         return success
 
@@ -82,13 +79,11 @@ class GripperActionServer(object):
         position = goal.command.position
         effort = goal.command.max_effort
 
-
         # Check for errors
         if self._gripper.has_error():
             rospy.logerr("%s: Gripper error - please restart action server." %
                          (self._action_name,))
             self._server.set_aborted()
-
 
         is_close_goal = position < 0.02
 
@@ -104,12 +99,12 @@ class GripperActionServer(object):
         def now_from_start(start):
             return rospy.get_time() - start
 
-        self._command_gripper_update(position,is_close_goal)
+        self._command_gripper_update(position, is_close_goal)
         rospy.sleep(0.2)
 
         # Continue commanding goal until success or timeout
         while ((now_from_start(start_time) < self._timeout or
-               self._timeout < 0.0) and not rospy.is_shutdown()):
+                        self._timeout < 0.0) and not rospy.is_shutdown()):
             if self._server.is_preempt_requested():
                 self._gripper.stop()
                 rospy.loginfo("%s: Gripper Action Preempted" %
@@ -117,10 +112,10 @@ class GripperActionServer(object):
                 self._server.set_preempted(self.result_msg)
                 return
             self._update_feedback(position)
-            if self.check_success(position,is_close_goal):
+            if self.check_success(position, is_close_goal):
                 self._server.set_succeeded(self.result_msg)
                 return
-            self._command_gripper_update(position,is_close_goal)
+            self._command_gripper_update(position, is_close_goal)
             control_rate.sleep()
 
         # Gripper failed to achieve goal before timeout/shutdown
@@ -130,6 +125,7 @@ class GripperActionServer(object):
                          (self._action_name,))
         self._update_feedback(position)
         self._server.set_aborted(self.result_msg)
+
 
 import argparse
 
@@ -155,7 +151,7 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=arg_fmt)
     parser.add_argument("-g", "--gripper", dest="gripper", default="both",
                         choices=['both', 'left', 'right'],
-                        help="gripper action server limb",)
+                        help="gripper action server limb", )
     args = parser.parse_args(rospy.myargv()[1:])
     start_server(args.gripper)
 

@@ -160,15 +160,18 @@ class EnvironmentEstimation:
 
 
             return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
-                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])),graspA,graspB
+                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])),graspA or graspB
         except Exception as ex:
             rospy.logwarn("erroneous cube detection")
             #cv2.imshow("erroneus cube detection", cv_image)
             #cv2.waitKey(0)
-            return None, None, None
+            return None, False
 
     def compute_block_pose_estimations_from_head_camera(self):
         """
+        For each block updates:
+            - block.headview_pose_estimation
+            - block.hue_estimation
         :return: 
         """
         try:

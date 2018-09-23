@@ -224,10 +224,11 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 4. Run the following command: `rosdep install --from-paths src --ignore-src -r -y`
 5. Build the code: `catkin build`
 6. Run the following commands to launch the simulator:
-    ```sh
-    cd $HOME/ros_ws && ./intera.sh sim
-    cd ~/AI-Robot-Challenge-Lab && source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
-    ```
+  ```sh
+  ./intera.sh sim
+  source devel/setup.bash
+  roslaunch sorting_demo sorting_demo.launch
+  ```
 7. Wait until the Sawyer robot simulation appears in the Gazebo window.
 
 # Bringing Your Robot to Life 

@@ -14,6 +14,7 @@ def tasync(taskname):
                 sys.exit(0)
 
             if self.has_cancel_signal():
+                raise Exception("canceling")
                 rospy.logerr("trying to invoke but cancel signal: " + str(taskname))
                 self.print_tasks()
                 return Task("CANCEL", None)
