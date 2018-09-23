@@ -8,6 +8,8 @@ from geometry_msgs.msg import (
     Pose,
 )
 
+from sorting_demo import demo_constants
+from real_gripper import PSGGripper
 
 class SawyerRobotControl(object):
     def __init__(self, trajectory_planner, limb="right", hover_distance=0.08, tip_name="right_gripper_tip"):
@@ -21,7 +23,12 @@ class SawyerRobotControl(object):
         self._tip_name = tip_name  # string
         self._hover_distance = hover_distance  # in meters
         self._limb = intera_interface.Limb(limb)
-        self._gripper = intera_interface.Gripper()
+
+        if demo_constants.REAL_ROBOT:
+            self._gripper =PSGGripper()
+        else:
+            self._gripper = intera_interface.Gripper()
+
         self._robot_enable = intera_interface.RobotEnable()
 
         # verify robot is enabled
