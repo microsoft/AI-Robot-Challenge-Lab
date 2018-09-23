@@ -108,7 +108,7 @@ def load_gazebo_models():
         for j in xrange(k):
             q = tf.transformations.quaternion_from_euler(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi),
                                                          random.uniform(0, 2 * math.pi))
-
+            q = [0,0,0,1]
 
             block_poses.append(Pose(position=Point(x=0.45 + j * 0.15 + random.uniform(-1, 1) * 0.03,
                                                    y=-0.15 + i * 0.15 + random.uniform(-1, 1) * 0.03, z=0.7725),
