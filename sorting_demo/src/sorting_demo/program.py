@@ -5,19 +5,23 @@ import sys
 import rospy
 import gazebo_models
 from task_planner import TaskPlanner
-
+import demo_constants
 
 def main():
 
     rospy.init_node("sorting_demo")
 
-    # Load Gazebo Models via Spawning Services
-    # Note that the models reference is the /world frame
-    # and the IK operates with respect to the /base frame
-    model_list, original_block_poses = gazebo_models.load_gazebo_models()
-    # Remove models from the scene on shutdown
+    rospy.logwarn("Hello world")
 
-    rospy.on_shutdown(functools.partial(gazebo_models.delete_gazebo_models, model_list))
+    if not demo_constants.REAL_ROBOT:
+        # Load Gazebo Models via Spawning Services
+        # Note that the models reference is the /world frame
+        # and the IK operates with respect to the /base frame
+        model_list, original_block_poses = gazebo_models.load_gazebo_models()
+        # Remove models from the scene on shutdown
+        rospy.on_shutdown(functools.partial(gazebo_models.delete_gazebo_models, model_list))
+
+    rospy.logwarn("Creating task planner")
 
     task_planner = TaskPlanner()
 

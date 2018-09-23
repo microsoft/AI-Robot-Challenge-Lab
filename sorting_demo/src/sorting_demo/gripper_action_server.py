@@ -11,14 +11,15 @@ from control_msgs.msg import (
     GripperCommandFeedback,
     GripperCommandResult,
 )
-
+import real_gripper
+from real_gripper import  PSGGripper
 import intera_interface
 
 
 class GripperActionServer(object):
     def __init__(self):
         self._ns = "/robot/gripper_action_server"
-        self._gripper = intera_interface.Gripper()
+        self._gripper = PSGGripper() # intera_interface.Gripper()
 
         # Action Server
         self._server = actionlib.SimpleActionServer(

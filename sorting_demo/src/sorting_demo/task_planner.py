@@ -29,10 +29,12 @@ class TaskPlanner:
     def __init__(self):
         """
         """
+        rospy.logwarn("creating task planner")
         limbname = 'right'
         self._hover_distance = 0.1  # meters
         self.place_hover_distance = 0.15
 
+        rospy.logwarn("creating environment estimation")
         # subcomponents
         self.environment_estimation = EnvironmentEstimation()
 
@@ -43,6 +45,8 @@ class TaskPlanner:
         self.executor = ThreadPoolExecutor(max_workers=14)
 
         self.ikservice = rospy.ServiceProxy("/sawyer_ik_5d_node/ik", moveit_msgs.srv.GetPositionIK)
+
+        rospy.logwarn("creating task planner")
 
         self.cancel_signal = False
         self.pause_flag = False
@@ -63,6 +67,16 @@ class TaskPlanner:
 
         self.joint_names = ["right_j0", "right_j1", "right_j2", "right_j3", "right_j4", "right_j5", "right_j6"]
         self.gripper_state = GripperState()
+
+        self.head_pose_joints = {'right_j0': 0.0,
+                                'right_j1': -numpy.pi / 2.0,
+                                'right_j2': 0.0,
+                                'right_j3': numpy.pi / 2.0,
+                                'right_j4': 0.0,
+                                'right_j5': 0.0,
+                                'right_j6': 0.0}
+
+        self.starting_joint_angles = self.head_pose_joints
 
     def scheduler_yield(self):
         rospy.logwarn("scheduler yield")
@@ -314,13 +328,7 @@ class TaskPlanner:
 
         oldceil = self.trajectory_planner.ceilheight
 
-        joint_angles = {'right_j0': 0.0,
-                        'right_j1': -numpy.pi / 2.0,
-                        'right_j2': 0.0,
-                        'right_j3': numpy.pi / 2.0,
-                        'right_j4': 0.0,
-                        'right_j5': 0.0,
-                        'right_j6': 0.0}
+        joint_angles = self.head_pose_joints
 
         self.trajectory_planner.ceilheight = 2.0
 

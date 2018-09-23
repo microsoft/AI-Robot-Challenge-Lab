@@ -12,6 +12,6 @@
     <node pkg="sorting_demo" type="gripper_action_server.py" name="gripper_action_server"/>
 
     <include file="$(find sawyer_moveit_config)/launch/sawyer_moveit.launch">
-        <arg name="electric_gripper" value="true"/>
+        <arg name="electric_gripper" value="false"/>
     </include>
 </launch>
