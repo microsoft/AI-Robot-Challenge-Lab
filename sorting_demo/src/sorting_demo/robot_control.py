@@ -24,7 +24,7 @@ class SawyerRobotControl(object):
         self._hover_distance = hover_distance  # in meters
         self._limb = intera_interface.Limb(limb)
 
-        if demo_constants.REAL_ROBOT:
+        if demo_constants.is_real_robot():
             self._gripper =PSGGripper()
         else:
             self._gripper = intera_interface.Gripper()

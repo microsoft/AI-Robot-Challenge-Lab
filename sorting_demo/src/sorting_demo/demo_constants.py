@@ -1,4 +1,7 @@
 #!/usr/bin/python
+
+import rospy
+
 CUBE_EDGE_LENGTH = 0.04
 
 BLOCK_COLOR_MAPPINGS = [
@@ -23,4 +26,6 @@ ARM_TOP_VIEW_Z_OFFSET = 0.05 #meters
 
 SIMULATE_TRAY_BLOCK_DETECTION = True
 
-REAL_ROBOT = False
+def is_real_robot ():
+    return not rospy.has_param("/use_sim_time") and not rospy.get_param("/use_sim_time")
+

@@ -1,19 +1,18 @@
 #!/usr/bin/python
 import functools
 import sys
-
 import rospy
-import gazebo_models
+
 from task_planner import TaskPlanner
 import demo_constants
+import gazebo_models
 
 def main():
 
     rospy.init_node("sorting_demo")
-
     rospy.logwarn("Hello world")
 
-    if not demo_constants.REAL_ROBOT:
+    if not demo_constants.is_real_robot():
         # Load Gazebo Models via Spawning Services
         # Note that the models reference is the /world frame
         # and the IK operates with respect to the /base frame
@@ -25,10 +24,14 @@ def main():
 
     task_planner = TaskPlanner()
 
-    task_facade = task_planner.get_task_facade()
+    rospy.logwarn("Hello world")
+
 
     task_planner.create_go_home_task(check_obstacles=False).result()
-    task_facade.start()
+
+    task_facade = task_planner.get_task_facade()
+
+    #task_facade.start()
 
     task_facade.run_rest_server()
 
