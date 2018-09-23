@@ -31,4 +31,4 @@ def is_real_robot():
     if rospy.has_param("/use_sim_time"):
         return not rospy.get_param("/use_sim_time")
     else:
-        return False
+        return True

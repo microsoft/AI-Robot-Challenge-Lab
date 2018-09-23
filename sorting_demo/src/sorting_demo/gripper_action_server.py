@@ -22,8 +22,10 @@ class GripperActionServer(object):
         self._ns = "/robot/gripper_action_server"
 
         if demo_constants.is_real_robot():
+            rospy.logwarn("IS REAL ROBOT FOR GRIPPER")
             self._gripper = PSGGripper() # intera_interface.Gripper()
         else:
+            rospy.logwarn("IS VIRTUAL ROBOT FOR GRIPPER")
             self._gripper = intera_interface.Gripper()
 
         # Action Server
@@ -141,10 +143,13 @@ from dynamic_reconfigure.server import Server
 
 
 def start_server(gripper):
-    print("Initializing node... ")
-    rospy.init_node("rsdk_gripper_action_server%s" %
-                    ("" if gripper == 'both' else "_" + gripper,))
-    print("Initializing gripper action server...")
+
+    rospy.logwarn("Initializing node... ")
+
+    rospy.init_node("gripper_action_server")
+    rospy.sleep(0.1)
+
+    rospy.logwarn("Initialized")
 
     gas = GripperActionServer()
 
