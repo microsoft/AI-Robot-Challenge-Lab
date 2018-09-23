@@ -76,7 +76,8 @@ class TaskPlanner:
                                 'right_j5': 0.0,
                                 'right_j6': 0.0}
 
-        self.starting_joint_angles = self.head_pose_joints
+        if demo_constants.REAL_ROBOT:
+            self.starting_joint_angles = self.head_pose_joints
 
     def scheduler_yield(self):
         rospy.logwarn("scheduler yield")
