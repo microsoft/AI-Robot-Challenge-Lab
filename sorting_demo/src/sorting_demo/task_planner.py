@@ -918,8 +918,7 @@ class TaskPlanner:
 
                 if not demo_constants.SIMULATE_TRAY_BLOCK_DETECTION:
                     detected = self.create_move_top_block_view_and_detect(target_block, "tray_place_pose",
-                                                                          additional_z_offset=0.1,
-                                                                          CUBE_SIZE=95).result()
+                                                                          additional_z_offset=0.1).result()
                 else:
                     rospy.sleep(1.0)
                     self.environment_estimation.update()
@@ -974,8 +973,7 @@ class TaskPlanner:
         return self.environment_estimation.table.blocks
 
     @tasync("LOCATE ARMVIEW TO BLOCK ESTIMATION")
-    def create_move_top_block_view_and_detect(self, block, source="headview_pose_estimation", additional_z_offset=0.0,
-                                              CUBE_SIZE=150):
+    def create_move_top_block_view_and_detect(self, block, source="headview_pose_estimation", additional_z_offset=0.0):
         """
         :return:
         """
@@ -1007,8 +1005,7 @@ class TaskPlanner:
         self.create_move_XY(poseaux).result()
         # individual processing algorithm
 
-        estimated_cube_grasping_pose, available_grasp = self.environment_estimation.compute_block_pose_estimation_from_arm_camera(
-            CUBE_SIZE=CUBE_SIZE)
+        estimated_cube_grasping_pose, available_grasp = self.environment_estimation.compute_block_pose_estimation_from_arm_camera()
 
         if estimated_cube_grasping_pose is None:
             rospy.logerr("cube on table not detected")

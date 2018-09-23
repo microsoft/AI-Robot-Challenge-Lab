@@ -23,8 +23,9 @@ class RightHandCVParameters:
             self.CLAHE_SIZE = 8
             self.SIGMA = 0.3
             self.DILATION_SIZE = 5
+            self.CUBE_SIZE = 120
             self.CUBE_BORDER_SIZE = 4
-            #self.CLEARANCE_AREA_LENGTH
+            self.CLEARANCE_AREA_LENGTH = 60
             self.CLEARANCE_AREA_MARGIN = 20
             self.TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
             self.CLEARANCE_THRESHOLD = 50
@@ -34,8 +35,9 @@ class RightHandCVParameters:
             self.CLAHE_SIZE = 64
             self.SIGMA = 0.33
             self.DILATION_SIZE = 5
+            self.CUBE_SIZE = 150
             self.CUBE_BORDER_SIZE = 4
-            #self.CLEARANCE_AREA_LENGTH
+            self.CLEARANCE_AREA_LENGTH = 75
             self.CLEARANCE_AREA_MARGIN = 20
             self.TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
             self.CLEARANCE_THRESHOLD = 50
@@ -118,7 +120,7 @@ def __apply_template_matching(angle, template, image):
 
     return (max_match, angle, template_rotated, image_templated_inrange_size_corrected)
 
-def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
+def get_cubes_z_rotation(cv_image):
     """
     Gets the cubes rotation in the Z plane from an image. The results are sorted by distance to the center of the image
 
@@ -175,13 +177,14 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
     #cv2.imshow("Contours", cv_image_contours_filled)
 
     # Create cube image for template matching
+    CUBE_SIZE = right_hand_parameters.CUBE_SIZE
     cv_image_cube_template = numpy.full((CUBE_SIZE, CUBE_SIZE, 1), 255, numpy.uint8)
 
     CUBE_BORDER_SIZE = right_hand_parameters.CUBE_BORDER_SIZE
     cv_image_cube_template_border = cv2.copyMakeBorder(cv_image_cube_template, CUBE_BORDER_SIZE, CUBE_BORDER_SIZE, CUBE_BORDER_SIZE, CUBE_BORDER_SIZE, cv2.BORDER_CONSTANT, value=0)
 
     # Create mask for clearance check
-    CLEARANCE_AREA_LENGTH = CUBE_SIZE / 2
+    CLEARANCE_AREA_LENGTH = right_hand_parameters.CLEARANCE_AREA_LENGTH
     CLEARANCE_AREA_MARGIN = right_hand_parameters.CLEARANCE_AREA_MARGIN
     clearance_check_mask = numpy.full((CUBE_SIZE + 2 * CLEARANCE_AREA_MARGIN, CUBE_SIZE), 0, numpy.uint8)
     clearance_check_mask = cv2.copyMakeBorder(clearance_check_mask, CLEARANCE_AREA_LENGTH, CLEARANCE_AREA_LENGTH, 0, 0, cv2.BORDER_CONSTANT, value=255)
@@ -316,7 +319,7 @@ def test_right_hand_ros():
             index += 1
 
             # Get cube rotation
-            angles = get_cubes_z_rotation(cv_image, 120)
+            angles = get_cubes_z_rotation(cv_image)
             print(angles)
 
             # Wait for a key press

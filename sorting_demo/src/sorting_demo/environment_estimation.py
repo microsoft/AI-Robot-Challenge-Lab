@@ -93,7 +93,7 @@ class EnvironmentEstimation:
         else:
             return None
 
-    def compute_block_pose_estimation_from_arm_camera(self, CUBE_SIZE=150):
+    def compute_block_pose_estimation_from_arm_camera(self):
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
@@ -128,7 +128,7 @@ class EnvironmentEstimation:
         # cv2.imwrite("/tmp/debug.png", cv_image)
 
         # Get cube rotation
-        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=CUBE_SIZE)
+        detected_cubes_info = get_cubes_z_rotation(cv_image)
         center = (cv_image.shape[1] / 2, cv_image.shape[0] / 2)
 
         def cubedistToCenter(cube):
