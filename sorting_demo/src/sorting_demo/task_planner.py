@@ -1237,8 +1237,6 @@ class TaskPlanner:
             if blocks is None:
                 self.scheduler_yield()
 
-
-
             self.create_move_all_cubes_to_trays(blocks).result()
 
             self.robot_say("I FINISHED SORTING THE BLOCKS").result()

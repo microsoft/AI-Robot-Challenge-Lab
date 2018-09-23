@@ -66,7 +66,7 @@ class EnvironmentEstimation:
                                                                 z=0.7725),
                                                  orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
 
-                    self.gazebo_blocks.append(block)
+                    self.blocks.append(block)
 
     def identify_block_from_aproximated_point(self, projected):
         """
@@ -184,6 +184,18 @@ class EnvironmentEstimation:
             # cv2.waitKey(0)
             return None, False
 
+    def nearest_color(self, huevalue):
+        known_colors = [("Red", 0), ("Blue", 120), ("Green", 60)]
+
+        distances = dict()
+
+        for k, value in known_colors:
+            distances[k] = math.fabs(value - huevalue)
+
+        if len(distances)> 0:
+            return sorted(distances.keys(),lambda k: distances[k])[0]
+
+
     def compute_block_pose_estimations_from_head_camera(self):
         """
         For each block updates:
@@ -213,11 +225,14 @@ class EnvironmentEstimation:
 
             detected_blocks = []
 
+            rospy.logwarn("bricks database: "+ str(self.blocks))
             for huekey, point2d in ptinfos:
                 projected = self.head_camera_helper.project_point_on_table(point2d)
                 rospy.logwarn("projected: %s" % str(projected))
 
                 block = self.identify_block_from_aproximated_point(projected)
+                block.color = self.nearest_color(huekey)
+
                 if block is None:
                     continue
 
