@@ -15,6 +15,8 @@ from visualization_msgs.msg import *
 
 from cv_detection_camera_helper import CameraHelper
 
+import demo_constants
+
 def get_blobs_info(cv_image):
     """
     Gets information about the colored blobs in the image
@@ -95,6 +97,7 @@ def get_blobs_info(cv_image):
     #pyplot.clf()
     #pyplot.plot(cv_image_h_histogram_cut)
     #pyplot.pause(0.001)
+    #pyplot.show()
 
     # Process every color found in the histogram
     blob_info = {}
@@ -140,6 +143,7 @@ def get_blobs_info(cv_image):
         # Collect data
         blob_info[current_hue] = contour_centroids
 
+    #cv2.imshow("Blobs info", cv_image_contours_debug)
     cv2.imwrite("/tmp/head_contours.jpg", cv_image_contours_debug)
 
     return blob_info
@@ -178,6 +182,8 @@ def test_head_ros():
 
     TABLE_HEIGHT = demo_constants.TABLE_HEIGHT
     camera_helper = CameraHelper(camera_name, "base", TABLE_HEIGHT)
+    camera_helper.set_exposure(100)
+    camera_helper.set_gain(30)
 
     bridge = CvBridge()
 

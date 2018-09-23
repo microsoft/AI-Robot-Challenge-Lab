@@ -4,6 +4,7 @@ import numpy
 import os
 import math
 import functools
+import time
 
 import rospy
 import cv2
@@ -265,22 +266,29 @@ def test_right_hand_ros():
     camera_name = "right_hand_camera"
 
     camera_helper = CameraHelper(camera_name, "base", 0)
+    camera_helper.set_exposure(100)
+    camera_helper.set_gain(30)
 
     bridge = CvBridge()
 
+    index = 0
     try:
         while not rospy.is_shutdown():
             # Take picture
+            camera_helper.set_cognex_strobe(True)
+            time.sleep(0.05)
+            camera_helper.set_cognex_strobe(False)
             img_data = camera_helper.take_single_picture()
 
             # Convert to OpenCV format
             cv_image = bridge.imgmsg_to_cv2(img_data, "bgr8")
 
             # Save for debugging
-            #cv2.imwrite("/tmp/debug.png", cv_image)
+            cv2.imwrite("/tmp/right_hand_debug{}.png".format(index), cv_image)
+            index += 1
 
             # Get cube rotation
-            angles = get_cubes_z_rotation(cv_image)
+            angles = get_cubes_z_rotation(cv_image, 120)
             print(angles)
 
             # Wait for a key press

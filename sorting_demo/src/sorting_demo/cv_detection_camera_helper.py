@@ -37,8 +37,8 @@ class CameraHelper:
 
         self.pinhole_camera_model.fromCameraInfo(camera_info)
 
-        cameras = intera_interface.Cameras()
-        cameras.set_callback(camera_name, self.__show_image_callback, rectify_image=True)
+        self.cameras = intera_interface.Cameras()
+        self.cameras.set_callback(camera_name, self.__show_image_callback, rectify_image=True)
 
     def __show_image_callback(self, img_data):
         """
@@ -48,6 +48,15 @@ class CameraHelper:
         """
         if self.image_queue.empty():
             self.image_queue.put(img_data)
+
+    def set_exposure(self, exposure):
+        self.cameras.set_exposure(self.camera_name, exposure)
+
+    def set_gain(self, gain):
+        self.cameras.set_gain(self.camera_name, gain)
+
+    def set_cognex_strobe(self, value):
+        self.cameras.set_cognex_strobe(value)
 
     def take_single_picture(self):
         """
