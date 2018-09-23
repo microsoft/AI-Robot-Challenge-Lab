@@ -17,17 +17,19 @@ from cv_detection_camera_helper import CameraHelper
 
 import demo_constants
 
+use_real_robot_parameters = True
 class HeadCVParameters:
     def __init__(self):
-        if demo_constants.is_real_robot():
+        global use_real_robot_parameters
+        if use_real_robot_parameters:
             self.BLUR_SIZE = 3
             self.ROI_MASK = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask_real.png"
             self.CLAHE_SIZE = 16
-            self.BIN_THRESHOLD = 64
+            self.BIN_THRESHOLD = 16
             self.EROSION_SIZE = 3
-            self.HISTOGRAM_BLUR_SIZE = 31
+            self.HISTOGRAM_BLUR_SIZE = 61
             self.PEAK_MINIMUM = 10
-            self.PEAK_MAXIMUM = 200
+            self.PEAK_MAXIMUM = 150
             self.HUE_AMPLITUDE = 10
             self.FIND_CONTOURS_METHOD = cv2.RETR_EXTERNAL
             self.MINIMUM_AREA_SIZE = 50
@@ -287,7 +289,12 @@ def test_head_debug():
     """
 
     # Get files
-    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_simulator"
+    global use_real_robot_parameters
+    if use_real_robot_parameters:
+        path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_real"
+    else:
+        path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_sim"
+
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     #print(files)
 
