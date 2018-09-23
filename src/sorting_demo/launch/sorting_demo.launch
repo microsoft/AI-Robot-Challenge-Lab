@@ -3,5 +3,5 @@
     <arg name="electric_gripper" value="true"/>
   </include>
 
-  <include file="$(find sorting_demo)/launch/sorting_demo_control.launch"/>
+  <include file="$(find sorting_demo)/launch/robot_sorting_demo_control.launch"/>
 </launch>
