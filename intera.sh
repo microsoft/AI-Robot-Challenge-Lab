@@ -23,8 +23,9 @@ robot_hostname="paule.local"
 
 # Set *Either* your computers ip address or hostname. Please note if using
 # your_hostname that this must be resolvable to the Robot.
-your_ip="192.168.XXX.XXX"
-#your_hostname="my_computer.local"
+# your_ip="127.0.XXX.XXX"
+your_hostname="Ubuntu16"
+
 
 # Specify ROS distribution (e.g. indigo, hydro, etc.)
 ros_version="kinetic"
