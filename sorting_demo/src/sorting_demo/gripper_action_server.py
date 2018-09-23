@@ -5,6 +5,7 @@ from math import fabs
 import rospy
 
 import actionlib
+import demo_constants
 
 from control_msgs.msg import (
     GripperCommandAction,
@@ -19,7 +20,11 @@ import intera_interface
 class GripperActionServer(object):
     def __init__(self):
         self._ns = "/robot/gripper_action_server"
-        self._gripper = PSGGripper() # intera_interface.Gripper()
+
+        if demo_constants.is_real_robot():
+            self._gripper = PSGGripper() # intera_interface.Gripper()
+        else:
+            self._gripper = intera_interface.Gripper()
 
         # Action Server
         self._server = actionlib.SimpleActionServer(
