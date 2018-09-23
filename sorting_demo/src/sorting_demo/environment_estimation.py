@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import copy
+import random
 import re
 
 import math
@@ -12,7 +13,6 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 from concepts.block import BlockState
 from concepts.tray import TrayState
 from concepts.table import Table
-
 
 from cv_detection_head import CameraHelper, get_blobs_info
 
@@ -51,6 +51,22 @@ class EnvironmentEstimation:
 
         self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
 
+        if demo_constants.is_real_robot():
+            k = 3
+            for i in xrange(k):
+                for j in xrange(k):
+                    q = tf.transformations.quaternion_from_euler(random.uniform(0, 2 * math.pi),
+                                                                 random.uniform(0, 2 * math.pi),
+                                                                 random.uniform(0, 2 * math.pi))
+
+                    block = BlockState(id=str(len(self.gazebo_blocks)),
+                                       pose=Pose(position=Point(x=0.45 + j * 0.15 + random.uniform(-1, 1) * 0.03,
+                                                                y=-0.15 + i * 0.15 + random.uniform(-1, 1) * 0.03,
+                                                                z=0.7725),
+                                                 orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
+
+                    self.gazebo_blocks.append(block)
+
     def identify_block_from_aproximated_point(self, projected):
         """
         :param projected: 
@@ -77,7 +93,7 @@ class EnvironmentEstimation:
             return None
 
     def compute_block_pose_estimation_from_arm_camera(self, CUBE_SIZE=150):
-        #get latest image from topic
+        # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
         img_data = self.hand_camera_helper.take_single_picture()
@@ -143,7 +159,7 @@ class EnvironmentEstimation:
             # select the other grasping
             if not graspA and graspB:
                 rospy.logwarn("Swiching grasping orientation for current block (grasping clearance)")
-                if final_cube_yaw_angle >0:
+                if final_cube_yaw_angle > 0:
                     final_cube_yaw_angle -= math.pi / 2
                 else:
                     final_cube_yaw_angle += math.pi / 2
@@ -155,16 +171,16 @@ class EnvironmentEstimation:
             self.tf_broacaster.sendTransform(projected, poseq, rospy.Time(0), "estimated_cube_1", "base")
             rospy.logwarn(projected)
 
-            #cv2.imshow("cube detection", cv_image)
-            #cv2.waitKey(0)
+            # cv2.imshow("cube detection", cv_image)
+            # cv2.waitKey(0)
 
 
             return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
-                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])),graspA or graspB
+                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])), graspA or graspB
         except Exception as ex:
             rospy.logwarn("erroneous cube detection")
-            #cv2.imshow("erroneus cube detection", cv_image)
-            #cv2.waitKey(0)
+            # cv2.imshow("erroneus cube detection", cv_image)
+            # cv2.waitKey(0)
             return None, False
 
     def compute_block_pose_estimations_from_head_camera(self):
@@ -180,7 +196,7 @@ class EnvironmentEstimation:
 
             # Convert to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
-            cv2.imwrite("/tmp/last_head_picture.jpg",cv_image)
+            cv2.imwrite("/tmp/last_head_picture.jpg", cv_image)
 
             rospy.logwarn("processing head camera image to find blocks")
             blobs_info = get_blobs_info(cv_image)
@@ -278,7 +294,7 @@ class EnvironmentEstimation:
                     item = self.get_block_by_gazebo_id(name)
                     if item is None:
                         # rospy.logwarn("block create name: "+ name)
-                        item = BlockState(gazebo_id=name, pose=pose)
+                        item = BlockState(id=name, pose=pose)
                         item.color = demo_constants.BLOCK_COLOR_MAPPINGS[item.num]["material"].replace("Gazebo/", "")
                     else:
                         item.pose = pose
@@ -288,7 +304,8 @@ class EnvironmentEstimation:
                     item = self.get_tray_by_gazebo_id(name)
                     # item = None
                     if item is None:
-                        item = TrayState(gazebo_id=name, pose=pose, TRAY_SURFACE_THICKNESS= demo_constants.TRAY_SURFACE_THICKNESS)
+                        item = TrayState(gazebo_id=name, pose=pose,
+                                         TRAY_SURFACE_THICKNESS=demo_constants.TRAY_SURFACE_THICKNESS)
                         item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/", "")
                     else:
                         item.pose = pose
@@ -321,45 +338,46 @@ class EnvironmentEstimation:
             blocks = []
             trays = []
 
-            # publish tfs
-            basehomopose = get_homo_matrix_from_pose_msg(self.gazebo_world_to_ros_transform, tag="base")
+            if not demo_constants.is_real_robot():
+                # publish tfs
+                basehomopose = get_homo_matrix_from_pose_msg(self.gazebo_world_to_ros_transform, tag="base")
 
-            for items in collections:
-                for item in items:
+                for items in collections:
+                    for item in items:
 
-                    # block homogeneous transform
-                    homo_pose = get_homo_matrix_from_pose_msg(item.pose, tag="block")
+                        # block homogeneous transform
+                        homo_pose = get_homo_matrix_from_pose_msg(item.pose, tag="block")
 
-                    # rospy.logwarn("TF PUBLISH..." +  str(homo_pose))
-                    # rospy.logwarn("item state: " + str(item))
+                        # rospy.logwarn("TF PUBLISH..." +  str(homo_pose))
+                        # rospy.logwarn("item state: " + str(item))
 
-                    transf_homopose = inverse_compose(basehomopose, homo_pose)
+                        transf_homopose = inverse_compose(basehomopose, homo_pose)
 
-                    trans = tf.transformations.translation_from_matrix(transf_homopose)
-                    quat = tf.transformations.quaternion_from_matrix(transf_homopose)
+                        trans = tf.transformations.translation_from_matrix(transf_homopose)
+                        quat = tf.transformations.quaternion_from_matrix(transf_homopose)
 
-                    self.tf_broacaster.sendTransform(trans,
-                                                     quat,
-                                                     rospy.Time.now(),
-                                                     item.gazebo_id,
-                                                     "world")
+                        self.tf_broacaster.sendTransform(trans,
+                                                         quat,
+                                                         rospy.Time.now(),
+                                                         item.gazebo_id,
+                                                         "world")
 
-                    item.gazebo_pose = homotransform_to_pose_msg(transf_homopose)
+                        item.gazebo_pose = homotransform_to_pose_msg(transf_homopose)
 
-                    if isinstance(item, BlockState):
-                        blocks.append(item)
-                    elif isinstance(item, TrayState):
-                        trays.append(item)
-                        # else:
-                        # rospy.logwarn("DETECTED ITEM:" + str(item))
+                        if isinstance(item, BlockState):
+                            blocks.append(item)
+                        elif isinstance(item, TrayState):
+                            trays.append(item)
+                            # else:
+                            # rospy.logwarn("DETECTED ITEM:" + str(item))
 
-            self.blocks = blocks
-            self.trays = trays
+                self.blocks = blocks
+                self.trays = trays
 
-            # rospy.logwarn("GAZEBO blocks update lenght: %d"%len(self.gazebo_blocks))
-            # rospy.logwarn("blocks update lenght: %d"%len(self.blocks))
-            if self.original_blocks_poses_ is None:
-                self.original_blocks_poses_ = [copy.deepcopy(block.gazebo_pose) for block in blocks]
+                # rospy.logwarn("GAZEBO blocks update lenght: %d"%len(self.gazebo_blocks))
+                # rospy.logwarn("blocks update lenght: %d"%len(self.blocks))
+                if self.original_blocks_poses_ is None:
+                    self.original_blocks_poses_ = [copy.deepcopy(block.gazebo_pose) for block in blocks]
 
         finally:
             self.mutex.release()
@@ -420,7 +438,6 @@ class EnvironmentEstimation:
         :param id:
         :return:
         """
-
         color = color.replace("Gazebo/", "")
         rospy.logwarn("by color: " + str(color))
         rospy.logwarn("by color: " + str(self.trays))

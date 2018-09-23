@@ -1,19 +1,24 @@
 import re
 from rospy_message_converter import message_converter
-
+import demo_constants
 
 class BlockState:
     regex = re.compile(r'block(\d+)\.*')
 
-    def __init__(self, gazebo_id, pose):
+    def __init__(self, id, pose):
         self.perception_id = None
 
-        self.gazebo_id = gazebo_id
+        self.gazebo_id = id
         self.pose = pose
         self.color = None
         self.homogeneous_transform = None
-        search = BlockState.regex.search(gazebo_id)
-        self.num = int(search.group(1))
+
+        if not demo_constants.is_real_robot():
+            search = BlockState.regex.search(id)
+            self.num = int(search.group(1))
+        else:
+            self.num = int(id)
+
         self.gazebo_pose = None
         self.grasp_pose = None
         self.place_pose = None

@@ -337,7 +337,7 @@ def test_right_hand_debug():
     """
 
     # Get files
-    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_right_hand"
+    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_right_hand_simulator"
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     #files = ["border.png"]
     #print(files)

@@ -256,7 +256,7 @@ def test_head_debug():
     """
 
     # Get files
-    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head"
+    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_simulator"
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     #print(files)
 
