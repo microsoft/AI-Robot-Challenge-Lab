@@ -26,6 +26,7 @@ robot_hostname="paule.local"
 # your_ip="127.0.XXX.XXX"
 your_hostname="Ubuntu16"
 
+
 # Specify ROS distribution (e.g. indigo, hydro, etc.)
 ros_version="kinetic"
 #-----------------------------------------------------------------------------#
