@@ -17,7 +17,8 @@ from cv_detection_camera_helper import CameraHelper
 
 import demo_constants
 
-use_real_robot_parameters = True
+use_real_robot_parameters = demo_constants.is_real_robot()
+
 class HeadCVParameters:
     def __init__(self):
         global use_real_robot_parameters
