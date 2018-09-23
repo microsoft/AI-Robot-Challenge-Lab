@@ -401,6 +401,8 @@ class TrajectoryPlanner:
         :param joints: float array
         :return: 
         """
+        if demo_constants.is_real_robot():
+            self.group.set_max_acceleration_scaling_factor(0.5)
 
         self.clear_parameters()
 
