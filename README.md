@@ -226,7 +226,8 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 6. Run the following commands to launch the simulator:
   ```sh
   ./intera.sh sim
-  source devel/setup.bash && roslaunch sorting_demo sorting_demo.launch
+  source devel/setup.bash
+  roslaunch sorting_demo sorting_demo.launch
   ```
 7. Wait until the Sawyer robot simulation appears in the Gazebo window.
 
