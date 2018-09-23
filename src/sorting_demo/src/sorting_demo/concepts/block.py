@@ -13,7 +13,7 @@ class BlockState:
         self.color = None
         self.homogeneous_transform = None
 
-        if not demo_constants.REAL_ROBOT:
+        if not demo_constants.is_real_robot():
             search = BlockState.regex.search(id)
             self.num = int(search.group(1))
         else:

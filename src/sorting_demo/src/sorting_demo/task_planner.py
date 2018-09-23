@@ -21,7 +21,7 @@ from tasync import Task, tasync
 import tf
 import tf.transformations
 from concepts.gripper_state import GripperState
-
+import intera_interface
 from trajectory_planner import TrajectoryPlanner
 
 
@@ -33,6 +33,8 @@ class TaskPlanner:
         limbname = 'right'
         self._hover_distance = 0.1  # meters
         self.place_hover_distance = 0.15
+        self._head = intera_interface.Head()
+
 
         rospy.logwarn("creating environment estimation")
         # subcomponents
@@ -76,7 +78,7 @@ class TaskPlanner:
                                 'right_j5': 0.0,
                                 'right_j6': 0.0}
 
-        if demo_constants.REAL_ROBOT:
+        if demo_constants.is_real_robot():
             self.starting_joint_angles = self.head_pose_joints
 
     def scheduler_yield(self):
@@ -282,6 +284,8 @@ class TaskPlanner:
         else:
             self.safe_goto_joint_position(self.starting_joint_angles).result()
 
+        self._head.set_pan(00, speed=0.2, timeout=5.0)
+
     @tasync("GREET TASK")
     def create_greet_task(self):
         """
@@ -404,7 +408,6 @@ class TaskPlanner:
         :return:
         """
         # rotate in y
-
         reverseTransformY = utils.mathutils.rot_y(-1.3 * numpy.pi / 2.0)
         # reverseTransformY = utils.mathutils.rot_x(numpy.pi / 2.0)
         reverseTransformZ = numpy.eye(4)

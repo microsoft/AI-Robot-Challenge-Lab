@@ -51,7 +51,7 @@ class EnvironmentEstimation:
 
         self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
 
-        if demo_constants.REAL_ROBOT:
+        if demo_constants.is_real_robot():
             k = 3
             for i in xrange(k):
                 for j in xrange(k):
@@ -338,7 +338,7 @@ class EnvironmentEstimation:
             blocks = []
             trays = []
 
-            if not demo_constants.REAL_ROBOT:
+            if not demo_constants.is_real_robot():
                 # publish tfs
                 basehomopose = get_homo_matrix_from_pose_msg(self.gazebo_world_to_ros_transform, tag="base")
 
