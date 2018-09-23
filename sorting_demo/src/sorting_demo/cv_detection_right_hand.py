@@ -14,6 +14,32 @@ from cv_bridge import CvBridge, CvBridgeError
 
 from cv_detection_camera_helper import CameraHelper
 
+import demo_constants
+
+class RightHandCVParameters:
+    def __init__(self):
+        if demo_constants.is_real_robot():
+            self.BLUR_SIZE = 3
+            self.CLAHE_SIZE = 8
+            self.SIGMA = 0.3
+            self.DILATION_SIZE = 5
+            self.CUBE_BORDER_SIZE = 4
+            #self.CLEARANCE_AREA_LENGTH
+            self.CLEARANCE_AREA_MARGIN = 20
+            self.TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
+            self.CLEARANCE_THRESHOLD = 50
+
+        else: # Simulator
+            self.BLUR_SIZE = 3
+            self.CLAHE_SIZE = 64
+            self.SIGMA = 0.33
+            self.DILATION_SIZE = 5
+            self.CUBE_BORDER_SIZE = 4
+            #self.CLEARANCE_AREA_LENGTH
+            self.CLEARANCE_AREA_MARGIN = 20
+            self.TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
+            self.CLEARANCE_THRESHOLD = 50
+
 imgindex = 0
 
 def __create_mask_image_from_template(reference_image, template, pos_x, pos_y):
@@ -103,6 +129,8 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
 
     """
 
+    right_hand_parameters = RightHandCVParameters()
+
     # Show original image
     #cv2.imshow("Original image", cv_image)
 
@@ -110,26 +138,26 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
     cv_image_grayscale = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
     # Apply blur
-    BLUR_SIZE = 3
+    BLUR_SIZE = right_hand_parameters.BLUR_SIZE
     cv_image_blur = cv2.GaussianBlur(cv_image_grayscale, (BLUR_SIZE, BLUR_SIZE), 0)
     #cv2.imshow("Blur", cv_image_blur)
 
     # Apply CLAHE
-    CLAHE_SIZE = 64
+    CLAHE_SIZE = right_hand_parameters.CLAHE_SIZE
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(CLAHE_SIZE, CLAHE_SIZE))
     cv_image_clahe = clahe.apply(cv_image_blur)
     #cv2.imshow("CLAHE", cv_image_clahe)
 
     # Apply Canny filter
-    sigma = 0.33
+    SIGMA = right_hand_parameters.SIGMA
     median = numpy.median(cv_image_clahe)
-    lower = int(max(0, (1.0 - sigma) * median))
-    upper = int(min(255, (1.0 + sigma) * median))
+    lower = int(max(0, (1.0 - SIGMA) * median))
+    upper = int(min(255, (1.0 + SIGMA) * median))
     cv_image_canny = cv2.Canny(cv_image_clahe, lower, upper)
     #cv2.imshow("Canny", cv_image_canny)
 
     # Apply dilation
-    DILATION_SIZE = 5
+    DILATION_SIZE = right_hand_parameters.DILATION_SIZE
     dilation_kernel = numpy.ones((DILATION_SIZE, DILATION_SIZE), numpy.uint8)
     cv_image_dilated = cv2.dilate(cv_image_canny, dilation_kernel, iterations = 1)
     #cv2.imshow("Dilation", cv_image_dilated)
@@ -149,12 +177,12 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
     # Create cube image for template matching
     cv_image_cube_template = numpy.full((CUBE_SIZE, CUBE_SIZE, 1), 255, numpy.uint8)
 
-    CUBE_BORDER_SIZE = 4
+    CUBE_BORDER_SIZE = right_hand_parameters.CUBE_BORDER_SIZE
     cv_image_cube_template_border = cv2.copyMakeBorder(cv_image_cube_template, CUBE_BORDER_SIZE, CUBE_BORDER_SIZE, CUBE_BORDER_SIZE, CUBE_BORDER_SIZE, cv2.BORDER_CONSTANT, value=0)
 
     # Create mask for clearance check
     CLEARANCE_AREA_LENGTH = CUBE_SIZE / 2
-    CLEARANCE_AREA_MARGIN = 20
+    CLEARANCE_AREA_MARGIN = right_hand_parameters.CLEARANCE_AREA_MARGIN
     clearance_check_mask = numpy.full((CUBE_SIZE + 2 * CLEARANCE_AREA_MARGIN, CUBE_SIZE), 0, numpy.uint8)
     clearance_check_mask = cv2.copyMakeBorder(clearance_check_mask, CLEARANCE_AREA_LENGTH, CLEARANCE_AREA_LENGTH, 0, 0, cv2.BORDER_CONSTANT, value=255)
 
@@ -178,7 +206,7 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
         template_matching_results_max = max(template_matching_results_max_values)
 
         # Check if the match coefficient is good enough
-        TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
+        TEMPLATE_MATCHING_MAX_THRESHOLD = right_hand_parameters.TEMPLATE_MATCHING_MAX_THRESHOLD
         if template_matching_results_max < TEMPLATE_MATCHING_MAX_THRESHOLD:
             break
 
@@ -219,7 +247,7 @@ def get_cubes_z_rotation(cv_image, CUBE_SIZE=90):
         clearance_0_count = cv2.countNonZero(original_image_clearance_mask_applied_0)
         clearance_90_count = cv2.countNonZero(original_image_clearance_mask_applied_90)
 
-        CLEARANCE_THRESHOLD = 50
+        CLEARANCE_THRESHOLD = right_hand_parameters.CLEARANCE_THRESHOLD
         clearance_0 = clearance_0_count < CLEARANCE_THRESHOLD
         clearance_90 = clearance_90_count < CLEARANCE_THRESHOLD
 

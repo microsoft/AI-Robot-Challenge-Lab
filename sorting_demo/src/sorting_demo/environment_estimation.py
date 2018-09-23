@@ -14,9 +14,10 @@ from concepts.block import BlockState
 from concepts.tray import TrayState
 from concepts.table import Table
 
-from cv_detection_head import CameraHelper, get_blobs_info
-
+from cv_detection_camera_helper import CameraHelper
+from cv_detection_head import get_blobs_info
 from cv_detection_right_hand import get_cubes_z_rotation
+
 from utils.mathutils import *
 import demo_constants
 from threading import RLock

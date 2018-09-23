@@ -17,6 +17,34 @@ from cv_detection_camera_helper import CameraHelper
 
 import demo_constants
 
+class HeadCVParameters:
+    def __init__(self):
+        if demo_constants.is_real_robot():
+            self.BLUR_SIZE = 3
+            self.ROI_MASK = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask_real.png"
+            self.CLAHE_SIZE = 16
+            self.BIN_THRESHOLD = 64
+            self.EROSION_SIZE = 3
+            self.HISTOGRAM_BLUR_SIZE = 31
+            self.PEAK_MINIMUM = 10
+            self.PEAK_MAXIMUM = 200
+            self.HUE_AMPLITUDE = 10
+            self.FIND_CONTOURS_METHOD = cv2.RETR_EXTERNAL
+            self.MINIMUM_AREA_SIZE = 50
+
+        else: # Simulator
+            self.BLUR_SIZE = 3
+            self.ROI_MASK = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask_sim.png"
+            self.CLAHE_SIZE = 16
+            self.BIN_THRESHOLD = 64
+            self.EROSION_SIZE = 3
+            self.HISTOGRAM_BLUR_SIZE = 11
+            self.PEAK_MINIMUM = 100
+            self.PEAK_MAXIMUM = 500
+            self.HUE_AMPLITUDE = 5
+            self.FIND_CONTOURS_METHOD = cv2.RETR_LIST
+            self.MINIMUM_AREA_SIZE = 50
+
 def get_blobs_info(cv_image):
     """
     Gets information about the colored blobs in the image
@@ -27,17 +55,19 @@ def get_blobs_info(cv_image):
             {0: [(639, 558), (702, 555)], 120: [(567, 550), (698, 515), (648, 515)]}
     """
 
+    head_parameters = HeadCVParameters()
+
     # Show original image
     #cv2.imshow("Original image", cv_image)
 
     # Apply blur
-    BLUR_SIZE = 3
+    BLUR_SIZE = head_parameters.BLUR_SIZE
     cv_image_blur = cv2.GaussianBlur(cv_image, (BLUR_SIZE, BLUR_SIZE), 0)
     #cv2.imshow("Blur", cv_image_blur)
 
     # Apply ROI mask
-    mask_path = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask.png"
-    cv_mask = cv2.imread(mask_path)
+    ROI_MASK = head_parameters.ROI_MASK
+    cv_mask = cv2.imread(ROI_MASK)
     cv_mask = cv2.cvtColor(cv_mask, cv2.COLOR_BGR2GRAY)
 
     cv_image_masked = cv2.bitwise_and(cv_image_blur, cv_image_blur, mask=cv_mask)
@@ -51,7 +81,7 @@ def get_blobs_info(cv_image):
     #cv2.imshow("Image V", cv_image_v)
 
     # Apply CLAHE to Value channel
-    CLAHE_SIZE = 16
+    CLAHE_SIZE = head_parameters.CLAHE_SIZE
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(CLAHE_SIZE, CLAHE_SIZE))
     cv_image_v_clahe = clahe.apply(cv_image_v)
 
@@ -65,13 +95,13 @@ def get_blobs_info(cv_image):
     #cv2.imshow("Image S*V", cv_image_sv_multiplied)
 
     # Binarize the result
-    BIN_THRESHOLD = 64
+    BIN_THRESHOLD = head_parameters.BIN_THRESHOLD
     #_, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     _, cv_image_binary = cv2.threshold(cv_image_sv_multiplied, BIN_THRESHOLD, 255, cv2.THRESH_BINARY)
     #cv2.imshow("Threshold", cv_image_binary)
 
     # Erode the image to use as mask
-    EROSION_SIZE = 3
+    EROSION_SIZE = head_parameters.EROSION_SIZE
     erosion_kernel = numpy.ones((EROSION_SIZE, EROSION_SIZE), numpy.uint8)
     cv_image_binary_eroded = cv2.erode(cv_image_binary, erosion_kernel)
 
@@ -79,7 +109,7 @@ def get_blobs_info(cv_image):
     cv_image_h_histogram = cv2.calcHist([cv_image_h], [0], cv_image_binary_eroded, [180], [0, 179])
 
     # Smoothen the histogram to find local maxima
-    HISTOGRAM_BLUR_SIZE = 11
+    HISTOGRAM_BLUR_SIZE = head_parameters.HISTOGRAM_BLUR_SIZE
     histogram_length = len(cv_image_h_histogram)
     cv_image_h_histogram_wrap = cv2.repeat(cv_image_h_histogram, 3, 1)
     cv_image_h_histogram_smooth = cv2.GaussianBlur(cv_image_h_histogram_wrap, (HISTOGRAM_BLUR_SIZE, HISTOGRAM_BLUR_SIZE), 0)
@@ -90,8 +120,8 @@ def get_blobs_info(cv_image):
         if cv_image_h_histogram_cut[(i - 1) % histogram_length] < cv_image_h_histogram_cut[i] > cv_image_h_histogram_cut[(i + 1) % histogram_length]]
 
     # Filter peaks
-    PEAK_MINIMUM = 100 # Ideally below the value of a single cube
-    PEAK_MAXIMUM = 500 # Ideally above the value of all the cubes of a single color
+    PEAK_MINIMUM = head_parameters.PEAK_MINIMUM # Ideally below the value of a single cube
+    PEAK_MAXIMUM = head_parameters.PEAK_MAXIMUM # Ideally above the value of all the cubes of a single color
     histogram_high_peaks = filter(lambda p : PEAK_MINIMUM < cv_image_h_histogram_cut[p] < PEAK_MAXIMUM, histogram_peaks)
     #print(histogram_high_peaks)
     #pyplot.clf()
@@ -105,7 +135,7 @@ def get_blobs_info(cv_image):
 
     for current_hue in histogram_high_peaks:
         # Perform a Hue rotation that will be used to make detecting the edge colors easier (red in HSV corresponds to both 0 and 180)
-        HUE_AMPLITUDE = 5
+        HUE_AMPLITUDE = head_parameters.HUE_AMPLITUDE
         cv_image_h_rotated = cv_image_h.astype(numpy.int16)
         cv_image_h_rotated[:] -= current_hue
         cv_image_h_rotated[:] += HUE_AMPLITUDE
@@ -121,10 +151,11 @@ def get_blobs_info(cv_image):
         #cv2.imshow("inRange {}".format(histogram_high_peaks.index(current_hue)), cv_image_h_masked)
 
         # Find contours
-        _, contours, _ = cv2.findContours(cv_image_h_masked.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        FIND_CONTOURS_METHOD = head_parameters.FIND_CONTOURS_METHOD
+        _, contours, _ = cv2.findContours(cv_image_h_masked.copy(), FIND_CONTOURS_METHOD, cv2.CHAIN_APPROX_SIMPLE)
 
         # Filter by area
-        MINIMUM_AREA_SIZE = 50
+        MINIMUM_AREA_SIZE = head_parameters.MINIMUM_AREA_SIZE
         contours_filtered_area = filter(lambda cnt: cv2.contourArea(cnt) > MINIMUM_AREA_SIZE, contours)
 
         # Calculate convex hull
