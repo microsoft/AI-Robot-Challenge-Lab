@@ -6,6 +6,10 @@
     <remap from="/joint_states" to="/robot/joint_states"/>
   </node>
 
+  <param name="tip_link_name" value="right_hand_camera_optical" if="$(arg electric_gripper)"/>
+  <param name="tip_link_name" value="right_hand_camera" unless="$(arg electric_gripper)"/>
+
+
   <node pkg="topic_tools" type="relay" args="/robot/joint_states /joint_states" name="statedup"/>
   <node pkg="sawyer_ik_5d" type="sawyer_ik_5d_node" name="sawyer_ik_5d_node"  output="screen"/>
 

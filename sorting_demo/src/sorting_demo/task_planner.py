@@ -34,7 +34,7 @@ class TaskPlanner:
         self._hover_distance = 0.1  # meters
         self.place_hover_distance = 0.15
         self._head = intera_interface.Head()
-
+        self.tf_broacaster = tf.TransformBroadcaster()
 
         rospy.logwarn("creating environment estimation")
         # subcomponents
@@ -720,11 +720,11 @@ class TaskPlanner:
             rospy.logwarn("No block to pick from table!!")
             return False
 
-            target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
+        target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
 
-            if target_tray is not None:
-                target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
-                rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
+        if target_tray is not None:
+            target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
+            rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
 
         return target_block, target_tray
 
@@ -988,7 +988,9 @@ class TaskPlanner:
         if tabletop:
             rospy.loginfo("trying to estimate pose of block: " + str(block))
             top_view_pose = copy.deepcopy(block.headview_pose_estimation)
+
         else:
+            #this code is specific to pick from the tray
             rospy.loginfo("trying to estimate pose of block: " + str(block))
             top_view_pose = copy.deepcopy(block.tray_place_pose)
             top_view_pose.orientation.x = 0
@@ -996,16 +998,34 @@ class TaskPlanner:
             top_view_pose.orientation.z = 0
             top_view_pose.orientation.w = 1
 
+        if demo_constants.is_real_robot():
+            q = tf.transformations.quaternion_from_euler(0, math.pi / 2.0, 0)
+            top_view_pose.orientation.x = q[0]
+            top_view_pose.orientation.y = q[1]
+            top_view_pose.orientation.z = q[2]
+            top_view_pose.orientation.w = q[3]
+
         # chose z plane
         top_view_pose.position.z = demo_constants.ARM_TOP_VIEW_Z_OFFSET + additional_z_offset
 
         poseaux = top_view_pose  # Pose(position=Point(x=0.5 + ki*0.1, y=0.0, z=0.2),orientation=Quaternion(x=0, y=0, z=0, w=1))
         topview_homo_pose = utils.mathutils.get_homo_matrix_from_pose_msg(poseaux)
         topview_homo_pose = utils.mathutils.composition(topview_homo_pose, utils.mathutils.rot_y(math.pi / 2.0))
+
         poseaux = utils.mathutils.homotransform_to_pose_msg(topview_homo_pose)
+
+        q = tf.transformations.quaternion_from_matrix(topview_homo_pose)
+
+        self.tf_broacaster.sendTransform([poseaux.position.x, poseaux.position.y, poseaux.position.z], q, rospy.Time(0),
+                                         "target_head_pose", "base")
+
+        #while not rospy.is_shutdown():
+        #    self.tf_broacaster.sendTransform([poseaux.position.x,poseaux.position.y, poseaux.position.z], q, rospy.Time(0), "target_head_pose", "base")
+        #    rospy.sleep(1.0)
 
         self.create_move_XY(poseaux).result()
         # individual processing algorithm
+        #rospy.spin()
 
         estimated_cube_grasping_pose, available_grasp = self.environment_estimation.compute_block_pose_estimation_from_arm_camera()
 
