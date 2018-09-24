@@ -1038,7 +1038,7 @@ class TaskPlanner:
             rospy.logwarn("CUBE POSE DETECTED")
 
         if not available_grasp:
-            rospy.logerr("there is no available grasping for this piece")
+            rospy.logerr("there is no available posible grasping for this piece")
             return False
 
         self.environment_estimation.update()

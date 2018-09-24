@@ -94,7 +94,6 @@ class EnvironmentEstimation:
             return None
 
     def compute_block_pose_estimation_from_arm_camera(self):
-
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
@@ -108,7 +107,6 @@ class EnvironmentEstimation:
 
         camwtrans = None
         camwrot = None
-
 
         rospy.logwarn("LOOKUP ARM CAMERA POSITION FRAME")
 
@@ -150,11 +148,13 @@ class EnvironmentEstimation:
         sorted_center_cubes = sorted(detected_cubes_info, key=cubedistToCenter)
 
         try:
-            cube = sorted_center_cubes[0]
+            cube_result = sorted_center_cubes[0]
 
-            image_cube_angle = cube[1] * (math.pi / 180.0)
-            graspA = cube[2]
-            graspB = cube[3]
+            image_cube_angle = cube_result[1] * (math.pi / 180.0)
+            graspA = cube_result[2]
+            graspB = cube_result[3]
+
+            graspA = True
 
             rospy.logwarn("image detected cube angle: " + str(image_cube_angle))
 
@@ -174,7 +174,7 @@ class EnvironmentEstimation:
                 else:
                     final_cube_yaw_angle += math.pi / 2
 
-            projected = self.hand_camera_helper.project_point_on_table(cube[0])
+            projected = self.hand_camera_helper.project_point_on_table(cube_result[0])
             poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
 
             rospy.logwarn("quaternion angle:" + str(poseq))
