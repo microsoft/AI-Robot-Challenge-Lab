@@ -261,18 +261,20 @@ class EnvironmentEstimation:
                 # Fake detection of cubes on the table
                 color_table = {"Red" : 0, "Green" : 60, "Blue" : 120}
                 for block in self.blocks:
-                    if -0.43 < block.gazebo_pose.position.y < 0.43:
-                        detected_blocks.append(block)
+                    if 0.32 < block.gazebo_pose.position.x < 1.18:
+                        if -0.43 < block.gazebo_pose.position.y < 0.43:
+                            if (demo_constants.TABLE_HEIGHT - 0.1) < block.gazebo_pose.position.z < (demo_constants.TABLE_HEIGHT + 0.1):
+                                detected_blocks.append(block)
 
-                        projected = block.gazebo_pose.position
-                        block.headview_proj_estimation = projected
-                        block.headview_proj_estimation.z = demo_constants.TABLE_HEIGHT
-                        block.hue_estimation = color_table[block.color]
-                        block.headview_pose_estimation = Pose(
-                            position=Point(x=projected.x, y=projected.y, z=projected.z),
-                            orientation=Quaternion(x=0, y=0, z=0, w=1))
+                                projected = block.gazebo_pose.position
+                                block.headview_proj_estimation = projected
+                                block.headview_proj_estimation.z = demo_constants.TABLE_HEIGHT
+                                block.hue_estimation = color_table[block.color]
+                                block.headview_pose_estimation = Pose(
+                                    position=Point(x=projected.x, y=projected.y, z=projected.z),
+                                    orientation=Quaternion(x=0, y=0, z=0, w=1))
 
-                        rospy.logwarn("blob identified: " + str(block))
+                                rospy.logwarn("blob identified: " + str(block))
                 detected_blocks = sorted(detected_blocks, key=lambda b : (b.hue_estimation, -b.headview_proj_estimation.y))
 
             rospy.logwarn("Table blocks:")
