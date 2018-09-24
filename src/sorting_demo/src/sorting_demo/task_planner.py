@@ -851,7 +851,7 @@ class TaskPlanner:
             self.moveit_tabletop_pick(target_block).result()
 
             rospy.sleep(0.1)
-            if self.sawyer_robot._gripper.get_position() < 0.03:
+            if self.sawyer_robot._gripper.get_position() < 0.01:
                 rospy.logerr("LOOKS LIKE THE GRASPING FAILED")
                 self.trajectory_planner.clear_attached_object(target_block)
                 self.gripper_state.holding_block = None
