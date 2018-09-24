@@ -52,7 +52,7 @@ class TrajectoryPlanner:
 
         rospy.sleep(0.2)
 
-    def register_box(self, block):
+    def  register_box(self, block):
         if not block in self.registered_blocks:
             block.perception_id = "block"+ str(len(self.registered_blocks))
             self.registered_blocks.append(block)
@@ -93,23 +93,43 @@ class TrajectoryPlanner:
         grasp.pre_grasp_approach.min_distance = 0.08
         grasp.pre_grasp_approach.desired_distance = 0.1
 
-        # opened gripper
-        grasp.pre_grasp_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
-        trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
-        trajpoint.positions = [0.04, 0.04]
-        trajpoint.time_from_start = rospy.Duration(0.5)
-        grasp.pre_grasp_posture.points = [trajpoint]
 
-        grasp.post_grasp_retreat.direction.vector.z = 1.0
-        grasp.post_grasp_retreat.min_distance = 0.08
-        grasp.post_grasp_retreat.desired_distance = 0.1
+        if demo_constants.is_real_robot():
+            # opened gripper
+            grasp.pre_grasp_posture.joint_names = []#"right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
+            trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
+            trajpoint.positions = []#[0.04, 0.04]
+            trajpoint.time_from_start = rospy.Duration(0.5)
+            grasp.pre_grasp_posture.points = [trajpoint]
 
-        # closed gripper
-        grasp.grasp_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
-        trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
-        trajpoint.positions = [0.0, 0.0]
-        trajpoint.time_from_start = rospy.Duration(0.5)
-        grasp.grasp_posture.points = [trajpoint]
+            grasp.post_grasp_retreat.direction.vector.z = 1.0
+            grasp.post_grasp_retreat.min_distance = 0.08
+            grasp.post_grasp_retreat.desired_distance = 0.1
+
+            # closed gripper
+            grasp.grasp_posture.joint_names = []#["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
+            trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
+            trajpoint.positions = []#[0.0, 0.0]
+            trajpoint.time_from_start = rospy.Duration(0.5)
+            grasp.grasp_posture.points = [trajpoint]
+        else:
+            # opened gripper
+            grasp.pre_grasp_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
+            trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
+            trajpoint.positions = [0.04, 0.04]
+            trajpoint.time_from_start = rospy.Duration(0.5)
+            grasp.pre_grasp_posture.points = [trajpoint]
+
+            grasp.post_grasp_retreat.direction.vector.z = 1.0
+            grasp.post_grasp_retreat.min_distance = 0.08
+            grasp.post_grasp_retreat.desired_distance = 0.1
+
+            # closed gripper
+            grasp.grasp_posture.joint_names = ["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
+            trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
+            trajpoint.positions = [0.0, 0.0]
+            trajpoint.time_from_start = rospy.Duration(0.5)
+            grasp.grasp_posture.points = [trajpoint]
 
         graps = [grasp]
         rospy.logwarn("blocks that can be picked: " + str(self.registered_blocks))
