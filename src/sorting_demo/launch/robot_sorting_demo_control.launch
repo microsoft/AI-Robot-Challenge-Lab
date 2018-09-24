@@ -8,7 +8,7 @@
   <node pkg="sawyer_ik_5d" type="sawyer_ik_5d_node" name="sawyer_ik_5d_node"  output="screen"/>
 
     <!---->
-    <node pkg="intera_interface" type="joint_trajectory_action_server.py" name="trajectory_action_server"/>
+    <node pkg="sorting_demo" type="trajectory_action_server.py" name="trajectory_action_server"/>
     <node pkg="sorting_demo" type="gripper_action_server.py" name="gripper_action_server"/>
 
     <include file="$(find sawyer_moveit_config)/launch/sawyer_moveit.launch">
