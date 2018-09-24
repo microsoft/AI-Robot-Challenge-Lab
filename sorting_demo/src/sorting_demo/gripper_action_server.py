@@ -16,7 +16,6 @@ import real_gripper
 from real_gripper import  PSGGripper
 import intera_interface
 
-
 class GripperActionServer(object):
     def __init__(self):
         self._ns = "/robot/gripper_action_server"
@@ -64,7 +63,6 @@ class GripperActionServer(object):
             # self._gripper.set_position(position)
 
     def check_success(self, position, close_goal):
-
         rospy.logwarn("gripping force: " + str(self._gripper.get_force()))
         rospy.logwarn("gripper position: " + str(self._gripper.get_position()))
         rospy.logwarn("gripper position deadzone: " + str(self._gripper.get_dead_zone()))
@@ -75,8 +73,6 @@ class GripperActionServer(object):
             success = False
 
         # success = fabs(self._gripper.get_position() - position) < self._gripper.get_dead_zone()
-
-
         rospy.logwarn("gripping success: " + str(success))
 
         return success
@@ -84,8 +80,12 @@ class GripperActionServer(object):
     def _on_gripper_action(self, goal):
         # Store position and effort from call
         # Position to 0:100 == close:open
+        rospy.logwarn("GRIPPER ACTION SERVER, command: "+ str(goal))
+
+
         position = goal.command.position
         effort = goal.command.max_effort
+        rospy.logwarn("GRIPPER ACTION SERVER")
 
         # Check for errors
         if self._gripper.has_error():
@@ -143,7 +143,6 @@ from dynamic_reconfigure.server import Server
 
 
 def start_server(gripper):
-
     rospy.logwarn("Initializing node... ")
 
     rospy.init_node("gripper_action_server")

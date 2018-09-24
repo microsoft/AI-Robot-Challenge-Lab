@@ -328,7 +328,6 @@ class TaskPlanner:
         """
 
         self._head.set_pan(00, speed=0.2, timeout=5.0)
-        self.sawyer_robot.gripper_open()
 
         self.trajectory_planner.ceilheight = 0.95
         self.trajectory_planner.update_ceiling_obstacle()
@@ -346,6 +345,10 @@ class TaskPlanner:
         # self.delay_task(0.2).result()
         rospy.sleep(0.5)
         self.trajectory_planner.ceilheight = oldceil
+
+        self.sawyer_robot.gripper_open()
+
+
         """
         rospy.logwarn(self.sawyer_robot._limb.endpoint_pose())
 

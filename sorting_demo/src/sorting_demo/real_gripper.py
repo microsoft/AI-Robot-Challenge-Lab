@@ -86,10 +86,10 @@ class GripperConnect(object):
             rospy.logwarn(msg)
 
     def open(self):
-        self._open_action(True)
+        self._gripper.set_ee_signal_value('grip', False)
 
     def close(self):
-        self._close_action(True)
+        self._gripper.set_ee_signal_value('grip', True)
 
     def _open_action(self, value):
         print "OPEN ACTION"
