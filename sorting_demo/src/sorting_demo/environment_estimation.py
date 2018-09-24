@@ -187,13 +187,13 @@ class EnvironmentEstimation:
     def nearest_color(self, huevalue):
         known_colors = [("Red", 0), ("Blue", 120), ("Green", 60)]
 
-        distances = dict()
+        distances = []
 
         for k, value in known_colors:
-            distances[k] = math.fabs(value - huevalue)
+            distances.append((k, math.fabs(value - huevalue)))
 
         if len(distances)> 0:
-            return sorted(distances.keys(),lambda k: distances[k])[0]
+            return sorted(distances,key=lambda tup: tup[1])[0][0]
 
 
     def compute_block_pose_estimations_from_head_camera(self):
@@ -454,6 +454,7 @@ class EnvironmentEstimation:
         :param id:
         :return:
         """
+        rospy.logwarn("Color: "+ str(color))
         color = color.replace("Gazebo/", "")
         rospy.logwarn("by color: " + str(color))
         rospy.logwarn("by color: " + str(self.trays))

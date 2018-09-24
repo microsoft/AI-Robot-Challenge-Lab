@@ -720,10 +720,12 @@ class TaskPlanner:
             rospy.logwarn("No block to pick from table!!")
             return False
 
-        target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
-        target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
+            target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
 
-        rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
+            if target_tray is not None:
+                target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
+                rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
+
         return target_block, target_tray
 
     def compute_grasp_pose_offset(self, pose):
@@ -1183,6 +1185,10 @@ class TaskPlanner:
                 else:
                     rospy.logerr("Autocancelling Move all cubes to tray task?")
                     self.scheduler_yield()
+
+            if target_tray is None:
+                rospy.logerr("There is not tray to place this block")
+                self.create_wait_forever_task().result()
 
             # concurrency issue, what if we lock the objectdetection update?
             grasp = self.pick_block_from_table_and_place_to_tray(target_block, target_tray).result()
