@@ -326,6 +326,7 @@ class TaskPlanner:
         :return:
         """
 
+        self._head.set_pan(00, speed=0.2, timeout=5.0)
         self.sawyer_robot.gripper_open()
 
         self.trajectory_planner.ceilheight = 0.95
@@ -1180,7 +1181,7 @@ class TaskPlanner:
 
         current_index = 0
         while blocks_count > 0:
-            # self.create_go_home_task().result()
+            self.create_go_home_task().result()
 
             res = self.create_detect_block_poses_task(blocks, current_index).result()
             if res is not None:
