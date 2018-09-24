@@ -11,6 +11,7 @@ def main():
 
     rospy.init_node("sorting_demo")
 
+    rospy.wait_for_service("/ExternalTools/right/PositionKinematicsNode/IKService")
     # Load Gazebo Models via Spawning Services
     # Note that the models reference is the /world frame
     # and the IK operates with respect to the /base frame

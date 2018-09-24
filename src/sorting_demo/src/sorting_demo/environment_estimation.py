@@ -43,22 +43,25 @@ class EnvironmentEstimation:
         self.original_blocks_poses_ = None
         self.mutex = RLock()
 
-        TABLE_HEIGHT = -0.12
-        self.head_camera_helper = CameraHelper("head_camera", "base", TABLE_HEIGHT)
-        self.bridge = CvBridge()
-        self.block_pose_estimation_head_camera = None
         self.table = Table()
 
-        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
+        if demo_constants.VISUAL_ESTIMATION:
+            TABLE_HEIGHT = -0.12
+            self.head_camera_helper = CameraHelper("head_camera", "base", TABLE_HEIGHT)
+            self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
+            self.bridge = CvBridge()
+        else:
+            self.head_camera_helper = None
+            self.hand_camera_helper = None
 
-    def identify_block_from_aproximated_point(self, projected):
+    def identify_block_from_aproximated_point(self, blocks, projected):
         """
         :param projected: 
         :return: 
         """
         bestindex = -1
         bestdist = sys.float_info.max
-        for index, b in enumerate(self.blocks):
+        for index, b in enumerate(blocks):
             p1 = b.pose.position
             p2 = projected
             dx = p1.x - p2[0]
@@ -72,25 +75,21 @@ class EnvironmentEstimation:
                 bestindex = index
 
         if bestindex != -1:
-            return self.blocks[bestindex]
+            return blocks[bestindex]
         else:
             return None
 
     def compute_block_pose_estimation_from_arm_camera(self, CUBE_SIZE=150):
         #get latest image from topic
         rospy.sleep(0.3)
-        # Take picture
-        img_data = self.hand_camera_helper.take_single_picture()
-
-        # Convert to OpenCV format
-        cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
 
         camwtrans = None
         camwrot = None
 
         try:
-            (camwtrans, camwrot) = self.tf_listener.lookupTransform('/right_hand_camera_optical', '/base',
-                                                                    rospy.Time(0))
+            rospy.sleep(1.0)
+            self.tf_listener.waitForTransform('/base', '/right_hand_camera_optical', rospy.Time(), rospy.Duration(10))
+            (camwtrans, camwrot) = self.tf_listener.lookupTransform('/base', '/right_hand_camera_optical', rospy.Time())
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
             rospy.logerr(ex.message)
 
@@ -107,114 +106,176 @@ class EnvironmentEstimation:
         rospy.logwarn("camera angle:" + str(camera_yaw_angle * 180.0 / math.pi))
         rospy.logwarn("camera rot:" + str(rotmat))
         rospy.logwarn("zaxis camera vector:" + str(zaxis))
-        # Save for debugging
-        # cv2.imwrite("/tmp/debug.png", cv_image)
 
-        # Get cube rotation
-        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=CUBE_SIZE)
-        center = (cv_image.shape[1] / 2, cv_image.shape[0] / 2)
+        projected = None
+        poseq = None
+        success = False
 
-        def cubedistToCenter(cube):
-            # ((370, 224), 26.0, True, False)
-            dx = cube[0][0] - center[0]
-            dy = cube[0][1] - center[1]
+        if self.hand_camera_helper is not None:
+            # Take picture
+            img_data = self.hand_camera_helper.take_single_picture()
 
-            return dx * dx + dy * dy
+            # Convert to OpenCV format
+            cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
 
-        sorted_center_cubes = sorted(detected_cubes_info, key=cubedistToCenter)
+            # Save for debugging
+            # cv2.imwrite("/tmp/debug.png", cv_image)
 
-        try:
-            cube = sorted_center_cubes[0]
+            # Get cube rotation
+            detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=CUBE_SIZE)
 
-            image_cube_angle = cube[1] * (math.pi / 180.0)
-            graspA = cube[2]
-            graspB = cube[3]
+            try:
+                cube = detected_cubes_info[0]
 
-            rospy.logwarn("image detected cube angle: " + str(image_cube_angle))
+                image_cube_angle = cube[1] * (math.pi / 180.0)
+                graspA = cube[2]
+                graspB = cube[3]
 
-            final_cube_yaw_angle = camera_yaw_angle - image_cube_angle
+                rospy.logwarn("image detected cube angle: " + str(image_cube_angle))
 
-            while final_cube_yaw_angle > math.pi / 4:
-                final_cube_yaw_angle -= math.pi / 2
+                final_cube_yaw_angle = camera_yaw_angle - image_cube_angle
 
-            while final_cube_yaw_angle < -math.pi / 4:
-                final_cube_yaw_angle += math.pi / 2
-
-            # select the other grasping
-            if not graspA and graspB:
-                rospy.logwarn("Swiching grasping orientation for current block (grasping clearance)")
-                if final_cube_yaw_angle >0:
+                while final_cube_yaw_angle > math.pi / 4:
                     final_cube_yaw_angle -= math.pi / 2
-                else:
+
+                while final_cube_yaw_angle < -math.pi / 4:
                     final_cube_yaw_angle += math.pi / 2
 
-            projected = self.hand_camera_helper.project_point_on_table(cube[0])
-            poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
+                # select the other grasping
+                if not graspA and graspB:
+                    rospy.logwarn("Swiching grasping orientation for current block (grasping clearance)")
+                    if final_cube_yaw_angle >0:
+                        final_cube_yaw_angle -= math.pi / 2
+                    else:
+                        final_cube_yaw_angle += math.pi / 2
 
-            rospy.logwarn("quaternion angle:" + str(poseq))
-            self.tf_broacaster.sendTransform(projected, poseq, rospy.Time(0), "estimated_cube_1", "base")
-            rospy.logwarn(projected)
+                projected = self.hand_camera_helper.project_point_on_table(cube[0])
+                poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
+                success = graspA or graspB
 
-            #cv2.imshow("cube detection", cv_image)
-            #cv2.waitKey(0)
+            except Exception as ex:
+                rospy.logwarn("erroneous cube detection")
+                #cv2.imshow("erroneus cube detection", cv_image)
+                #cv2.waitKey(0)
+                return None, False
+        else:
+            camera_position = camwtrans
+            camera_position[2] = demo_constants.TABLE_HEIGHT
+            closest_block = self.identify_block_from_aproximated_point(self.table.blocks, camera_position)
 
+            position = closest_block.gazebo_pose.position
+            orientation = closest_block.gazebo_pose.orientation
 
-            return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
-                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])),graspA or graspB
-        except Exception as ex:
-            rospy.logwarn("erroneous cube detection")
-            #cv2.imshow("erroneus cube detection", cv_image)
-            #cv2.waitKey(0)
-            return None, False
+            projected = [position.x, position.y, position.z]
+            poseq = self.calculate_best_approximation_quaternion_for_cube(orientation)
+            success = True
+
+        rospy.logwarn("quaternion angle:" + str(poseq))
+        self.tf_broacaster.sendTransform(projected, poseq, rospy.Time(0), "estimated_cube_1", "base")
+        rospy.logwarn(projected)
+
+        return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
+                        orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])), success
+
+    def calculate_best_approximation_quaternion_for_cube(self, cube_orientation):
+        # Convert to tf quaternion
+        tf_quat = [cube_orientation.x, cube_orientation.y, cube_orientation.z, cube_orientation.w]
+
+        # Get transformation matrix
+        m = tf.transformations.quaternion_matrix(tf_quat)
+
+        # Transpose to get base vectors by row and delete the homogeneous matrix row
+        m_transpose = m.transpose()[:-1]
+
+        # Get the index of the vector most aligned with the X axis
+        x_component_abs = [math.fabs(row[0]) for row in m_transpose]
+        max_x_component = max(x_component_abs)
+        max_x_component_index = x_component_abs.index(max_x_component)
+        max_x_component_vector = m_transpose[max_x_component_index][:-1]
+        x_vector = max_x_component_vector * math.copysign(1, max_x_component_vector[0])
+
+        # Calculate vectors Y and Z
+        z_vector = [0, 0, 1]
+        y_vector = numpy.cross(z_vector, x_vector)
+
+        # Create rotation matrix
+        x_vector = numpy.append(x_vector, 0)
+        y_vector = numpy.append(y_vector, 0)
+        z_vector = numpy.append(z_vector, 0)
+        rotation_matrix = numpy.matrix([x_vector, y_vector, z_vector, [0, 0, 0, 1]])
+        rotation_matrix = rotation_matrix.transpose()
+
+        # Get quaternion
+        quaternion = tf.transformations.quaternion_from_matrix(rotation_matrix)
+
+        return quaternion
 
     def compute_block_pose_estimations_from_head_camera(self):
         """
         For each block updates:
             - block.headview_pose_estimation
             - block.hue_estimation
-        :return: 
+        :return:
         """
         try:
             self.mutex.acquire()
-            img_data = self.head_camera_helper.take_single_picture()
-
-            # Convert to OpenCV format
-            cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
-            cv2.imwrite("/tmp/last_head_picture.jpg",cv_image)
-
-            rospy.logwarn("processing head camera image to find blocks")
-            blobs_info = get_blobs_info(cv_image)
-
-            index = 0
-            ptinfos = []
-            for huekey in blobs_info.keys():
-                points = blobs_info[huekey]
-                rospy.logwarn("blob position[%d]: %s" % (index, str(points)))
-                for point in points:
-                    ptinfos.append([huekey, point])
-                    index += 1
 
             detected_blocks = []
+            if self.head_camera_helper is not None:
+                img_data = self.head_camera_helper.take_single_picture()
 
-            for huekey, point2d in ptinfos:
-                projected = self.head_camera_helper.project_point_on_table(point2d)
-                rospy.logwarn("projected: %s" % str(projected))
+                # Convert to OpenCV format
+                cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
+                cv2.imwrite("/tmp/last_head_picture.jpg",cv_image)
 
-                block = self.identify_block_from_aproximated_point(projected)
-                if block is None:
-                    continue
+                rospy.logwarn("processing head camera image to find blocks")
+                blobs_info = get_blobs_info(cv_image)
 
-                detected_blocks.append(block)
+                index = 0
+                ptinfos = []
+                for huekey in blobs_info.keys():
+                    points = blobs_info[huekey]
+                    rospy.logwarn("blob position[%d]: %s" % (index, str(points)))
+                    for point in points:
+                        ptinfos.append([huekey, point])
+                        index += 1
 
-                block.headview_proj_estimation = point2d
+                for huekey, point2d in ptinfos:
+                    projected = self.head_camera_helper.project_point_on_table(point2d)
+                    rospy.logwarn("projected: %s" % str(projected))
 
-                block.headview_proj_estimation = projected
-                block.hue_estimation = huekey
-                block.headview_pose_estimation = Pose(
-                    position=Point(x=projected[0], y=projected[1], z=projected[2]),
-                    orientation=Quaternion(x=0, y=0, z=0, w=1))
+                    block = self.identify_block_from_aproximated_point(self.blocks, projected)
+                    if block is None:
+                        continue
 
-                rospy.logwarn("blob identified: " + str(block))
+                    detected_blocks.append(block)
+
+                    block.headview_proj_estimation = projected
+                    block.hue_estimation = huekey
+                    block.headview_pose_estimation = Pose(
+                        position=Point(x=projected[0], y=projected[1], z=projected[2]),
+                        orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+                    rospy.logwarn("blob identified: " + str(block))
+            else:
+                # Fake detection of cubes on the table
+                color_table = {"Red" : 0, "Green" : 60, "Blue" : 120}
+                for block in self.blocks:
+                    if 0.32 < block.gazebo_pose.position.x < 1.18:
+                        if -0.43 < block.gazebo_pose.position.y < 0.43:
+                            if (demo_constants.TABLE_HEIGHT - 0.1) < block.gazebo_pose.position.z < (demo_constants.TABLE_HEIGHT + 0.1):
+                                detected_blocks.append(block)
+
+                                projected = block.gazebo_pose.position
+                                block.headview_proj_estimation = projected
+                                block.headview_proj_estimation.z = demo_constants.TABLE_HEIGHT
+                                block.hue_estimation = color_table[block.color]
+                                block.headview_pose_estimation = Pose(
+                                    position=Point(x=projected.x, y=projected.y, z=projected.z),
+                                    orientation=Quaternion(x=0, y=0, z=0, w=1))
+
+                                rospy.logwarn("blob identified: " + str(block))
+                detected_blocks = sorted(detected_blocks, key=lambda b : (b.hue_estimation, -b.headview_proj_estimation.y))
 
             rospy.logwarn("Table blocks:")
             self.table.blocks = detected_blocks
