@@ -187,7 +187,7 @@ class BotCommandHandler:
     def move_arm():
         print('Moving arm... do something cool')
         # launch your python2 script using bash
-        python2_command = "python2.7 bot-wave-arm-node.py"  
+        python2_command = "source ~/AI-Robot-Challenge-Lab/devel/setup.bash && python2.7 bot-wave-arm-node.py"  
 
         process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()  # receive output from the python2 script
@@ -200,7 +200,7 @@ class BotCommandHandler:
         #Implement Move Grippers Command (do not uncomment this line)
         # print(f'{action} grippers... wait a few seconds')
         # # launch your python2 script using bash
-        # python2_command = "python2.7 bot-move-grippers.py -a {}".format(action)  
+        # python2_command = "source ~/AI-Robot-Challenge-Lab/devel/setup.bash && python2.7 bot-move-grippers.py -a {}".format(action)  
 
         # process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
         # output, error = process.communicate()  # receive output from the python2 script
@@ -215,7 +215,7 @@ class BotCommandHandler:
         #Implement Show Stats Command (do not uncomment this line)
         # print('Showing stats... do something')
         # # launch your python2 script using bash
-        # python2_command = "python2.7 bot-stats-node.py"  
+        # python2_command = "source ~/AI-Robot-Challenge/devel/setup.bash && python2.7 bot-stats-node.py"  
 
         # process = subprocess.Popen(python2_command.split(), stdout=subprocess.PIPE)
         # output, error = process.communicate()  # receive output from the python2 script
