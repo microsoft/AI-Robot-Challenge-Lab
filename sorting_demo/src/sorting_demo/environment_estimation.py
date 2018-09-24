@@ -96,6 +96,8 @@ class EnvironmentEstimation:
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
+        self.hand_camera_helper.set_exposure(100)
+        self.hand_camera_helper.set_gain(30)
         img_data = self.hand_camera_helper.take_single_picture()
 
         rospy.logwarn("COMPUTE BLOCK POSE ESTIMATION")
@@ -213,6 +215,9 @@ class EnvironmentEstimation:
         """
         try:
             self.mutex.acquire()
+
+            self.head_camera_helper.set_exposure(100)
+            self.head_camera_helper.set_gain(30)
             img_data = self.head_camera_helper.take_single_picture()
 
             # Convert to OpenCV format
