@@ -44,13 +44,12 @@ class EnvironmentEstimation:
         self.original_blocks_poses_ = None
         self.mutex = RLock()
 
-        TABLE_HEIGHT = -0.12
-        self.head_camera_helper = CameraHelper("head_camera", "base", TABLE_HEIGHT)
+        self.head_camera_helper = CameraHelper("head_camera", "base", demo_constants.TABLE_HEIGHT)
         self.bridge = CvBridge()
         self.block_pose_estimation_head_camera = None
         self.table = Table()
 
-        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
+        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", demo_constants.TABLE_HEIGHT)
 
         if demo_constants.is_real_robot():
             k = 3
@@ -97,6 +96,8 @@ class EnvironmentEstimation:
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
+        self.hand_camera_helper.set_exposure(100)
+        self.hand_camera_helper.set_gain(30)
         img_data = self.hand_camera_helper.take_single_picture()
 
         rospy.logwarn("COMPUTE BLOCK POSE ESTIMATION")
@@ -214,6 +215,9 @@ class EnvironmentEstimation:
         """
         try:
             self.mutex.acquire()
+
+            self.head_camera_helper.set_exposure(100)
+            self.head_camera_helper.set_gain(30)
             img_data = self.head_camera_helper.take_single_picture()
 
             # Convert to OpenCV format
