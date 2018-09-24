@@ -44,13 +44,12 @@ class EnvironmentEstimation:
         self.original_blocks_poses_ = None
         self.mutex = RLock()
 
-        TABLE_HEIGHT = -0.12
-        self.head_camera_helper = CameraHelper("head_camera", "base", TABLE_HEIGHT)
+        self.head_camera_helper = CameraHelper("head_camera", "base", demo_constants.TABLE_HEIGHT)
         self.bridge = CvBridge()
         self.block_pose_estimation_head_camera = None
         self.table = Table()
 
-        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
+        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", demo_constants.TABLE_HEIGHT)
 
         if demo_constants.is_real_robot():
             k = 3
