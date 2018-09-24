@@ -1232,7 +1232,12 @@ class TaskPlanner:
         for i in xrange(1000):
             self.create_go_vision_head_pose_task().result()
 
-            blocks = self.create_head_vision_processing_on_table().result()
+            try:
+                blocks = self.create_head_vision_processing_on_table().result()
+            except Exception as ex:
+                pass
+
+            self.create_wait_forever_task().result()
 
             if blocks is None:
                 self.scheduler_yield()

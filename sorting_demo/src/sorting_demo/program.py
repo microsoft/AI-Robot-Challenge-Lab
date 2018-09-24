@@ -26,7 +26,7 @@ def main():
 
     rospy.logwarn("Hello world")
 
-    task_planner.create_go_home_task(check_obstacles=False).result()
+    #task_planner.create_go_home_task(check_obstacles=False).result()
 
     task_facade = task_planner.get_task_facade()
 
