@@ -94,10 +94,14 @@ class EnvironmentEstimation:
             return None
 
     def compute_block_pose_estimation_from_arm_camera(self):
+
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
         img_data = self.hand_camera_helper.take_single_picture()
+
+        rospy.logwarn("COMPUTE BLOCK POSE ESTIMATION")
+        rospy.logwarn("GETTING IMAGE FROM ARM CAMERA")
 
         # Convert to OpenCV format
         cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
@@ -105,11 +109,15 @@ class EnvironmentEstimation:
         camwtrans = None
         camwrot = None
 
+
+        rospy.logwarn("LOOKUP ARM CAMERA POSITION FRAME")
+
         try:
             (camwtrans, camwrot) = self.tf_listener.lookupTransform('/right_hand_camera_optical', '/base',
                                                                     rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
             rospy.logerr(ex.message)
+            return None, False
 
         rotmat = tf.transformations.quaternion_matrix(camwrot)
         transmat = tf.transformations.translation_matrix((camwtrans))
@@ -126,6 +134,7 @@ class EnvironmentEstimation:
         rospy.logwarn("zaxis camera vector:" + str(zaxis))
         # Save for debugging
         # cv2.imwrite("/tmp/debug.png", cv_image)
+
 
         # Get cube rotation
         detected_cubes_info = get_cubes_z_rotation(cv_image)

@@ -23,7 +23,7 @@ class RightHandCVParameters:
             self.CLAHE_SIZE = 8
             self.SIGMA = 0.3
             self.DILATION_SIZE = 5
-            self.CUBE_SIZE = 120
+            self.CUBE_SIZE = 180
             self.CUBE_BORDER_SIZE = 4
             self.CLEARANCE_AREA_LENGTH = 60
             self.CLEARANCE_AREA_MARGIN = 20

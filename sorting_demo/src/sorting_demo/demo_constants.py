@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import rospy
+import math
 
 CUBE_EDGE_LENGTH = 0.04
 
@@ -27,6 +28,7 @@ ARM_TOP_VIEW_Z_OFFSET = 0.1  # meters
 
 SIMULATE_TRAY_BLOCK_DETECTION = True
 
+JOINT_6_OFFSET_ARM_VIEW= math.pi/2
 
 def is_real_robot():
     if rospy.has_param("/use_sim_time"):

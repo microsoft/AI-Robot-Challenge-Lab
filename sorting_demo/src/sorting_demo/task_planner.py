@@ -163,6 +163,8 @@ class TaskPlanner:
 
         targetjoints = dict(zip(resp.solution.joint_state.name, jntspos))
 
+        targetjoints["right_j6"]= demo_constants.JOINT_6_OFFSET_ARM_VIEW
+
         rospy.logwarn("Target joints:" + str(targetjoints))
         rospy.logwarn("target jonts: " + str(jntangles))
 
