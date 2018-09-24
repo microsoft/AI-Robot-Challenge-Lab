@@ -178,7 +178,7 @@ class TrajectoryPlanner:
         block_pose.header.stamp = rospy.Time.now()
         block_pose.header.frame_id = self.robot.get_planning_frame()
         block_index = self.registered_blocks.index(block)
-        self.scene.add_box("block" + str(block_index), block_pose, size=(0.04, 0.04, 0.04))
+        self.scene.add_box("block" + str(block_index), block_pose, size=(demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH))
         rospy.sleep(0.5)
         return block_index
 

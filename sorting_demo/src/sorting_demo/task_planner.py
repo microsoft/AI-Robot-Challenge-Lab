@@ -287,6 +287,7 @@ class TaskPlanner:
             self.safe_goto_joint_position(self.starting_joint_angles).result()
 
         self._head.set_pan(00, speed=0.2, timeout=5.0)
+        self.environment_estimation.set_cognex_strobe(False)
 
     @tasync("GREET TASK")
     def create_greet_task(self):

@@ -92,6 +92,9 @@ class EnvironmentEstimation:
         else:
             return None
 
+    def set_cognex_strobe(self,value):
+        self.hand_camera_helper.set_cognex_strobe(value)
+
     def compute_block_pose_estimation_from_arm_camera(self):
         # get latest image from topic
         rospy.sleep(0.3)
@@ -99,6 +102,10 @@ class EnvironmentEstimation:
         self.hand_camera_helper.set_exposure(100)
         self.hand_camera_helper.set_gain(30)
         img_data = self.hand_camera_helper.take_single_picture()
+
+        self.hand_camera_helper.set_cognex_strobe(True)
+        rospy.sleep(0.2)
+        self.hand_camera_helper.set_cognex_strobe(False)
 
         rospy.logwarn("COMPUTE BLOCK POSE ESTIMATION")
         rospy.logwarn("GETTING IMAGE FROM ARM CAMERA")
