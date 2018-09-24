@@ -37,7 +37,7 @@ class HeadCVParameters:
 
         else: # Simulator
             self.BLUR_SIZE = 3
-            self.ROI_MASK = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask_sim.png"
+            self.ROI_MASK = rospkg.RosPack().get_path('sorting_demo') + "/share/head_mask_simulator.png"
             self.CLAHE_SIZE = 16
             self.BIN_THRESHOLD = 64
             self.EROSION_SIZE = 3
@@ -166,7 +166,7 @@ def get_blobs_info(cv_image):
 
         contour_color_hsv = numpy.array([[[current_hue, 255, 255]]], numpy.uint8)
         contour_color_rgb = cv2.cvtColor(contour_color_hsv, cv2.COLOR_HSV2BGR)[0][0].tolist()
-        #cv2.drawContours(cv_image_contours_debug, convex_contours, -1, contour_color_rgb, 1)
+        cv2.drawContours(cv_image_contours_debug, convex_contours, -1, contour_color_rgb, 1)
 
         # Find centroids
         contour_moments = [cv2.moments(cnt) for cnt in convex_contours]
@@ -294,7 +294,7 @@ def test_head_debug():
     if use_real_robot_parameters:
         path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_real"
     else:
-        path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_sim"
+        path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_head_simulator"
 
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     #print(files)
