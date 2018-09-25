@@ -346,6 +346,9 @@ class TaskPlanner:
         rospy.sleep(0.5)
         self.trajectory_planner.ceilheight = oldceil
 
+        self.sawyer_robot.gripper_close()
+        rospy.sleep(1.0)
+
         self.sawyer_robot.gripper_open()
 
 
