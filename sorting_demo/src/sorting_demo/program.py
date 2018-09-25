@@ -30,7 +30,7 @@ def main():
 
     task_facade = task_planner.get_task_facade()
 
-    task_facade.start()
+    #task_facade.start()
 
     task_facade.run_rest_server()
 

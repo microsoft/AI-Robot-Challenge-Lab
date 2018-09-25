@@ -19,8 +19,11 @@ BLOCK_COLOR_MAPPINGS = [
 
 TRAY_COLORS = ["Red", "Green", "Blue"]
 
-TABLE_HEIGHT = -0.15
-TABLE_HEIGHT = -0.08
+#TABLE_HEIGHT = -0.15
+TABLE_HEIGHT_FOR_PICKING = 0
+
+#take into account the concept of the height of the cube
+TABLE_HEIGHT_FOR_PROJECTION = -0.15
 
 TRAY_SURFACE_THICKNESS = 0.04
 

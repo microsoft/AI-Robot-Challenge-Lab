@@ -126,7 +126,7 @@ class RobotTaskFacade:
 
 
     def run_rest_server(self):
-        self.app.run(threaded=True)
+        self.app.run(host= '0.0.0.0', threaded=True)
 
     # -------- observer methods ------------------
 

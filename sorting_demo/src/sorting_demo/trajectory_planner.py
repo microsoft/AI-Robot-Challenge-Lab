@@ -59,8 +59,8 @@ class TrajectoryPlanner:
             rospy.sleep(0.1)
 
     def set_default_tables_z(self):
-        self.table1_z = demo_constants.TABLE_HEIGHT + 0.02
-        self.table2_z = demo_constants.TABLE_HEIGHT + 0.05
+        self.table1_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + 0.02
+        self.table2_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + 0.05
 
     def set_default_planner(self):
         # self.group.set_planner_id("OMPL")

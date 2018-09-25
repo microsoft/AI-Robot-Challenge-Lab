@@ -214,7 +214,7 @@ def test_head_ros():
 
     camera_name = "head_camera"
 
-    TABLE_HEIGHT = demo_constants.TABLE_HEIGHT
+    TABLE_HEIGHT = demo_constants.TABLE_HEIGHT_FOR_PROJECTION
     camera_helper = CameraHelper(camera_name, "base", TABLE_HEIGHT)
     camera_helper.set_exposure(100)
     camera_helper.set_gain(30)
