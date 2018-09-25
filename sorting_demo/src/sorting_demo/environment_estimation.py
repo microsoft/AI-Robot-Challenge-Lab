@@ -99,12 +99,12 @@ class EnvironmentEstimation:
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
-        self.hand_camera_helper.set_exposure(100)
-        self.hand_camera_helper.set_gain(30)
-        img_data = self.hand_camera_helper.take_single_picture()
+        self.hand_camera_helper.set_exposure(5)
+        self.hand_camera_helper.set_gain(255)
 
         self.hand_camera_helper.set_cognex_strobe(True)
-        rospy.sleep(0.2)
+        rospy.sleep(0.05)
+        img_data = self.hand_camera_helper.take_single_picture()
         self.hand_camera_helper.set_cognex_strobe(False)
 
         rospy.logwarn("COMPUTE BLOCK POSE ESTIMATION")
@@ -139,7 +139,7 @@ class EnvironmentEstimation:
         rospy.logwarn("camera rot:" + str(rotmat))
         rospy.logwarn("zaxis camera vector:" + str(zaxis))
         # Save for debugging
-        # cv2.imwrite("/tmp/debug.png", cv_image)
+        cv2.imwrite("/tmp/debug.png", cv_image)
 
 
         # Get cube rotation

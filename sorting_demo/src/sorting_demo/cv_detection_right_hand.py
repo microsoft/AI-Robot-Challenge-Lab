@@ -16,19 +16,22 @@ from cv_detection_camera_helper import CameraHelper
 
 import demo_constants
 
+use_real_robot_parameters = demo_constants.is_real_robot() # or True
+
 class RightHandCVParameters:
     def __init__(self):
-        if demo_constants.is_real_robot():
+        global use_real_robot_parameters
+        if use_real_robot_parameters:
             self.BLUR_SIZE = 3
-            self.CLAHE_SIZE = 8
-            self.SIGMA = 0.3
-            self.DILATION_SIZE = 5
+
+
+
             self.CUBE_SIZE = 120
             self.CUBE_BORDER_SIZE = 4
-            self.CLEARANCE_AREA_LENGTH = 60
+            self.CLEARANCE_AREA_LENGTH = self.CUBE_SIZE / 2
             self.CLEARANCE_AREA_MARGIN = 20
             self.TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
-            self.CLEARANCE_THRESHOLD = 50
+            self.CLEARANCE_THRESHOLD = 1000
 
         else: # Simulator
             self.BLUR_SIZE = 3
@@ -37,7 +40,7 @@ class RightHandCVParameters:
             self.DILATION_SIZE = 5
             self.CUBE_SIZE = 150
             self.CUBE_BORDER_SIZE = 4
-            self.CLEARANCE_AREA_LENGTH = 75
+            self.CLEARANCE_AREA_LENGTH = self.CUBE_SIZE / 2
             self.CLEARANCE_AREA_MARGIN = 20
             self.TEMPLATE_MATCHING_MAX_THRESHOLD = 0.5
             self.CLEARANCE_THRESHOLD = 50
@@ -144,25 +147,31 @@ def get_cubes_z_rotation(cv_image):
     cv_image_blur = cv2.GaussianBlur(cv_image_grayscale, (BLUR_SIZE, BLUR_SIZE), 0)
     #cv2.imshow("Blur", cv_image_blur)
 
-    # Apply CLAHE
-    CLAHE_SIZE = right_hand_parameters.CLAHE_SIZE
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(CLAHE_SIZE, CLAHE_SIZE))
-    cv_image_clahe = clahe.apply(cv_image_blur)
-    #cv2.imshow("CLAHE", cv_image_clahe)
+    global use_real_robot_parameters
+    if use_real_robot_parameters:
+        # Apply adaptive threshold
+        _, cv_image_dilated = cv2.threshold(cv_image_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        #cv2.imshow("Threshold", cv_image_dilated)
+    else:
+        # Apply CLAHE
+        CLAHE_SIZE = right_hand_parameters.CLAHE_SIZE
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(CLAHE_SIZE, CLAHE_SIZE))
+        cv_image_clahe = clahe.apply(cv_image_blur)
+        #cv2.imshow("CLAHE", cv_image_clahe)
 
-    # Apply Canny filter
-    SIGMA = right_hand_parameters.SIGMA
-    median = numpy.median(cv_image_clahe)
-    lower = int(max(0, (1.0 - SIGMA) * median))
-    upper = int(min(255, (1.0 + SIGMA) * median))
-    cv_image_canny = cv2.Canny(cv_image_clahe, lower, upper)
-    #cv2.imshow("Canny", cv_image_canny)
+        # Apply Canny filter
+        SIGMA = right_hand_parameters.SIGMA
+        median = numpy.median(cv_image_clahe)
+        lower = int(max(0, (1.0 - SIGMA) * median))
+        upper = int(min(255, (1.0 + SIGMA) * median))
+        cv_image_canny = cv2.Canny(cv_image_clahe, lower, upper)
+        #cv2.imshow("Canny", cv_image_canny)
 
-    # Apply dilation
-    DILATION_SIZE = right_hand_parameters.DILATION_SIZE
-    dilation_kernel = numpy.ones((DILATION_SIZE, DILATION_SIZE), numpy.uint8)
-    cv_image_dilated = cv2.dilate(cv_image_canny, dilation_kernel, iterations = 1)
-    #cv2.imshow("Dilation", cv_image_dilated)
+        # Apply dilation
+        DILATION_SIZE = right_hand_parameters.DILATION_SIZE
+        dilation_kernel = numpy.ones((DILATION_SIZE, DILATION_SIZE), numpy.uint8)
+        cv_image_dilated = cv2.dilate(cv_image_canny, dilation_kernel, iterations = 1)
+        #cv2.imshow("Dilation", cv_image_dilated)
 
     # Find contours
     _, contours, _ = cv2.findContours(cv_image_dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -245,10 +254,13 @@ def get_cubes_z_rotation(cv_image):
         original_image_clearance_mask_applied_90 = cv2.bitwise_and(original_image, clearance_check_mask_full_size_90)
         #cv2.imshow("Clearance check mask 0 applied", original_image_clearance_mask_applied_0)
         #cv2.imshow("Clearance check mask 90 applied", original_image_clearance_mask_applied_90)
+        #cv2.waitKey(0)
 
         # Check clearance
         clearance_0_count = cv2.countNonZero(original_image_clearance_mask_applied_0)
         clearance_90_count = cv2.countNonZero(original_image_clearance_mask_applied_90)
+        #print(clearance_0_count)
+        #print(clearance_90_count)
 
         CLEARANCE_THRESHOLD = right_hand_parameters.CLEARANCE_THRESHOLD
         clearance_0 = clearance_0_count < CLEARANCE_THRESHOLD
@@ -297,8 +309,8 @@ def test_right_hand_ros():
     camera_name = "right_hand_camera"
 
     camera_helper = CameraHelper(camera_name, "base", 0)
-    camera_helper.set_exposure(100)
-    camera_helper.set_gain(30)
+    camera_helper.set_exposure(5)
+    camera_helper.set_gain(255)
 
     bridge = CvBridge()
 
@@ -308,8 +320,8 @@ def test_right_hand_ros():
             # Take picture
             camera_helper.set_cognex_strobe(True)
             time.sleep(0.05)
-            camera_helper.set_cognex_strobe(False)
             img_data = camera_helper.take_single_picture()
+            camera_helper.set_cognex_strobe(False)
 
             # Convert to OpenCV format
             cv_image = bridge.imgmsg_to_cv2(img_data, "bgr8")
@@ -325,7 +337,7 @@ def test_right_hand_ros():
             # Wait for a key press
             cv2.waitKey(1)
 
-            rospy.sleep(0.1)
+            rospy.sleep(1)
     except CvBridgeError, err:
         rospy.logerr(err)
 
@@ -368,7 +380,12 @@ def test_right_hand_debug():
     """
 
     # Get files
-    path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_right_hand_simulator"
+    global use_real_robot_parameters
+    if use_real_robot_parameters:
+        path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_right_hand_real"
+    else:
+        path = rospkg.RosPack().get_path('sorting_demo') + "/share/test_right_hand_simulator"
+
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     #files = ["border.png"]
     #print(files)
