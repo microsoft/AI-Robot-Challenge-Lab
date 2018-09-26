@@ -12,11 +12,12 @@ import demo_constants
 class TrayState:
     regex = re.compile(r'tray(\d+)\.*')
 
-    def __init__(self, id, pose, TRAY_SURFACE_THICKNESS=0.04):
+    def __init__(self, id, pose, TRAY_SURFACE_THICKNESS=0.04, MAX_TRAY_BLOCKS = 4):
         self.gazebo_id = id
         self.pose = pose
         self.gazebo_pose = None
         self.TRAY_SURFACE_THICKNESS =TRAY_SURFACE_THICKNESS
+        self.MAX_TRAY_BLOCKS = MAX_TRAY_BLOCKS
 
         if not demo_constants.is_real_robot():
             search = TrayState.regex.search(id)

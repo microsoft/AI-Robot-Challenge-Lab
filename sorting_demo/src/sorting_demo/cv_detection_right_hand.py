@@ -282,17 +282,17 @@ def get_cubes_z_rotation(cv_image):
     for ((x, y), angle, clear_0, clear_90) in cube_positions_and_angles_sorted:
         rotated_rectangle = cv2.boxPoints(((x, y), (CUBE_SIZE, CUBE_SIZE), angle))
         rotated_rectangle = numpy.int0(rotated_rectangle)
-        cv2.drawContours(template_matching_debug_image, [rotated_rectangle], -1, (255, 0, 0), 2)
+        cv2.drawContours(template_matching_debug_image, [rotated_rectangle], -1, (255, 0, 0), 4)
 
-        clearance_points_rectangle = cv2.boxPoints(((x, y), (CUBE_SIZE * 0.6, CUBE_SIZE * 0.6), angle + 45))
+        clearance_points_rectangle = cv2.boxPoints(((x, y), (CUBE_SIZE * 0.5, CUBE_SIZE * 0.5), angle + 45))
         clearance_points_rectangle = numpy.int0(clearance_points_rectangle)
 
         clearance_bools = [clear_90, clear_0]
         for (i, (point_x, point_y)) in enumerate(clearance_points_rectangle):
             current_clearance = clearance_bools[i % len(clearance_bools)]
             clearance_circle_color = current_clearance and (0, 255, 0) or (0, 0, 255)
-            cv2.circle(template_matching_debug_image, (point_x, point_y), 5, clearance_circle_color, cv2.FILLED)
-            cv2.circle(template_matching_debug_image, (point_x, point_y), 5, (255, 255, 255), 2)
+            cv2.circle(template_matching_debug_image, (point_x, point_y), 8, clearance_circle_color, cv2.FILLED)
+            cv2.circle(template_matching_debug_image, (point_x, point_y), 8, (255, 255, 255), 3)
 
     #cv2.imshow("Template matching result", template_matching_debug_image)
     global imgindex

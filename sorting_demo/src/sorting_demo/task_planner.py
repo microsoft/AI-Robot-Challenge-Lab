@@ -861,13 +861,14 @@ class TaskPlanner:
         self.trajectory_planner.set_default_tables_z()
 
         #avoid collisions
-        self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH *1.1
+        self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH *2.5
         self.trajectory_planner.update_table2_collision()
+        self.trajectory_planner.update_environment_obstacles()
 
         target_block.tray = target_tray
         target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose(),flipVerticalAxis=False)
 
-        target_block.tray_place_pose.position.z+=0.02
+        target_block.tray_place_pose.position.z+=0.01
 
         approach_pose = copy.deepcopy(target_block.tray_place_pose )
 
@@ -947,8 +948,6 @@ class TaskPlanner:
 
     @tasync("MOVEIT TABLETOP PICK 2")
     def moveit_tabletop_pick2(self, target_block):
-
-
         #self.sawyer_robot._limb.set_joint_position_speed(1.0)
 
         self.sawyer_robot.gripper_open()
@@ -956,6 +955,10 @@ class TaskPlanner:
 
         approach_pose = copy.deepcopy(target_block.grasp_pose)
 
+        # this 1.2 is possible since there is no gripper with collisions
+        self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH*2.5
+        self.trajectory_planner.update_table1_collision()
+        self.trajectory_planner.update_environment_obstacles()
 
         approach_pose.position.z +=demo_constants.APPROACH_Z_OFFSET
         approachjnts = self.iterative_ik_find(self.sawyer_robot._limb, approach_pose, self.sawyer_robot._tip_name)
@@ -997,7 +1000,7 @@ class TaskPlanner:
         while not result or result < 0:
             self.scheduler_yield()
             self.trajectory_planner.set_default_tables_z()
-            self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT_FOR_PICKING
+            self.trajectory_planner.table1_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH*2.0
             self.trajectory_planner.update_table2_collision()
             self.trajectory_planner.update_table1_collision()
             target_block.table_place_pose = self.compute_grasp_pose_offset(

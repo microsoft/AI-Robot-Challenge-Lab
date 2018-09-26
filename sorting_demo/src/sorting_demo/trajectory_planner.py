@@ -21,7 +21,7 @@ class TrajectoryPlanner:
         self.internal_tray_walls_enable=False
 
         if demo_constants.is_real_robot():
-            self.table_edge_height = 0.1
+            self.table_edge_height = 0.05
         else:
             self.table_edge_height = 0.15
 
