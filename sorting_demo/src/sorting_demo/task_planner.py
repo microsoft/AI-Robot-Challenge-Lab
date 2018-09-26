@@ -131,12 +131,6 @@ class TaskPlanner:
         """
         return self.task_facade
 
-    def robot_sayt2s(self, text):
-        """
-        :param text:
-        :return:
-        """
-        rospy.logwarn("ROBOT SAYS: " + text)
 
     @tasync("MOVE XY")
     def create_move_XY(self, target_pose):
@@ -991,6 +985,8 @@ class TaskPlanner:
         self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
         rospy.logwarn("TABLE BLOCKS post transfer:"+ str(self.environment_estimation.table.blocks))
 
+        self.robot_say("This is a %s block"%str(target_block.color))
+
 
 
     @tasync("MOVEIT TABLETOP PLACE")
@@ -1430,7 +1426,7 @@ class TaskPlanner:
         from playsound import playsound
 
         api_key = '1432498a32d547ec9cea2a31877fece4'
-        text = "i am a handsome robot"
+        text = msg
         output_file = '/tmp/output.mp3'
 
         print('Getting token')
@@ -1441,19 +1437,25 @@ class TaskPlanner:
         # print(token)
 
         print('Generating Request')
-        xml = """<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xml:lang='en-US'> <voice name='Microsoft Server Speech Text to Speech Voice (en-US, Jessa24kRUS)'> """ + text + """ </voice></speak>"""
+        xml = """<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xml:lang='en-US'> <voice name='Microsoft Server Speech Text to Speech Voice (en-US, Guy24kRUS)'> """ + text + """ </voice></speak>"""
         bearer = 'Bearer ' + token
         headersAudio = {'Content-type': 'application/ssml+xml', 'Content-Length': '199', 'Authorization': bearer,
                         'Connection': 'Keep-Alive', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'}
         data = requests.post('https://westus.tts.speech.microsoft.com/cognitiveservices/v1', data=xml,
                              headers=headersAudio).content
 
-        print('Writing File' + output_file)
+        rospy.logwarn('Writing File' + output_file)
         with open(output_file, "wb") as a_file:
             a_file.write(data)
 
-        print('Playing sound: ' + text)
-        playsound('./' + output_file)
+        #print('Playing sound: ' + text)
+        #playsound('./' + output_file)
+        from pygame import mixer  # Load the required library
+
+        mixer.init(frequency=16050)
+        mixer.music.load(output_file)
+        mixer.music.play()
+
 
     @tasync("DISABLE ROBOT")
     def disable_robot_task(self):
@@ -1476,7 +1478,7 @@ class TaskPlanner:
         :return:
         """
 
-        self.robot_say("Hello World")
+        self.robot_say("Running the loop sorting task")
 
         if not demo_constants.is_real_robot():
             # for simulated version the robot starts going to a home position because it usually starts
@@ -1550,7 +1552,7 @@ class TaskPlanner:
         #launch asynchronosuly
         fn(*args)
 
-        self.robot_sayt2s("REQUESTED TASK COMPLETED")
+        self.robot_say("REQUESTED TASK COMPLETED")
 
 
         # self.create_main_loop_task().result()
@@ -1559,14 +1561,14 @@ class TaskPlanner:
         """
         :return:
         """
-        rospy.logwarn("PAUSING TASK PLANNER")
+        self.robot_say("I am paused")
         self.pause_flag = True
 
     def resume(self):
         """
         :return:
         """
-        rospy.logwarn("RESUMING TASK PLANNER")
+        self.robot_say("I am resumed")
         self.pause_flag = False
 
     def stop(self):
