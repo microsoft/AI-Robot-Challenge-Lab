@@ -867,6 +867,8 @@ class TaskPlanner:
         target_block.tray = target_tray
         target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose(),flipVerticalAxis=False)
 
+        target_block.tray_place_pose.position.z+=0.02
+
         approach_pose = copy.deepcopy(target_block.tray_place_pose )
 
         approach_pose.position.z += demo_constants.APPROACH_Z_OFFSET
@@ -884,8 +886,8 @@ class TaskPlanner:
         # pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
         # self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
 
-        success = execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=500, tipname=self.sawyer_robot._tip_name,
-                              total_time_sec=2.0)
+        success = execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=50, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=1.5)
 
         if not success:
             rospy.logerr("Lost control authority")
@@ -894,8 +896,8 @@ class TaskPlanner:
 
         rospy.sleep(1.0)
         # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
-        success = execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=500, tipname=self.sawyer_robot._tip_name,
-                              total_time_sec=2.0)
+        success = execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=50, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=1.5)
 
         if not success:
             rospy.logerr("Lost control authority")
