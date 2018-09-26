@@ -62,11 +62,11 @@ class EnvironmentEstimation:
                                orientation=Quaternion(x=0, y=0, z=0, w=1))]
             """
 
-            tray_poses = [Pose(position=Point(x=0.3, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+            tray_poses = [Pose(position=Point(x=0.3, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
                                orientation=Quaternion(x=0, y=0, z=0, w=1)),
-                          Pose(position=Point(x=0.2, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                          Pose(position=Point(x=0.2, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
                                orientation=Quaternion(x=0, y=0, z=0, w=1)),
-                          Pose(position=Point(x=0.1, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                          Pose(position=Point(x=0.1, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
                                orientation=Quaternion(x=0, y=0, z=0, w=1))]
 
             colors = ["Red", "Blue", "Green"]
