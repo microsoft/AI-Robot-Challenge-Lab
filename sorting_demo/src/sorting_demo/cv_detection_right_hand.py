@@ -16,6 +16,8 @@ from cv_detection_camera_helper import CameraHelper
 
 import demo_constants
 
+import intera_interface
+
 use_real_robot_parameters = demo_constants.is_real_robot() # or True
 
 class RightHandCVParameters:
@@ -294,9 +296,13 @@ def get_cubes_z_rotation(cv_image):
 
     #cv2.imshow("Template matching result", template_matching_debug_image)
     global imgindex
-    cv2.imwrite("/tmp/img"+ str(imgindex)+".jpg", template_matching_debug_image)
+    image_file_name = "/tmp/img"+ str(imgindex)+".jpg"
+    cv2.imwrite(image_file_name, template_matching_debug_image)
     imgindex+=1
     #cv2.waitKey(0)
+
+    head_display = intera_interface.HeadDisplay()
+    head_display.display_image(image_file_name)
 
     return cube_positions_and_angles_sorted
 

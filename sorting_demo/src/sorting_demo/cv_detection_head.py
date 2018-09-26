@@ -17,6 +17,8 @@ from cv_detection_camera_helper import CameraHelper
 
 import demo_constants
 
+import intera_interface
+
 use_real_robot_parameters = demo_constants.is_real_robot()
 
 class HeadCVParameters:
@@ -178,7 +180,12 @@ def get_blobs_info(cv_image):
         blob_info[current_hue] = contour_centroids
 
     #cv2.imshow("Blobs info", cv_image_contours_debug)
-    cv2.imwrite("/tmp/head_contours.jpg", cv_image_contours_debug)
+
+    image_file_name = "/tmp/head_contours.jpg"
+    cv2.imwrite(image_file_name, cv_image_contours_debug)
+
+    head_display = intera_interface.HeadDisplay()
+    head_display.display_image(image_file_name)
 
     return blob_info
 
