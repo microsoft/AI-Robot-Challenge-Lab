@@ -386,7 +386,7 @@ class TaskPlanner:
         """
 
         # PICK TRAY
-        self.create_pick_task(copy.deepcopy(target_tray.get_tray_pick_location()),
+        self.create_pick_task(copy.deepcopy(target_tray.get_tray_pick_location_for_turning_over()),
                               approach_speed=0.0001,
                               approach_time=1.0,
                               meet_time=0.1,
@@ -413,7 +413,7 @@ class TaskPlanner:
                                   approach_time=3.0,
                                   hover_distance=0.15).result()
 
-        self.create_place_task(copy.deepcopy(target_tray.get_tray_pick_location()),
+        self.create_place_task(copy.deepcopy(target_tray.get_tray_pick_location_for_turning_over()),
                                approach_speed=0.0001,
                                approach_time=3.0,
                                meet_time=3.0,
@@ -728,6 +728,7 @@ class TaskPlanner:
         """
         :return:
         """
+
         # An orientation for gripper fingers to be overhead and parallel to the obj
         rospy.logwarn("NEW TARGET BLOCK INDEX: %d" % target_block_index)
 
@@ -736,12 +737,17 @@ class TaskPlanner:
             target_block = blocks[target_block_index]  # access first item , pose field
         else:
             rospy.logwarn("No block to pick from table!!")
+            target_block=None
             return False
 
         target_tray = self.environment_estimation.get_tray_by_color(target_block.get_color())
 
         if target_tray is not None:
-            target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
+            if demo_constants.is_real_robot():
+                target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.pose)
+            else:
+                target_tray.gazebo_pose = self.compute_tray_pick_offset_transform(target_tray.gazebo_pose)
+
             rospy.logwarn("TARGET TRAY POSE: " + str(target_tray))
 
         return target_block, target_tray
@@ -857,7 +863,45 @@ class TaskPlanner:
         return approach_joints
 
     @tasync("MOVEIT TABLETOP PLACE 2")
-    def moveit_tabletop_place2(self, target_block):
+    def moveit_tray_place2(self, target_block, target_tray):
+        target_block.tray = target_tray
+        target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose())
+        target_block.place_pose = target_block.tray_place_pose
+
+        approach_pose = copy.deepcopy(target_block.table_place_pose)
+
+        approach_pose.position.z += demo_constants.APPROACH_Z_OFFSET
+        approachjnts = self.iterative_ik_find(self.sawyer_robot._limb, approach_pose, self.sawyer_robot._tip_name)
+        rospy.logwarn("APPROACH")
+        self.safe_goto_joint_position(approachjnts).result()
+        # approach_joints = self.iterative_ik_find(approach_pose)
+
+        rospy.logwarn("Grasp pose:" + str(target_block.table_place_pose))
+
+        # execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=100, tipname=self.sawyer_robot._tip_name, total_time_sec=2.0)
+        # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
+
+        place_pose = copy.deepcopy(target_block.table_place_pose)
+        # pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
+        # self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
+
+        execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=20, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=1.0)
+
+        self.sawyer_robot.gripper_open()
+
+        rospy.sleep(1.0)
+        # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
+        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=1.0)
+
+        # self.trajectory_planner.group.attach_object(target_block.perception_id)
+        rospy.sleep(0.5)
+
+        target_tray.notify_place_block(target_block, self.gripper_state)
+
+    @tasync("MOVEIT TABLETOP PLACE 2")
+    def moveit_tabletop_place2(self, target_block,update_table=True):
         target_block.table_place_pose = self.compute_grasp_pose_offset(target_block.tabletop_arm_view_estimated_pose)
 
         approach_pose = copy.deepcopy(target_block.table_place_pose)
@@ -890,7 +934,8 @@ class TaskPlanner:
         # self.trajectory_planner.group.attach_object(target_block.perception_id)
         rospy.sleep(0.5)
 
-        self.environment_estimation.table.notify_gripper_place(target_block,self.gripper_state)
+        if update_table:
+            self.environment_estimation.table.notify_gripper_place(target_block,self.gripper_state)
 
     @tasync("MOVEIT TABLETOP PICK 2")
     def moveit_tabletop_pick2(self, target_block):
@@ -929,7 +974,10 @@ class TaskPlanner:
 
         #self.trajectory_planner.group.attach_object(target_block.perception_id)
         rospy.sleep(0.5)
+
+        rospy.logwarn("TABLE BLOCKS pre transfer:"+ str(self.environment_estimation.table.blocks))
         self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
+        rospy.logwarn("TABLE BLOCKS post transfer:"+ str(self.environment_estimation.table.blocks))
 
 
 
@@ -971,8 +1019,8 @@ class TaskPlanner:
 
         target_block.tray.notify_pick_block(target_block,self.gripper_state)
 
-    @tasync("PICK BLOCK FROM TABLE AND MOVE TO TRAY")
-    def pick_block_from_table_and_place_to_tray(self, target_block, target_tray):
+    @tasync("PICK SINGLE BLOCK FROM TABLE AND MOVE TO TRAY")
+    def pick_single_block_from_table_and_place_to_tray(self, target_block, target_tray):
         """
         :param original_block_poses:
         :return: None if picking failed (probably grasping failed)
@@ -994,7 +1042,8 @@ class TaskPlanner:
 
             rospy.sleep(0.5)
 
-            self.moveit_tabletop_place2(target_block).result()
+            self.moveit_tabletop_place2(target_block,update_table=False).result()
+            #self.moveit_tray_place2(target_block,target_tray).result()
             #rospy.spin()
 
             #self.moveit_tray_place(target_block, target_tray).result()
@@ -1242,7 +1291,7 @@ class TaskPlanner:
         res = self.create_move_top_block_view_and_detect(btarget).result()
 
         if res:
-            self.moveit_tabletop_pick(btarget).result()
+            self.moveit_tabletop_pick2(btarget).result()
 
         return btarget
 
@@ -1309,6 +1358,7 @@ class TaskPlanner:
 
         current_index = 0
         while blocks_count > 0:
+            rospy.logwarn("Remaining blocks on the table: "+ str(blocks_count))
             #self.create_go_home_task().result()
 
             res = self.create_detect_block_poses_task(blocks, current_index).result()
@@ -1342,7 +1392,7 @@ class TaskPlanner:
                 self.create_wait_forever_task().result()
 
             # concurrency issue, what if we lock the objectdetection update?
-            grasp = self.pick_block_from_table_and_place_to_tray(target_block, target_tray).result()
+            grasp = self.pick_single_block_from_table_and_place_to_tray(target_block, target_tray).result()
 
             if grasp is None:
                 # grasping failed reset table state
@@ -1355,7 +1405,7 @@ class TaskPlanner:
                 continue
 
             # restart again trying from the first index (because we already removed one)
-            current_index = 0
+            #current_index = 0
             blocks_count = len(blocks)
 
             # rospy.logwarn("target block index: " + str(target_block_index))
@@ -1386,31 +1436,38 @@ class TaskPlanner:
         """
 
         if not demo_constants.is_real_robot():
+            # for simulated version the robot starts going to a home position because it usually starts
+            # colliding with itself so moveit cannot work
             self.create_go_home_task(check_obstacles=False).result()
 
         for i in xrange(1000):
             self.create_go_vision_head_pose_task().result()
 
             try:
-                blocks = self.create_head_vision_processing_on_table().result()
+                table_blocks = self.create_head_vision_processing_on_table().result()
             except Exception as ex:
                 rospy.logerr("BLOCKS NOT DETECTED ON THE TABLE")
-                blocks = None
+                table_blocks = None
 
-            self.create_wait_forever_task().result()
-
-            if blocks is None:
+            # detection failed
+            if table_blocks is None:
                 self.scheduler_yield()
+                self.robot_say("BLOCKS NOT DETECTED ON THE TABLE. RESTARTING THE LOOP TASK").result()
+                rospy.sleep(1)
+            else:
+                #table blocks detection succeeded
+                rospy.logwarn("BLOCKS ON THE TABLE: "+ str(self.environment_estimation.table.blocks))
 
-            self.create_move_all_cubes_to_trays(blocks).result()
+                self.create_move_all_cubes_to_trays(table_blocks).result()
 
-            self.robot_say("I FINISHED SORTING THE BLOCKS").result()
-            rospy.sleep(3)
-            self.robot_say("NOW I WILL PUT THEM BACK ON THE TABLE").result()
+                self.robot_say("I FINISHED SORTING THE BLOCKS").result()
+                rospy.sleep(3)
+                self.robot_say("NOW I WILL PUT THEM BACK ON THE TABLE").result()
+                self.environment_estimation.blocks = None
+                continue
+                self.pick_all_pieces_from_tray_and_put_on_table().result()
 
-            self.pick_all_pieces_from_tray_and_put_on_table().result()
-
-            self.delay_task(1).result()
+                self.delay_task(1).result()
 
         self.create_wait_forever_task().result()
 

@@ -7,17 +7,23 @@ from rospy_message_converter import message_converter
 import tf
 import tf.transformations
 from geometry_msgs.msg import Quaternion
+import demo_constants
 
 class TrayState:
     regex = re.compile(r'tray(\d+)\.*')
 
-    def __init__(self, gazebo_id, pose, TRAY_SURFACE_THICKNESS=0.04):
-        self.gazebo_id = gazebo_id
+    def __init__(self, id, pose, TRAY_SURFACE_THICKNESS=0.04):
+        self.gazebo_id = id
         self.pose = pose
         self.gazebo_pose = None
         self.TRAY_SURFACE_THICKNESS =TRAY_SURFACE_THICKNESS
-        search = TrayState.regex.search(gazebo_id)
-        self.num = int(search.group(1))
+
+        if not demo_constants.is_real_robot():
+            search = TrayState.regex.search(id)
+            self.num = int(search.group(1))
+        else:
+            self.num = int(id)
+
         self.blocks = []
 
     @staticmethod
@@ -36,7 +42,7 @@ class TrayState:
         self.blocks.remove(block)
         gripper_state.holding_block = block
 
-    def get_tray_pick_location(self):
+    def get_tray_pick_location_for_turning_over(self):
         """
         provides the grasping pose for the tray
         
@@ -49,9 +55,13 @@ class TrayState:
 
     def get_tray_place_block_pose(self):
         #return self.gazebo_pose
-        copygazebopose = copy.deepcopy(self.gazebo_pose)
 
-        yoffset = -0.08 + 0.075 * len(self.blocks)
+        if demo_constants.is_real_robot:
+            copygazebopose = copy.deepcopy(self.pose)
+        else:
+            copygazebopose = copy.deepcopy(self.gazebo_pose)
+
+        yoffset = -0.08 + demo_constants.TRAY_CUBEi_OFFSET_FACTOR * len(self.blocks)
         copygazebopose.position.y -= yoffset
         copygazebopose.position.z += self.TRAY_SURFACE_THICKNESS
 

@@ -53,6 +53,17 @@ class EnvironmentEstimation:
         if demo_constants.is_real_robot():
             self.blocks = None
 
+            tray_poses = [Pose(position=Point(x=-0.3, y=0.7, z= demo_constants.TABLE_HEIGHT_FOR_PICKING),orientation=Quaternion(x=0,y=0,z=0,w=1)),
+                          Pose(position=Point(x=0.0, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),orientation=Quaternion(x=0,y=0,z=0,w=1)),
+                          Pose(position=Point(x=0.3, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),orientation=Quaternion(x=0,y=0,z=0,w=1))]
+
+            colors = ["Red", "Blue", "Green"]
+
+            for i, p in enumerate(tray_poses):
+                tray = TrayState(i,p,0.0)
+                tray.color = colors[i]
+                self.trays.append(tray)
+
         # CREATE MANUALLY BLOCKS FOR REAL CASE
         """
         if demo_constants.is_real_robot():
@@ -360,7 +371,7 @@ class EnvironmentEstimation:
                     item = self.get_tray_by_gazebo_id(name)
                     # item = None
                     if item is None:
-                        item = TrayState(gazebo_id=name, pose=pose,
+                        item = TrayState(id=name, pose=pose,
                                          TRAY_SURFACE_THICKNESS=demo_constants.TRAY_SURFACE_THICKNESS)
                         item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/", "")
                     else:
