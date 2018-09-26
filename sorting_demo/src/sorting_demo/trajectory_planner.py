@@ -20,20 +20,27 @@ class TrajectoryPlanner:
         end = False
         while not end:
             try:
+                rospy.logwarn("getting planning scene service")
                 rospy.wait_for_service('/get_planning_scene',timeout=60)
                 rospy.sleep(1)
 
+                rospy.logwarn("Initializing moveit commander")
                 self.ceilheight = 0.75
                 rospy.sleep(0.4)
                 moveit_commander.roscpp_initialize(sys.argv)
                 rospy.sleep(0.4)
 
+
+                rospy.logwarn("getting planning scene")
                 self.scene = moveit_commander.PlanningSceneInterface()
                 self.robot = moveit_commander.RobotCommander()
 
                 rospy.sleep(0.1)
 
+                rospy.logwarn("subscribing to comander")
                 self.group = moveit_commander.MoveGroupCommander("right_arm")
+
+                rospy.logwarn("publishers")
                 self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
                                                                     moveit_msgs.msg.DisplayTrajectory)
                 self.planning_scene_diff_publisher = rospy.Publisher("planning_scene", moveit_msgs.msg.PlanningScene,
@@ -41,6 +48,7 @@ class TrajectoryPlanner:
 
                 rospy.sleep(0.1)
 
+                rospy.logwarn("seting up planners")
                 self.set_default_planner()
 
                 print "============ Reference frame: %s" % self.group.get_planning_frame()
@@ -61,6 +69,7 @@ class TrajectoryPlanner:
             except Exception as ex:
                 rospy.logerr("error trying to connect to moveit. Retrying")
                 rospy.sleep(1)
+                continue
 
     def  register_box(self, block):
         if not block in self.registered_blocks:

@@ -768,7 +768,7 @@ class TaskPlanner:
         pose.orientation = Quaternion(x=resultingorient[0], y=resultingorient[1], z=resultingorient[2],
                                       w=resultingorient[3])
 
-        pose.position.x += 0
+        pose.position.x += demo_constants.GRASP_POSE_X_OFFSET
         pose.position.y += 0
         pose.position.z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH*0.3 + demo_constants.TOOLTIP_Z_OFFSET
         return pose
@@ -984,11 +984,16 @@ class TaskPlanner:
             self.moveit_tabletop_pick2(target_block).result()
 
             rospy.sleep(0.1)
-            if self.sawyer_robot._gripper.get_position() < 0.01:
-                rospy.logerr("LOOKS LIKE THE GRASPING FAILED")
-                self.trajectory_planner.clear_attached_object(target_block)
-                self.gripper_state.holding_block = None
-                return None
+
+            if not demo_constants.is_real_robot():
+                if self.sawyer_robot._gripper.get_position() < 0.01:
+                    rospy.logerr("LOOKS LIKE THE GRASPING FAILED")
+                    self.trajectory_planner.clear_attached_object(target_block)
+                    self.gripper_state.holding_block = None
+                    return None
+            else:
+                # we assume pick succedded
+                pass
 
             rospy.sleep(0.5)
 
