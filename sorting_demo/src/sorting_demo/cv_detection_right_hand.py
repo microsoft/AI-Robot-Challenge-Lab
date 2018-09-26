@@ -38,7 +38,7 @@ class RightHandCVParameters:
             self.CLAHE_SIZE = 64
             self.SIGMA = 0.33
             self.DILATION_SIZE = 5
-            self.CUBE_SIZE = 150
+            self.CUBE_SIZE = 110
             self.CUBE_BORDER_SIZE = 4
             self.CLEARANCE_AREA_LENGTH = self.CUBE_SIZE / 2
             self.CLEARANCE_AREA_MARGIN = 20
@@ -309,8 +309,10 @@ def test_right_hand_ros():
     camera_name = "right_hand_camera"
 
     camera_helper = CameraHelper(camera_name, "base", 0)
-    camera_helper.set_exposure(5)
-    camera_helper.set_gain(255)
+
+    if demo_constants.is_real_robot():
+        camera_helper.set_exposure(5)
+        camera_helper.set_gain(255)
 
     bridge = CvBridge()
 

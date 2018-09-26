@@ -2,6 +2,7 @@
 import copy
 import math
 import numpy
+import random
 from concurrent.futures import ThreadPoolExecutor
 from docutils.nodes import target
 from threading import Lock
@@ -17,6 +18,7 @@ from environment_estimation import EnvironmentEstimation
 from robot_control import SawyerRobotControl
 from robot_tasks_facade import RobotTaskFacade
 from robot_funcs import force_joint_limits
+from test_goto_angles import execute_linear_motion
 from tasync import Task, tasync
 import tf
 import tf.transformations
@@ -42,6 +44,12 @@ class TaskPlanner:
 
         self.trajectory_planner = TrajectoryPlanner()
         self.sawyer_robot = SawyerRobotControl(self.trajectory_planner, limbname, self._hover_distance)
+
+        #workaround
+        if demo_constants.is_real_robot():
+            self.sawyer_robot._tip_name = "stp_021804TP00031_base"
+        else:
+            rospy.logwarn("TIP NAME:" + str(self.sawyer_robot._tip_name))
 
         self.tasks = []
         self.executor = ThreadPoolExecutor(max_workers=14)
@@ -286,7 +294,7 @@ class TaskPlanner:
         else:
             self.safe_goto_joint_position(self.starting_joint_angles).result()
 
-        self._head.set_pan(00, speed=0.2, timeout=5.0)
+        self._head.set_pan(00, speed=0.2, timeout=10.0)
         self.environment_estimation.set_cognex_strobe(False)
 
     @tasync("GREET TASK")
@@ -327,7 +335,7 @@ class TaskPlanner:
         :return:
         """
 
-        self._head.set_pan(00, speed=0.2, timeout=5.0)
+        self._head.set_pan(00, speed=0.2, timeout=10.0)
 
         self.trajectory_planner.ceilheight = 0.95
         self.trajectory_planner.update_ceiling_obstacle()
@@ -744,6 +752,7 @@ class TaskPlanner:
         :return:
         """
 
+
         yrot = tf.transformations.quaternion_from_euler(0, math.pi, 0)
 
         cubeorientation = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
@@ -755,12 +764,13 @@ class TaskPlanner:
         # resultingorient = cubeorientation
 
 
+        pose = copy.deepcopy(pose)
         pose.orientation = Quaternion(x=resultingorient[0], y=resultingorient[1], z=resultingorient[2],
                                       w=resultingorient[3])
 
         pose.position.x += 0
         pose.position.y += 0
-        pose.position.z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH
+        pose.position.z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH*0.3 + demo_constants.TOOLTIP_Z_OFFSET
         return pose
 
     def compute_tray_pick_offset_transform(self, pose):
@@ -826,6 +836,103 @@ class TaskPlanner:
 
         self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
 
+    def iterative_ik_find(self, limb, approach_pose, tipname):
+        approach_joints = False
+        while approach_joints is False and not rospy.is_shutdown():
+            joint_seed = copy.deepcopy(limb.joint_angles())
+
+            for k in joint_seed.keys():
+                joint_seed[k] = joint_seed[k] + random.uniform(-0.2 * math.pi / 2, 0.2 * math.pi / 2)
+
+            # rospy.logwarn("JOINT SEED:" + str(joint_seed))
+            joint_seed = limb.joint_angles()
+            approach_joints = limb.ik_request(approach_pose, tipname, joint_seed=joint_seed)
+
+            # rospy.logwarn("APPROACH JOINTS: " + str(approach_joints))
+
+            if approach_joints is False:
+                rospy.logerr(approach_pose)
+                joint_seed = copy.deepcopy(limb.joint_angles())
+
+        return approach_joints
+
+    @tasync("MOVEIT TABLETOP PLACE 2")
+    def moveit_tabletop_place2(self, target_block):
+        target_block.table_place_pose = self.compute_grasp_pose_offset(target_block.tabletop_arm_view_estimated_pose)
+
+        approach_pose = copy.deepcopy(target_block.table_place_pose)
+
+        approach_pose.position.z += demo_constants.APPROACH_Z_OFFSET
+        approachjnts = self.iterative_ik_find(self.sawyer_robot._limb, approach_pose, self.sawyer_robot._tip_name)
+        rospy.logwarn("APPROACH")
+        self.safe_goto_joint_position(approachjnts).result()
+        # approach_joints = self.iterative_ik_find(approach_pose)
+
+        rospy.logwarn("Grasp pose:" + str(target_block.table_place_pose))
+
+        # execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=100, tipname=self.sawyer_robot._tip_name, total_time_sec=2.0)
+        # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
+
+        place_pose = copy.deepcopy(target_block.table_place_pose)
+        # pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
+        # self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
+
+        execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=20, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=1.5)
+
+        self.sawyer_robot.gripper_open()
+
+        rospy.sleep(1.0)
+        # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
+        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=1.5)
+
+        # self.trajectory_planner.group.attach_object(target_block.perception_id)
+        rospy.sleep(0.5)
+
+        self.environment_estimation.table.notify_gripper_place(target_block,self.gripper_state)
+
+    @tasync("MOVEIT TABLETOP PICK 2")
+    def moveit_tabletop_pick2(self, target_block):
+
+
+        #self.sawyer_robot._limb.set_joint_position_speed(1.0)
+
+        self.sawyer_robot.gripper_open()
+        target_block.grasp_pose= self.compute_grasp_pose_offset(copy.deepcopy(target_block.tabletop_arm_view_estimated_pose))
+
+        approach_pose = copy.deepcopy(target_block.grasp_pose)
+
+
+        approach_pose.position.z +=demo_constants.APPROACH_Z_OFFSET
+        approachjnts = self.iterative_ik_find(self.sawyer_robot._limb, approach_pose, self.sawyer_robot._tip_name)
+        rospy.logwarn("APPROACH")
+        self.safe_goto_joint_position(approachjnts).result()
+        #approach_joints = self.iterative_ik_find(approach_pose)
+
+        rospy.logwarn("Grasp pose:"+ str(target_block.grasp_pose))
+
+        #execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=100, tipname=self.sawyer_robot._tip_name, total_time_sec=2.0)
+        #self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
+
+        pick_pose = copy.deepcopy(target_block.grasp_pose)
+        #pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
+        #self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
+
+        execute_linear_motion(self.sawyer_robot._limb, pick_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.5)
+
+        self.sawyer_robot.gripper_close()
+
+        rospy.sleep(1.0)
+        #self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
+        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.5)
+
+        #self.trajectory_planner.group.attach_object(target_block.perception_id)
+        rospy.sleep(0.5)
+        self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
+
+
+
     @tasync("MOVEIT TABLETOP PLACE")
     def moveit_tabletop_place(self, target_block):
         result = False
@@ -843,6 +950,7 @@ class TaskPlanner:
             rospy.logwarn("place result: " + str(result))
 
         self.environment_estimation.table.notify_gripper_place(target_block,self.gripper_state)
+
 
     @tasync("MOVEIT TRAYTOP PICK")
     def moveit_traytop_pick(self, target_block):
@@ -872,7 +980,8 @@ class TaskPlanner:
 
         try:
 
-            self.moveit_tabletop_pick(target_block).result()
+            #self.moveit_tabletop_pick(target_block).result()
+            self.moveit_tabletop_pick2(target_block).result()
 
             rospy.sleep(0.1)
             if self.sawyer_robot._gripper.get_position() < 0.01:
@@ -883,7 +992,10 @@ class TaskPlanner:
 
             rospy.sleep(0.5)
 
-            self.moveit_tray_place(target_block, target_tray).result()
+            self.moveit_tabletop_place2(target_block).result()
+            rospy.spin()
+
+            #self.moveit_tray_place(target_block, target_tray).result()
 
             rospy.logwarn("pick and place finished. table blocks: " + str(self.environment_estimation.table.blocks))
             rospy.logwarn("pick and place finished. target tray blocks: " + str(target_tray.blocks))
@@ -891,6 +1003,7 @@ class TaskPlanner:
         except Exception as ex:
             rospy.logerr("Some exception on pick and place: "+ str(ex.message))
             self.create_wait_forever_task().result()
+            rospy.spin()
 
         # self.create_wait_forever_task().result()
 
@@ -1056,7 +1169,7 @@ class TaskPlanner:
         else:
             block.traytop_arm_view_estimated_pose = estimated_cube_grasping_pose
 
-        rospy.logerr("Cube properly detected with convinient grasp")
+        rospy.logwarn("Cube properly detected with convinient grasp")
         return True
 
     @tasync("OBSERVE ALL CUBES")
@@ -1178,6 +1291,9 @@ class TaskPlanner:
         Moves all cubes on the table to the trays according with its color
         :return:
         """
+        if blocks is None:
+            return None
+
         blocks_count = len(blocks)
 
         # declare all boxes on obstacles
@@ -1188,7 +1304,7 @@ class TaskPlanner:
 
         current_index = 0
         while blocks_count > 0:
-            self.create_go_home_task().result()
+            #self.create_go_home_task().result()
 
             res = self.create_detect_block_poses_task(blocks, current_index).result()
             if res is not None:
@@ -1263,7 +1379,9 @@ class TaskPlanner:
         This is the main plan of the application
         :return:
         """
-        #self.create_go_home_task(check_obstacles=False).result()
+
+        if not demo_constants.is_real_robot():
+            self.create_go_home_task(check_obstacles=False).result()
 
         for i in xrange(1000):
             self.create_go_vision_head_pose_task().result()
@@ -1271,7 +1389,8 @@ class TaskPlanner:
             try:
                 blocks = self.create_head_vision_processing_on_table().result()
             except Exception as ex:
-                pass
+                rospy.logerr("BLOCKS NOT DETECTED ON THE TABLE")
+                blocks = None
 
             self.create_wait_forever_task().result()
 

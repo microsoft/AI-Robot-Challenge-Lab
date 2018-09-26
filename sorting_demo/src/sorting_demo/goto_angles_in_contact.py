@@ -31,22 +31,22 @@ from intera_motion_interface.utility_functions import int2bool
 
 def interaction_joint_trajectory(limb,
                                  joint_angles,
-                                 trajType,
-                                 interaction_active,
-                                 interaction_control_mode,
-                                 interaction_frame,
-                                 speed_ratio,
-                                 accel_ratio,
-                                 K_impedance,
-                                 max_impedance,
-                                 in_endpoint_frame,
-                                 force_command,
-                                 K_nullspace,
-                                 endpoint_name,
-                                 timeout,
-                                 disable_damping_in_force_control,
-                                 disable_reference_resetting,
-                                 rotations_for_constrained_zeroG):
+                                 trajType='JOINT',
+                                 interaction_active=1,
+                                 interaction_control_mode=[1, 1, 1, 1, 1, 1],
+                                 interaction_frame=[0, 0, 0, 1, 0, 0, 0],
+                                 speed_ratio=0.1,
+                                 accel_ratio=0.5,
+                                 K_impedance=[1300.0, 1300.0, 1300.0, 30.0, 30.0, 30.0],
+                                 max_impedance=[1, 1, 1, 1, 1, 1],
+                                 in_endpoint_frame=False,
+                                 force_command=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                 K_nullspace=[5.0, 10.0, 5.0, 10.0, 5.0, 10.0, 5.0],
+                                 endpoint_name='right_hand',
+                                 timeout=None,
+                                 disable_damping_in_force_control=False,
+                                 disable_reference_resetting=False,
+                                 rotations_for_constrained_zeroG=False):
     try:
 
         traj = MotionTrajectory(limb=limb)
@@ -54,24 +54,15 @@ def interaction_joint_trajectory(limb,
         wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
                                         max_joint_accel=accel_ratio)
 
-        waypoint = MotionWaypoint(options = wpt_opts.to_msg(), limb = limb)
+        for joints_t in joint_angles:
+            if len(joints_t) !=7:
+                raise Exception("incorrect joint trajectory")
 
-        # one single waypoint
-        current_joint_angles = limb.joint_ordered_angles()
-        waypoint.set_joint_angles(joint_angles = current_joint_angles )
-        traj.append_waypoint(waypoint.to_msg())
+            waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
+            waypoint.set_joint_angles(joint_angles = joints_t)
+            traj.append_waypoint(waypoint.to_msg())
 
-        if len(current_joint_angles ) != len(joint_angles):
-            rospy.logerr('The number of joint_angles must be %d', len(current_joint_angles ))
-            return None
 
-        # ----- testing intermediate points with real robot
-        middle_joint_angles = [ (current_joint_angles[i] + joint_angles[i])/2.0 for i in xrange(len(current_joint_angles))]
-        waypoint.set_joint_angles(joint_angles=middle_joint_angles)
-        traj.append_waypoint(waypoint.to_msg())
-
-        waypoint.set_joint_angles(joint_angles = joint_angles)
-        traj.append_waypoint(waypoint.to_msg())
         # ----- end testing intermediate points with real robot
 
         # set the interaction control options in the current configuration
@@ -188,6 +179,7 @@ def main():
         (1: impedance, 2: force, 3: impedance with force limit, 4: force with motion limit)
     """
 
+    """
     arg_fmt = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=arg_fmt,
                                      description=main.__doc__)
@@ -252,30 +244,27 @@ def main():
         help="Max time in seconds to complete motion goal before returning. None is interpreted as an infinite timeout.")
 
     args = parser.parse_args(rospy.myargv()[1:])
-
+    """
 
     rospy.init_node('go_to_joint_angles_in_contact_py')
     limb = Limb()
 
-    interaction_joint_trajectory(limb,
-                                 joint_angles = args.joint_angles,
-                                 trajType= args.trajType,
-                                 interaction_control_mode= args.interaction_control_mode,
-                                 interaction_active= args.interaction_active,
-                                 interaction_frame= args.interaction_frame,
-                                 speed_ratio = args.speed_ratio,
-                                 accel_ratio = args.accel_ratio,
-                                 K_impedance= args.K_impedance,
-                                 max_impedance = args.max_impedance,
-                                 in_endpoint_frame = args.in_endpoint_frame,
-                                 force_command = args.force_command,
-                                 K_nullspace = args.K_nullspace,
-                                 endpoint_name = args.endpoint_name,
-                                 timeout = args.timeout,
-                                 disable_damping_in_force_control=args.disable_damping_in_force_control,
-                                 disable_reference_resetting = args.disable_reference_resetting ,
-                                 rotations_for_constrained_zeroG = args.rotations_for_constrained_zeroG
-                                 )
+    initial = limb.joint_ordered_angles()
+    target_joints = [0,0,0,0,0,0,0]
+
+    joint_trajectory = []
+    rospy.logwarn("initial: "+ str(initial))
+
+    import numpy
+    for t in numpy.arange(start=0, step=0.01, stop=1.0):
+        current_joints =[]
+        for i in xrange(len(initial)):
+            current_joints.append(initial[i]*(1-t) + target_joints[i]*t)
+
+            joint_trajectory.append(current_joints)
+
+
+    interaction_joint_trajectory(limb, joint_trajectory)
 
 if __name__ == '__main__':
     main()

@@ -31,7 +31,7 @@ def tasync(taskname):
                 res = None
                 try:
                     # f_kwargs["task"] = tt
-                    rospy.logwarn("launching task")
+                    rospy.logwarn("launching task lamb")
                     res = f(self, *f_args, **f_kwargs)
                 except Exception as ex:
                     rospy.logerr("task wrapping error (%s): %s" % (taskname, str(ex)))

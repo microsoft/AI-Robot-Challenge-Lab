@@ -17,40 +17,50 @@ class TrajectoryPlanner:
         """
         
         """
-        self.ceilheight = 0.75
-        rospy.sleep(0.4)
-        moveit_commander.roscpp_initialize(sys.argv)
-        rospy.sleep(0.4)
+        end = False
+        while not end:
+            try:
+                rospy.wait_for_service('/get_planning_scene',timeout=60)
+                rospy.sleep(1)
 
-        self.scene = moveit_commander.PlanningSceneInterface()
-        self.robot = moveit_commander.RobotCommander()
+                self.ceilheight = 0.75
+                rospy.sleep(0.4)
+                moveit_commander.roscpp_initialize(sys.argv)
+                rospy.sleep(0.4)
 
-        rospy.sleep(0.1)
+                self.scene = moveit_commander.PlanningSceneInterface()
+                self.robot = moveit_commander.RobotCommander()
 
-        self.group = moveit_commander.MoveGroupCommander("right_arm")
-        self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
-                                                            moveit_msgs.msg.DisplayTrajectory)
-        self.planning_scene_diff_publisher = rospy.Publisher("planning_scene", moveit_msgs.msg.PlanningScene,
-                                                             queue_size=1)
+                rospy.sleep(0.1)
 
-        rospy.sleep(0.1)
+                self.group = moveit_commander.MoveGroupCommander("right_arm")
+                self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
+                                                                    moveit_msgs.msg.DisplayTrajectory)
+                self.planning_scene_diff_publisher = rospy.Publisher("planning_scene", moveit_msgs.msg.PlanningScene,
+                                                                     queue_size=1)
 
-        self.set_default_planner()
+                rospy.sleep(0.1)
 
-        print "============ Reference frame: %s" % self.group.get_planning_frame()
+                self.set_default_planner()
 
-        print "============ Reference frame: %s" % self.group.get_end_effector_link()
-        print self.robot.get_group_names()
-        print self.robot.get_current_state()
-        self.enable_collision_table1 = True
-        self.enable_orientation_constraint = False
-        self.set_default_tables_z()
-        self.registered_blocks = []
+                print "============ Reference frame: %s" % self.group.get_planning_frame()
 
-        self.tableshape = (0.913, 0.913, 0.01)
-        # self.tableshape = (1.2, 1.2, 0.01)
+                print "============ Reference frame: %s" % self.group.get_end_effector_link()
+                print self.robot.get_group_names()
+                print self.robot.get_current_state()
+                self.enable_collision_table1 = True
+                self.enable_orientation_constraint = False
+                self.set_default_tables_z()
+                self.registered_blocks = []
 
-        rospy.sleep(0.2)
+                self.tableshape = (0.913, 0.913, 0.01)
+                # self.tableshape = (1.2, 1.2, 0.01)
+
+                rospy.sleep(0.2)
+                end = True
+            except Exception as ex:
+                rospy.logerr("error trying to connect to moveit. Retrying")
+                rospy.sleep(1)
 
     def  register_box(self, block):
         if not block in self.registered_blocks:
@@ -96,9 +106,9 @@ class TrajectoryPlanner:
 
         if demo_constants.is_real_robot():
             # opened gripper
-            grasp.pre_grasp_posture.joint_names = []#"right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
+            grasp.pre_grasp_posture.joint_names = []#["stp_021804TP00031_tip_1_joint"]#"right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
             trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
-            trajpoint.positions = []#[0.04, 0.04]
+            trajpoint.positions = []#[1.0]#[0.04, 0.04]
             trajpoint.time_from_start = rospy.Duration(0.5)
             grasp.pre_grasp_posture.points = [trajpoint]
 
@@ -107,9 +117,9 @@ class TrajectoryPlanner:
             grasp.post_grasp_retreat.desired_distance = 0.1
 
             # closed gripper
-            grasp.grasp_posture.joint_names = []#["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
+            grasp.grasp_posture.joint_names = []#["stp_021804TP00031_tip_1_joint"]#["right_gripper_l_finger_joint", "right_gripper_r_finger_joint"]
             trajpoint = trajectory_msgs.msg.JointTrajectoryPoint()
-            trajpoint.positions = []#[0.0, 0.0]
+            trajpoint.positions = []#[0]#[0.0, 0.0]
             trajpoint.time_from_start = rospy.Duration(0.5)
             grasp.grasp_posture.points = [trajpoint]
         else:
@@ -133,6 +143,7 @@ class TrajectoryPlanner:
 
         graps = [grasp]
         rospy.logwarn("blocks that can be picked: " + str(self.registered_blocks))
+
 
         return self.group.pick("block" + str(block_index), graps)
 
@@ -179,7 +190,7 @@ class TrajectoryPlanner:
         block_pose.header.frame_id = self.robot.get_planning_frame()
         block_index = self.registered_blocks.index(block)
         self.scene.add_box("block" + str(block_index), block_pose, size=(demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH, demo_constants.CUBE_EDGE_LENGTH))
-        rospy.sleep(0.5)
+        rospy.sleep(0.2)
         return block_index
 
     def update_table1_collision(self):

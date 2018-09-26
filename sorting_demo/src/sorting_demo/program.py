@@ -26,11 +26,14 @@ def main():
 
     rospy.logwarn("Hello world")
 
-    #task_planner.create_go_home_task(check_obstacles=False).result()
+    if not demo_constants.is_real_robot():
+        task_planner.create_go_home_task(check_obstacles=False).result()
 
     task_facade = task_planner.get_task_facade()
 
-    #task_facade.start()
+
+    if not demo_constants.is_real_robot():
+        task_facade.start()
 
     task_facade.run_rest_server()
 

@@ -251,10 +251,12 @@ class EnvironmentEstimation:
                 rospy.logwarn("projected: %s" % str(projected))
 
                 block = self.identify_block_from_aproximated_point(projected)
-                block.color = self.nearest_color(huekey)
-
                 if block is None:
+                    rospy.logerr("CUBE DETECTED BUT NOT IDENTIFIED TROUGH TABLE INTERSECTION PROJECTION")
+                    rospy.logerr("current blocks in the world: %s"%(str(self.blocks)))
                     continue
+
+                block.color = self.nearest_color(huekey)
 
                 detected_blocks.append(block)
 
