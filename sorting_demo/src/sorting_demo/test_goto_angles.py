@@ -26,24 +26,27 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 
 
 def iterative_ik_find(limb, approach_pose, tipname):
-    approach_joints = False
-    while approach_joints is False and not rospy.is_shutdown():
-        joint_seed = copy.deepcopy(limb.joint_angles())
+    computed_joints = False
+    joint_seed = copy.deepcopy(limb.joint_angles())
+
+    while computed_joints is False and not rospy.is_shutdown():
 
         for k in joint_seed.keys():
             joint_seed[k] = joint_seed[k] + random.uniform(-0.2 * math.pi / 2, 0.2 * math.pi / 2)
 
         #rospy.logwarn("JOINT SEED:" + str(joint_seed))
         joint_seed = limb.joint_angles()
-        approach_joints = limb.ik_request(approach_pose, tipname,joint_seed=joint_seed)
+        computed_joints = limb.ik_request(approach_pose, tipname,joint_seed=joint_seed)
 
         #rospy.logwarn("APPROACH JOINTS: " + str(approach_joints))
 
-        if approach_joints is False:
+        if computed_joints is False:
             rospy.logerr(approach_pose)
             joint_seed = copy.deepcopy(limb.joint_angles())
+        else:
+            joint_seed = copy.deepcopy(computed_joints)
 
-    return approach_joints
+    return computed_joints
 
 def execute_linear_motion(limb, target_pose, steps, tipname, total_time_sec):
     ik_delta = Pose()
@@ -186,11 +189,11 @@ def execute_joint_trajectory(limb, target_joint_trajectory, total_time_sec):
     #while client.get_state() == actionlib.GoalStatus.ACTIVE and not rospy.is_shutdown():
     #    rospy.sleep(0.1)
     # Waits for the server to finish performing the action.
-    client.wait_for_result()
+    success = client.wait_for_result()
 
     # Prints out the result of executing the action
     rospy.logwarn(client.get_result())  # A FibonacciResult
-
+    return success
 
 """
 std_msgs/Header header

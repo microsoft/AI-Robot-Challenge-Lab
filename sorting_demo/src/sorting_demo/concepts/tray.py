@@ -65,7 +65,13 @@ class TrayState:
         copygazebopose.position.y -= yoffset
         copygazebopose.position.z += self.TRAY_SURFACE_THICKNESS
 
-        zrot = tf.transformations.quaternion_from_euler(0, 0, -math.pi/2.0)
+
+        if not demo_constants.is_real_robot():
+            angle = -math.pi / 2.0
+        else:
+            angle = math.pi / 2.0
+
+        zrot = tf.transformations.quaternion_from_euler(0, 0, angle)
 
         trayorientatin = [copygazebopose.orientation.x, copygazebopose.orientation.y, copygazebopose.orientation.z, copygazebopose.orientation.w]
         # oorient = [overhead_orientation.x,overhead_orientation.y,overhead_orientation.z,overhead_orientation.w]

@@ -53,14 +53,26 @@ class EnvironmentEstimation:
         if demo_constants.is_real_robot():
             self.blocks = None
 
-            tray_poses = [Pose(position=Point(x=-0.3, y=0.7, z= demo_constants.TABLE_HEIGHT_FOR_PICKING),orientation=Quaternion(x=0,y=0,z=0,w=1)),
-                          Pose(position=Point(x=0.0, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),orientation=Quaternion(x=0,y=0,z=0,w=1)),
-                          Pose(position=Point(x=0.3, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),orientation=Quaternion(x=0,y=0,z=0,w=1))]
+            """
+            tray_poses = [Pose(position=Point(x=0.56, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.48, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.4, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1))]
+            """
+
+            tray_poses = [Pose(position=Point(x=0.32, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.24, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.18, y=0.7, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1))]
 
             colors = ["Red", "Blue", "Green"]
 
             for i, p in enumerate(tray_poses):
-                tray = TrayState(i,p,0.0)
+                tray = TrayState(i, p, 0.0)
                 tray.color = colors[i]
                 self.trays.append(tray)
 
@@ -108,7 +120,7 @@ class EnvironmentEstimation:
         else:
             return None
 
-    def set_cognex_strobe(self,value):
+    def set_cognex_strobe(self, value):
         self.hand_camera_helper.set_cognex_strobe(value)
 
     def compute_block_pose_estimation_from_arm_camera(self):
@@ -156,7 +168,6 @@ class EnvironmentEstimation:
         rospy.logwarn("zaxis camera vector:" + str(zaxis))
         # Save for debugging
         cv2.imwrite("/tmp/debug.png", cv_image)
-
 
         # Get cube rotation
         detected_cubes_info = get_cubes_z_rotation(cv_image)
@@ -225,9 +236,8 @@ class EnvironmentEstimation:
         for k, value in known_colors:
             distances.append((k, math.fabs(value - huevalue)))
 
-        if len(distances)> 0:
-            return sorted(distances,key=lambda tup: tup[1])[0][0]
-
+        if len(distances) > 0:
+            return sorted(distances, key=lambda tup: tup[1])[0][0]
 
     def compute_block_pose_estimations_from_head_camera(self):
         """
@@ -263,22 +273,22 @@ class EnvironmentEstimation:
 
             first_time_blocks = []
 
-            rospy.logwarn("bricks database: "+ str(self.blocks))
+            rospy.logwarn("bricks database: " + str(self.blocks))
             for huekey, point2d in ptinfos:
                 projected = self.head_camera_helper.project_point_on_table(point2d)
                 rospy.logwarn("projected: %s" % str(projected))
 
                 if self.blocks is not None:
-                    #match from previous state
+                    # match from previous state
                     block = self.identify_block_from_aproximated_point(projected)
                 else:
-                    #create for very first time
+                    # create for very first time
                     block = BlockState(id=str(len(first_time_blocks)), pose=Pose())
                     first_time_blocks.append(block)
 
                 if block is None:
                     rospy.logerr("CUBE DETECTED BUT NOT IDENTIFIED TROUGH TABLE INTERSECTION PROJECTION")
-                    rospy.logerr("current blocks in the world: %s"%(str(self.blocks)))
+                    rospy.logerr("current blocks in the world: %s" % (str(self.blocks)))
                     continue
 
                 block.color = self.nearest_color(huekey)
@@ -505,7 +515,7 @@ class EnvironmentEstimation:
         :param id:
         :return:
         """
-        rospy.logwarn("Color: "+ str(color))
+        rospy.logwarn("Color: " + str(color))
         color = color.replace("Gazebo/", "")
         rospy.logwarn("by color: " + str(color))
         rospy.logwarn("by color: " + str(self.trays))
