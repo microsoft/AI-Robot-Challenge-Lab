@@ -878,14 +878,14 @@ class TaskPlanner:
         # self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
 
         execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=20, tipname=self.sawyer_robot._tip_name,
-                              total_time_sec=1.5)
+                              total_time_sec=1.0)
 
         self.sawyer_robot.gripper_open()
 
         rospy.sleep(1.0)
         # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
         execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name,
-                              total_time_sec=1.5)
+                              total_time_sec=1.0)
 
         # self.trajectory_planner.group.attach_object(target_block.perception_id)
         rospy.sleep(0.5)
@@ -919,13 +919,13 @@ class TaskPlanner:
         #pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
         #self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
 
-        execute_linear_motion(self.sawyer_robot._limb, pick_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.5)
+        execute_linear_motion(self.sawyer_robot._limb, pick_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.0)
 
         self.sawyer_robot.gripper_close()
 
         rospy.sleep(1.0)
         #self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
-        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.5)
+        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.0)
 
         #self.trajectory_planner.group.attach_object(target_block.perception_id)
         rospy.sleep(0.5)
@@ -991,19 +991,19 @@ class TaskPlanner:
                     self.trajectory_planner.clear_attached_object(target_block)
                     self.gripper_state.holding_block = None
                     return None
-            else:
-                # we assume pick succedded
-                pass
 
             rospy.sleep(0.5)
 
             self.moveit_tabletop_place2(target_block).result()
-            rospy.spin()
+            #rospy.spin()
 
             #self.moveit_tray_place(target_block, target_tray).result()
 
+            rospy.logwarn("pick and place finished. table: " + str(self.environment_estimation.table))
             rospy.logwarn("pick and place finished. table blocks: " + str(self.environment_estimation.table.blocks))
-            rospy.logwarn("pick and place finished. target tray blocks: " + str(target_tray.blocks))
+
+            if target_tray is not None:
+                rospy.logwarn("pick and place finished. target tray blocks: " + str(target_tray.blocks))
 
         except Exception as ex:
             rospy.logerr("Some exception on pick and place: "+ str(ex.message))

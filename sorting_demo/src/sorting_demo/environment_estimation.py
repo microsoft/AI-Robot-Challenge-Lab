@@ -32,7 +32,6 @@ class EnvironmentEstimation:
         self.gazebo_blocks = []
 
         self.trays = []
-        self.blocks = []
 
         self.tf_broacaster = tf.TransformBroadcaster()
         self.tf_listener = tf.TransformListener()
@@ -52,6 +51,11 @@ class EnvironmentEstimation:
         self.hand_camera_helper = CameraHelper("right_hand_camera", "base", demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
 
         if demo_constants.is_real_robot():
+            self.blocks = None
+
+        # CREATE MANUALLY BLOCKS FOR REAL CASE
+        """
+        if demo_constants.is_real_robot():
             k = 3
             for i in xrange(k):
                 for j in xrange(k):
@@ -66,6 +70,7 @@ class EnvironmentEstimation:
                                                  orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
 
                     self.blocks.append(block)
+        """
 
     def identify_block_from_aproximated_point(self, projected):
         """
@@ -245,12 +250,21 @@ class EnvironmentEstimation:
 
             detected_blocks = []
 
+            first_time_blocks = []
+
             rospy.logwarn("bricks database: "+ str(self.blocks))
             for huekey, point2d in ptinfos:
                 projected = self.head_camera_helper.project_point_on_table(point2d)
                 rospy.logwarn("projected: %s" % str(projected))
 
-                block = self.identify_block_from_aproximated_point(projected)
+                if self.blocks is not None:
+                    #match from previous state
+                    block = self.identify_block_from_aproximated_point(projected)
+                else:
+                    #create for very first time
+                    block = BlockState(id=str(len(first_time_blocks)), pose=Pose())
+                    first_time_blocks.append(block)
+
                 if block is None:
                     rospy.logerr("CUBE DETECTED BUT NOT IDENTIFIED TROUGH TABLE INTERSECTION PROJECTION")
                     rospy.logerr("current blocks in the world: %s"%(str(self.blocks)))
@@ -269,6 +283,10 @@ class EnvironmentEstimation:
                     orientation=Quaternion(x=0, y=0, z=0, w=1))
 
                 rospy.logwarn("blob identified: " + str(block))
+
+            # blocks database created by this initial detection
+            if self.blocks is None:
+                self.blocks = first_time_blocks
 
             rospy.logwarn("Table blocks:")
             self.table.blocks = detected_blocks
