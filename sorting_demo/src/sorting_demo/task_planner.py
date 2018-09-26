@@ -861,7 +861,7 @@ class TaskPlanner:
         self.trajectory_planner.set_default_tables_z()
 
         #avoid collisions
-        self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH *1.2
+        self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH *1.1
         self.trajectory_planner.update_table2_collision()
 
         target_block.tray = target_tray

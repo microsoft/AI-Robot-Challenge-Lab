@@ -216,8 +216,10 @@ class TrajectoryPlanner:
 
 
     def update_table2_collision(self):
-
-
+        """
+        Update the moveit table 2 collisions
+        :return: 
+        """
         table2pose = geometry_msgs.msg.PoseStamped()
         table2pose.pose = Pose(position=Point(x=0.0, y=1.0, z=self.table2_z))
         table2pose.pose.orientation.w = 1.0
