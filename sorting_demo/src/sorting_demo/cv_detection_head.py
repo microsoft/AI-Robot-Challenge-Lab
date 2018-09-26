@@ -184,17 +184,39 @@ def get_blobs_info(cv_image):
     image_file_name = "/tmp/head_contours.jpg"
     cv2.imwrite(image_file_name, cv_image_contours_debug)
 
-    # Resize image for head display
-    debug_resized = cv2.resize(cv_image_contours_debug, (1024, 600))
+    # Create head display image
+    head_display_image = __create_head_screen_image(cv_mask, cv_image_contours_debug)
 
-    image_file_name_resized = "debug_head_resized.png"
-    cv2.imwrite(image_file_name_resized, debug_resized)
+    head_display_image_file_name = "/tmp/debug_head.png"
+    cv2.imwrite(head_display_image_file_name, head_display_image)
 
     # Show image on head display
     head_display = intera_interface.HeadDisplay()
-    head_display.display_image(image_file_name_resized)
+    head_display.display_image(head_display_image_file_name)
 
     return blob_info
+
+def __create_head_screen_image(cv_mask, cv_image_contours_debug):
+    # Compute bounding rectangle for the head display
+    _, contours, _ = cv2.findContours(cv_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    x, y, w, h = cv2.boundingRect(contours[0])
+
+    # Get ROI from the debug image
+    cv_image_contours_debug_roi = cv_image_contours_debug[y:y+h,x:x+w]
+
+    # Scale image
+    target_height, target_width = (600, 1024)
+    scale = min(target_width / float(w), target_height / float(h))
+
+    new_width = int(scale * w)
+    new_height = int(scale * h)
+    cv_image_contours_debug_resized = cv2.resize(cv_image_contours_debug_roi, (new_width, new_height), interpolation = cv2.INTER_CUBIC)
+
+    # Put the image in black background
+    cv_image_head = numpy.zeros((target_height, target_width, 3), numpy.uint8)
+    cv_image_head[:new_height,:new_width] = cv_image_contours_debug_resized
+
+    return cv_image_head
 
 def __publish_marker(publisher, index, point):
     """

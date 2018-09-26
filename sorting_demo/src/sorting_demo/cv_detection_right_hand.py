@@ -304,7 +304,7 @@ def get_cubes_z_rotation(cv_image):
     # Resize image for head display
     debug_resized = cv2.resize(template_matching_debug_image, (1024, 600))
 
-    image_file_name_resized = "debug_right_hand_resized.png"
+    image_file_name_resized = "/tmp/debug_right_hand_resized.png"
     cv2.imwrite(image_file_name_resized, debug_resized)
 
     # Show image on head display
