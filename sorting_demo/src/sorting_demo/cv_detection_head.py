@@ -184,8 +184,15 @@ def get_blobs_info(cv_image):
     image_file_name = "/tmp/head_contours.jpg"
     cv2.imwrite(image_file_name, cv_image_contours_debug)
 
+    # Resize image for head display
+    debug_resized = cv2.resize(cv_image_contours_debug, (1024, 600))
+
+    image_file_name_resized = "debug_head_resized.png"
+    cv2.imwrite(image_file_name_resized, debug_resized)
+
+    # Show image on head display
     head_display = intera_interface.HeadDisplay()
-    head_display.display_image(image_file_name)
+    head_display.display_image(image_file_name_resized)
 
     return blob_info
 

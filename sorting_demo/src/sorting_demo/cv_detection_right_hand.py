@@ -301,8 +301,15 @@ def get_cubes_z_rotation(cv_image):
     imgindex+=1
     #cv2.waitKey(0)
 
+    # Resize image for head display
+    debug_resized = cv2.resize(template_matching_debug_image, (1024, 600))
+
+    image_file_name_resized = "debug_right_hand_resized.png"
+    cv2.imwrite(image_file_name_resized, debug_resized)
+
+    # Show image on head display
     head_display = intera_interface.HeadDisplay()
-    head_display.display_image(image_file_name)
+    head_display.display_image(image_file_name_resized)
 
     return cube_positions_and_angles_sorted
 
