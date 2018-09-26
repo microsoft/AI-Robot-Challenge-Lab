@@ -752,27 +752,27 @@ class TaskPlanner:
 
         return target_block, target_tray
 
-    def compute_grasp_pose_offset(self, pose):
+    def compute_grasp_pose_offset(self, pose, flipVerticalAxis=True):
         """
         :param pose:
         :return:
         """
 
+        if flipVerticalAxis:
+            yrot = tf.transformations.quaternion_from_euler(0, math.pi, 0)
 
-        yrot = tf.transformations.quaternion_from_euler(0, math.pi, 0)
+            cubeorientation = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+            # oorient = [overhead_orientation.x,overhead_orientation.y,overhead_orientation.z,overhead_orientation.w]
 
-        cubeorientation = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
-        # oorient = [overhead_orientation.x,overhead_orientation.y,overhead_orientation.z,overhead_orientation.w]
+            # resultingorient = tf.transformations.quaternion_multiply(cubeorientation, tf.transformations.quaternion_conjugate(oorient))
+            resultingorient = tf.transformations.quaternion_multiply(cubeorientation, yrot)
 
-        # resultingorient = tf.transformations.quaternion_multiply(cubeorientation, tf.transformations.quaternion_conjugate(oorient))
-        resultingorient = tf.transformations.quaternion_multiply(cubeorientation, yrot)
-
-        # resultingorient = cubeorientation
+            # resultingorient = cubeorientation
 
 
-        pose = copy.deepcopy(pose)
-        pose.orientation = Quaternion(x=resultingorient[0], y=resultingorient[1], z=resultingorient[2],
-                                      w=resultingorient[3])
+            pose = copy.deepcopy(pose)
+            pose.orientation = Quaternion(x=resultingorient[0], y=resultingorient[1], z=resultingorient[2],
+                                          w=resultingorient[3])
 
         pose.position.x += demo_constants.GRASP_POSE_X_OFFSET
         pose.position.y += 0
@@ -855,7 +855,6 @@ class TaskPlanner:
             approach_joints = limb.ik_request(approach_pose, tipname, joint_seed=joint_seed)
 
             # rospy.logwarn("APPROACH JOINTS: " + str(approach_joints))
-
             if approach_joints is False:
                 rospy.logerr(approach_pose)
                 joint_seed = copy.deepcopy(limb.joint_angles())
@@ -864,11 +863,17 @@ class TaskPlanner:
 
     @tasync("MOVEIT TABLETOP PLACE 2")
     def moveit_tray_place2(self, target_block, target_tray):
-        target_block.tray = target_tray
-        target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose())
-        target_block.place_pose = target_block.tray_place_pose
 
-        approach_pose = copy.deepcopy(target_block.table_place_pose)
+        self.trajectory_planner.set_default_tables_z()
+
+        #avoid collisions
+        self.trajectory_planner.table2_z = demo_constants.TABLE_HEIGHT_FOR_PICKING + demo_constants.CUBE_EDGE_LENGTH *1.2
+        self.trajectory_planner.update_table2_collision()
+
+        target_block.tray = target_tray
+        target_block.tray_place_pose = self.compute_grasp_pose_offset(target_tray.get_tray_place_block_pose(),flipVerticalAxis=False)
+
+        approach_pose = copy.deepcopy(target_block.tray_place_pose )
 
         approach_pose.position.z += demo_constants.APPROACH_Z_OFFSET
         approachjnts = self.iterative_ik_find(self.sawyer_robot._limb, approach_pose, self.sawyer_robot._tip_name)
@@ -876,24 +881,31 @@ class TaskPlanner:
         self.safe_goto_joint_position(approachjnts).result()
         # approach_joints = self.iterative_ik_find(approach_pose)
 
-        rospy.logwarn("Grasp pose:" + str(target_block.table_place_pose))
+        rospy.logwarn("Grasp pose:" + str(target_block.tray_place_pose ))
 
         # execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=100, tipname=self.sawyer_robot._tip_name, total_time_sec=2.0)
         # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
 
-        place_pose = copy.deepcopy(target_block.table_place_pose)
+        place_pose = copy.deepcopy(target_block.tray_place_pose )
         # pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
         # self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
 
-        execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=20, tipname=self.sawyer_robot._tip_name,
-                              total_time_sec=1.0)
+        success = execute_linear_motion(self.sawyer_robot._limb, place_pose, steps=500, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=2.0)
+
+        if not success:
+            rospy.logerr("Lost control authority")
 
         self.sawyer_robot.gripper_open()
 
         rospy.sleep(1.0)
         # self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
-        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name,
-                              total_time_sec=1.0)
+        success = execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=500, tipname=self.sawyer_robot._tip_name,
+                              total_time_sec=2.0)
+
+        if not success:
+            rospy.logerr("Lost control authority")
+            #rospy.spin()
 
         # self.trajectory_planner.group.attach_object(target_block.perception_id)
         rospy.sleep(0.5)
@@ -1042,8 +1054,7 @@ class TaskPlanner:
 
             rospy.sleep(0.5)
 
-            self.moveit_tabletop_place2(target_block,update_table=False).result()
-            #self.moveit_tray_place2(target_block,target_tray).result()
+            self.moveit_tray_place2(target_block,target_tray).result()
             #rospy.spin()
 
             #self.moveit_tray_place(target_block, target_tray).result()
@@ -1293,6 +1304,8 @@ class TaskPlanner:
         if res:
             self.moveit_tabletop_pick2(btarget).result()
 
+        self.environment_estimation.table.blocks = None
+
         return btarget
 
     @tasync("PICK BY COLOR AND PUT TRAY")
@@ -1413,6 +1426,34 @@ class TaskPlanner:
     @tasync("DISABLE ROBOT")
     def robot_say(self, msg):
         rospy.logwarn("ROBOT SAYS: " + str(msg))
+        import requests
+        from playsound import playsound
+
+        api_key = '1432498a32d547ec9cea2a31877fece4'
+        text = "i am a handsome robot"
+        output_file = '/tmp/output.mp3'
+
+        print('Getting token')
+        headersToken = {'Content-type': 'application/x-www-form-urlencoded', 'Content-Length': '0',
+                        'Ocp-Apim-Subscription-Key': api_key}
+        token = requests.post('https://westus.api.cognitive.microsoft.com/sts/v1.0/issueToken',
+                              headers=headersToken).text
+        # print(token)
+
+        print('Generating Request')
+        xml = """<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xml:lang='en-US'> <voice name='Microsoft Server Speech Text to Speech Voice (en-US, Jessa24kRUS)'> """ + text + """ </voice></speak>"""
+        bearer = 'Bearer ' + token
+        headersAudio = {'Content-type': 'application/ssml+xml', 'Content-Length': '199', 'Authorization': bearer,
+                        'Connection': 'Keep-Alive', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'}
+        data = requests.post('https://westus.tts.speech.microsoft.com/cognitiveservices/v1', data=xml,
+                             headers=headersAudio).content
+
+        print('Writing File' + output_file)
+        with open(output_file, "wb") as a_file:
+            a_file.write(data)
+
+        print('Playing sound: ' + text)
+        playsound('./' + output_file)
 
     @tasync("DISABLE ROBOT")
     def disable_robot_task(self):
@@ -1434,6 +1475,8 @@ class TaskPlanner:
         This is the main plan of the application
         :return:
         """
+
+        self.robot_say("Hello World")
 
         if not demo_constants.is_real_robot():
             # for simulated version the robot starts going to a home position because it usually starts
