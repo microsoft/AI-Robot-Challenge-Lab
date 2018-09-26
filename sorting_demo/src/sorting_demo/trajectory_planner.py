@@ -19,6 +19,12 @@ class TrajectoryPlanner:
         """
 
         self.internal_tray_walls_enable=False
+
+        if demo_constants.is_real_robot():
+            self.table_edge_height = 0.1
+        else:
+            self.table_edge_height = 0.15
+
         end = False
         while not end:
             try:
@@ -225,7 +231,7 @@ class TrajectoryPlanner:
         table2pose.pose.orientation.w = 1.0
         table2pose.header.stamp = rospy.Time.now()
         table2pose.header.frame_id = "world"
-        edgeheight = 0.15
+        edgeheight = self.table_edge_height
 
         self.scene.add_box("table2", table2pose, size=self.tableshape)
 
