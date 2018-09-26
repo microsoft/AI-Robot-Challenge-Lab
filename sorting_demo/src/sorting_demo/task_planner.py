@@ -970,13 +970,13 @@ class TaskPlanner:
         #pick_pose.position.z += 0.1*demo_constants.CUBE_EDGE_LENGTH
         #self.create_linear_motion_task(pick_pose, time=2.0, steps=2000).result()
 
-        execute_linear_motion(self.sawyer_robot._limb, pick_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.0)
+        success = execute_linear_motion(self.sawyer_robot._limb, pick_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.0)
 
         self.sawyer_robot.gripper_close()
 
         rospy.sleep(1.0)
         #self.create_linear_motion_task(approach_pose, time=3.0, steps=2000).result()
-        execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.0)
+        success = execute_linear_motion(self.sawyer_robot._limb, approach_pose, steps=20, tipname=self.sawyer_robot._tip_name, total_time_sec=1.0)
 
         #self.trajectory_planner.group.attach_object(target_block.perception_id)
         rospy.sleep(0.5)

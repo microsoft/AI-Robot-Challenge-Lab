@@ -17,6 +17,8 @@ class TrajectoryPlanner:
         """
         
         """
+
+        self.internal_tray_walls_enable=False
         end = False
         while not end:
             try:
@@ -214,6 +216,8 @@ class TrajectoryPlanner:
 
 
     def update_table2_collision(self):
+
+
         table2pose = geometry_msgs.msg.PoseStamped()
         table2pose.pose = Pose(position=Point(x=0.0, y=1.0, z=self.table2_z))
         table2pose.pose.orientation.w = 1.0
@@ -225,33 +229,34 @@ class TrajectoryPlanner:
 
         self.update_table_edges_collision(table2pose, edgeheight,"table2",self.table2_z)
 
-        splits = 3
-        for i in xrange(1, splits):
-            edgeyi = geometry_msgs.msg.PoseStamped()
-            edgeyi.pose = Pose(
-                position=Point(x=i * self.tableshape[0] / float(splits) - self.tableshape[0] * 0.5, y=1.0,
-                               z=self.table2_z + edgeheight * 0.5))
-            edgeyi.pose.orientation.w = 1.0
-            edgeyi.header.stamp = rospy.Time.now()
-            edgeyi.header.frame_id = "world"
+        if self.internal_tray_walls_enable:
+            splits = 3
+            for i in xrange(1, splits):
+                edgeyi = geometry_msgs.msg.PoseStamped()
+                edgeyi.pose = Pose(
+                    position=Point(x=i * self.tableshape[0] / float(splits) - self.tableshape[0] * 0.5, y=1.0,
+                                   z=self.table2_z + edgeheight * 0.5))
+                edgeyi.pose.orientation.w = 1.0
+                edgeyi.header.stamp = rospy.Time.now()
+                edgeyi.header.frame_id = "world"
 
-            newshape = (
-            self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight * 0.5)
-            self.scene.add_box("table2_edgey_" + str(i), edgeyi, size=newshape)
+                newshape = (
+                self.tableshape[0] * 0.01, self.tableshape[1], self.tableshape[2] + edgeheight * 0.5)
+                self.scene.add_box("table2_edgey_" + str(i), edgeyi, size=newshape)
 
 
-        splits = 2
-        for i in xrange(1, splits):
-            edgexi = geometry_msgs.msg.PoseStamped()
-            edgexi.pose = Pose(
-                position=Point(x= 0.0, y=1.0 - self.tableshape[1] * 0.5 + i * self.tableshape[1] / float(splits), z=self.table2_z + edgeheight * 0.5))
-            edgexi.pose.orientation.w = 1.0
-            edgexi.header.stamp = rospy.Time.now()
-            edgexi.header.frame_id = "world"
+            splits = 2
+            for i in xrange(1, splits):
+                edgexi = geometry_msgs.msg.PoseStamped()
+                edgexi.pose = Pose(
+                    position=Point(x= 0.0, y=1.0 - self.tableshape[1] * 0.5 + i * self.tableshape[1] / float(splits), z=self.table2_z + edgeheight * 0.5))
+                edgexi.pose.orientation.w = 1.0
+                edgexi.header.stamp = rospy.Time.now()
+                edgexi.header.frame_id = "world"
 
-            newshape = (
-            self.tableshape[0] , self.tableshape[1] * 0.01, self.tableshape[2] + edgeheight * 0.5)
-            self.scene.add_box("table2_edgex_" + str(i), edgexi, size=newshape)
+                newshape = (
+                self.tableshape[0] , self.tableshape[1] * 0.01, self.tableshape[2] + edgeheight * 0.5)
+                self.scene.add_box("table2_edgex_" + str(i), edgexi, size=newshape)
 
     def update_table_edges_collision(self, basepose, edgeheight,tablename, table_z):
         edgex = copy.deepcopy(basepose)
