@@ -16,17 +16,15 @@ class CameraHelper:
     """
     A helper class to take pictures with the Sawyer camera and unproject points from the images
     """
-    def __init__(self, camera_name, base_frame, table_height):
+    def __init__(self, camera_name, base_frame):
         """
         Initialize the instance
 
-        :param camera_name: The camera name. One of (head_camera, right_hand_camera)
+        :param camera_name: The camera name. One of ("head_camera", "right_hand_camera")
         :param base_frame: The frame for the robot base
-        :param table_height: The table height with respect to base_frame
         """
         self.camera_name = camera_name
         self.base_frame = base_frame
-        self.table_height = table_height
 
         self.image_queue = Queue.Queue()
         self.pinhole_camera_model = PinholeCameraModel()
@@ -77,12 +75,37 @@ class CameraHelper:
 
         return image_data
 
-    def project_point_on_table(self, point):
+    def project_point_on_table(self, point, table_height):
         """
         Projects the 2D point from the camera image on the table
 
         :param point: The 2D point in the form (x, y)
         :return: The 3D point in the coordinate space of the frame that was specified when the object was initialized
+        """
+
+        # Unproject point
+        unprojected_ray_camera = self.pinhole_camera_model.projectPixelTo3dRay(point)
+
+        # Transform ray into base frame
+        identity_quaternion = [1.0, 0.0, 0.0, 0.0]
+        camera_position, _ = transform_pose_to_base_frame([0.0, 0.0, 0.0], identity_quaternion)
+        camera_ray_point, _ = transform_pose_to_base_frame(unprojected_ray_camera, identity_quaternion)
+
+        # Intersect ray with base plane
+        camera_ray_direction = camera_ray_point - camera_position
+        point_height = camera_position[2] - table_height
+        factor = -point_height / camera_ray_direction[2]
+        intersection = camera_position + camera_ray_direction * factor
+
+        return intersection
+
+    def transform_pose_to_base_frame(self, translation, orientation):
+        """
+        Transforms a translation/orientation pose from the camera frame to the base frame
+
+        :param translation: The translation vector
+        :param orientation: The orientation quaternion
+        :return: The translation/orientation pose in the base frame coordinate space
         """
 
         # Get camera frame name
@@ -92,18 +115,24 @@ class CameraHelper:
         if self.tf_listener.frameExists(self.base_frame) and self.tf_listener.frameExists(camera_frame):
             # Get transformation
             time = self.tf_listener.getLatestCommonTime(self.base_frame, camera_frame)
+
             camera_translation_base, camera_orientation_base = self.tf_listener.lookupTransform(self.base_frame, camera_frame, time)
 
-            # Unproject point
-            unprojected_ray_camera = self.pinhole_camera_model.projectPixelTo3dRay(point)
+            # Create base-camera matrix
+            camera_base_translation_matrix = tf.transformations.translation_matrix(camera_translation_base)
+            camera_base_orientation_matrix = tf.transformations.quaternion_matrix(camera_orientation_base)
+            camera_base_matrix = numpy.matmul(camera_base_translation_matrix, camera_base_orientation_matrix)
 
-            # Rotate ray based on the frame transformation
-            camera_frame_rotation_matrix = tf.transformations.quaternion_matrix(camera_orientation_base)
-            unprojected_ray_base = numpy.dot(camera_frame_rotation_matrix[:3,:3], unprojected_ray_camera)
+            # Create camera-pose matrix
+            pose_translation_matrix = tf.transformations.translation_matrix(translation)
+            pose_orientation_matrix = tf.transformations.quaternion_matrix(orientation)
+            pose_matrix = numpy.matmul(pose_translation_matrix, pose_orientation_matrix)
 
-            # Intersect ray with base plane
-            point_height = camera_translation_base[2] - self.table_height
-            factor = -point_height / unprojected_ray_base[2]
-            intersection = camera_translation_base + unprojected_ray_base * factor
+            # Multiply both matrices
+            final_matrix = numpy.matmul(camera_base_matrix, pose_matrix)
 
-            return intersection
+            # Get final pose
+            final_translation = tf.transformations.translation_from_matrix(final_matrix)
+            final_orientation = tf.transformations.quaternion_from_matrix(final_matrix)
+
+            return final_translation, final_orientation

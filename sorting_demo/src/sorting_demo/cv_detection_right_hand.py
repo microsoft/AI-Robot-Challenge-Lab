@@ -321,7 +321,7 @@ def test_right_hand_ros():
 
     camera_name = "right_hand_camera"
 
-    camera_helper = CameraHelper(camera_name, "base", 0)
+    camera_helper = CameraHelper(camera_name, "base")
 
     if demo_constants.is_real_robot():
         camera_helper.set_exposure(5)

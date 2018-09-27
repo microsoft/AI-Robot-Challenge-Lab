@@ -43,12 +43,12 @@ class EnvironmentEstimation:
         self.original_blocks_poses_ = None
         self.mutex = RLock()
 
-        self.head_camera_helper = CameraHelper("head_camera", "base", demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
+        self.head_camera_helper = CameraHelper("head_camera", "base")
         self.bridge = CvBridge()
         self.block_pose_estimation_head_camera = None
         self.table = Table()
 
-        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
+        self.hand_camera_helper = CameraHelper("right_hand_camera", "base")
 
         if demo_constants.is_real_robot():
             self.blocks = None
@@ -209,7 +209,7 @@ class EnvironmentEstimation:
                 else:
                     final_cube_yaw_angle += math.pi / 2
 
-            projected = self.hand_camera_helper.project_point_on_table(cube_result[0])
+            projected = self.hand_camera_helper.project_point_on_table(cube_result[0], demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
             poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
 
             rospy.logwarn("quaternion angle:" + str(poseq))
@@ -275,7 +275,7 @@ class EnvironmentEstimation:
 
             rospy.logwarn("bricks database: " + str(self.blocks))
             for huekey, point2d in ptinfos:
-                projected = self.head_camera_helper.project_point_on_table(point2d)
+                projected = self.head_camera_helper.project_point_on_table(point2d, demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
                 rospy.logwarn("projected: %s" % str(projected))
 
                 if self.blocks is not None:

@@ -251,7 +251,7 @@ def test_head_ros():
     camera_name = "head_camera"
 
     TABLE_HEIGHT = demo_constants.TABLE_HEIGHT_FOR_PROJECTION
-    camera_helper = CameraHelper(camera_name, "base", TABLE_HEIGHT)
+    camera_helper = CameraHelper(camera_name, "base")
     camera_helper.set_exposure(100)
     camera_helper.set_gain(30)
 
@@ -277,7 +277,7 @@ def test_head_ros():
             points = [y for x in blob_info.values() for y in x]
 
             for index, point in enumerate(points):
-                projected = camera_helper.project_point_on_table(point)
+                projected = camera_helper.project_point_on_table(point, TABLE_HEIGHT)
                 __publish_marker(publisher, index, projected)
 
             # Wait for a key press
