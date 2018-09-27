@@ -88,8 +88,8 @@ class CameraHelper:
 
         # Transform ray into base frame
         identity_quaternion = [1.0, 0.0, 0.0, 0.0]
-        camera_position, _ = transform_pose_to_base_frame([0.0, 0.0, 0.0], identity_quaternion)
-        camera_ray_point, _ = transform_pose_to_base_frame(unprojected_ray_camera, identity_quaternion)
+        camera_position, _ = self.transform_pose_to_base_frame([0.0, 0.0, 0.0], identity_quaternion)
+        camera_ray_point, _ = self.transform_pose_to_base_frame(unprojected_ray_camera, identity_quaternion)
 
         # Intersect ray with base plane
         camera_ray_direction = camera_ray_point - camera_position

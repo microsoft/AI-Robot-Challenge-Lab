@@ -1293,6 +1293,7 @@ class TaskPlanner:
         :param color:
         :return:
         """
+        self.robot_say("Picking block from table by "+ str(color)+ " color")
         self.reset_and_recompute_head_vision_table_state_estimation()
 
         blocks = self.environment_estimation.table.get_blocks()
@@ -1532,10 +1533,13 @@ class TaskPlanner:
         """
         return {
                 "current_task": self.get_task_stack(),
-                "planner_state": "PAUSED" if self.pause_flag else "RUNNING",
+                "planner_state": "PAUSED" if self.pause_flag else "RUNNING"
+                """
+                ,
                 "table_state": self.environment_estimation.table.get_state(),
                 "trays": [t.get_state() for t in self.environment_estimation.trays],
                 "gripper": self.gripper_state.get_state()
+                """
                 }
 
 

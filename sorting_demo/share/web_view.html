@@ -32,7 +32,6 @@
             xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 statediv = document.getElementById('statediv')
-                statediv.innerHTML = "hello"
                 if (this.readyState == 4 && this.status == 200) {
                     ugly = this.responseText;
                     var obj = JSON.parse(ugly);
