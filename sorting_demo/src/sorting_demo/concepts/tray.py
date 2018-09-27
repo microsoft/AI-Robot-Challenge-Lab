@@ -70,7 +70,7 @@ class TrayState:
         if not demo_constants.is_real_robot():
             angle = -math.pi / 2.0
         else:
-            angle = math.pi / 2.0
+            angle = 0 #math.pi / 2.0
 
         zrot = tf.transformations.quaternion_from_euler(0, 0, angle)
 

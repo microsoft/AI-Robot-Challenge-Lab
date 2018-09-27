@@ -1490,34 +1490,34 @@ class TaskPlanner:
             # colliding with itself so moveit cannot work
             self.create_go_home_task(check_obstacles=False).result()
 
-        for i in xrange(1000):
-            self.create_go_vision_head_pose_task().result()
+        #for i in xrange(1000):
+        self.create_go_vision_head_pose_task().result()
 
-            try:
-                table_blocks = self.create_head_vision_processing_on_table().result()
-            except Exception as ex:
-                rospy.logerr("BLOCKS NOT DETECTED ON THE TABLE")
-                table_blocks = None
+        try:
+            table_blocks = self.create_head_vision_processing_on_table().result()
+        except Exception as ex:
+            rospy.logerr("BLOCKS NOT DETECTED ON THE TABLE")
+            table_blocks = None
 
-            # detection failed
-            if table_blocks is None:
-                self.scheduler_yield()
-                self.robot_say("BLOCKS NOT DETECTED ON THE TABLE. RESTARTING THE LOOP TASK").result()
-                rospy.sleep(1)
-            else:
-                #table blocks detection succeeded
-                rospy.logwarn("BLOCKS ON THE TABLE: "+ str(self.environment_estimation.table.blocks))
+        # detection failed
+        if table_blocks is None:
+            self.scheduler_yield()
+            self.robot_say("BLOCKS NOT DETECTED ON THE TABLE. RESTARTING THE LOOP TASK").result()
+            rospy.sleep(1)
+        else:
+            #table blocks detection succeeded
+            rospy.logwarn("BLOCKS ON THE TABLE: "+ str(self.environment_estimation.table.blocks))
 
-                self.create_move_all_cubes_to_trays(table_blocks).result()
+            self.create_move_all_cubes_to_trays(table_blocks).result()
 
-                self.robot_say("I FINISHED SORTING THE BLOCKS").result()
-                rospy.sleep(3)
-                self.robot_say("NOW I WILL PUT THEM BACK ON THE TABLE").result()
-                self.environment_estimation.blocks = None
-                continue
-                self.pick_all_pieces_from_tray_and_put_on_table().result()
+            self.robot_say("I FINISHED SORTING THE BLOCKS").result()
+            rospy.sleep(3)
+            self.environment_estimation.blocks = None
+            # self.robot_say("NOW I WILL PUT THEM BACK ON THE TABLE").result()
+            #continue
+            #self.pick_all_pieces_from_tray_and_put_on_table().result()
 
-                self.delay_task(1).result()
+            self.delay_task(1).result()
 
         self.create_wait_forever_task().result()
 
