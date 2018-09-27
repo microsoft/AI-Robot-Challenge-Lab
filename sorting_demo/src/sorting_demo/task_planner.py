@@ -990,9 +990,13 @@ class TaskPlanner:
         self.environment_estimation.table.notify_gripper_pick(target_block, self.gripper_state)
         rospy.logwarn("TABLE BLOCKS post transfer:"+ str(self.environment_estimation.table.blocks))
 
-        self.robot_say("This is a %s block"%str(target_block.color))
+        colorstr = target_block.color.upper()
+        if colorstr == "RED":
+            colorstr = "an orange"
+        else:
+            colorstr = "a "+ colorstr
 
-
+        self.robot_say("This is %s block"%colorstr)
 
     @tasync("MOVEIT TABLETOP PLACE")
     def moveit_tabletop_place(self, target_block):
