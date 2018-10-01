@@ -223,13 +223,15 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 3. Move to the parent directory: `cd ..`
 4. Run the following command: `rosdep install --from-paths src --ignore-src -r -y`
 5. Build the code: `catkin build`
-6. Run the following commands to launch the simulator:
+6. Type `hostname` in the Terminal and copy the output.
+7. Open the `intera.sh` file with a **Text Editor** and replace **your_hostname** value with the one from previous step. Save the changes in the file.
+8. Run the following commands to launch the simulator:
   ```sh
   ./intera.sh sim
   source devel/setup.bash
   roslaunch sorting_demo sorting_demo.launch
   ```
-7. Wait until the Sawyer robot simulation appears in the Gazebo window.
+9. Wait until the Sawyer robot simulation appears in the Gazebo window.
 
 # Bringing Your Robot to Life 
 
@@ -310,6 +312,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 6. Click **Open Bot** and select the file `SawyerBot.bot` from your `~/AI-Robot-Challenge-Lab/src/chatbot` directory.
 
     > NOTE: The V4 Bot Emulator gives us the ability to create bot configuration files for simpler connectivity when debugging.
+
 7. **Type** `move your arm` and press enter.
 8. Return to **Gazebo** and wait for the simulator to move the arm.
 9. **Stop** the bot by pressing **CTRL+C** in **VS Code** Terminal.
