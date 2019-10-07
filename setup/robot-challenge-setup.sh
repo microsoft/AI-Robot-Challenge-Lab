@@ -115,7 +115,7 @@ echo -e "***\n***\n***\n***\n Install ROS Kinetic Desktop FUll \n***\n***\n***\n
 echo -e ${NC}
 
 sudo apt-get update -y
-sudo apt-get install -y ros-kinetic-desktop-full
+sudo apt-get install -y ros-kinetic-desktop-full --allow-unauthenticated
 
 # Initialize rosdep
 sudo rosdep init || echo -e "${YELLOW}ROSDep Already Exists.${NC}"
