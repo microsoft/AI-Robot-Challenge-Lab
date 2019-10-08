@@ -12,12 +12,18 @@ We will use in the simulation the [Sawyer](https://www.rethinkrobotics.com/sawye
 
 For the simulation, we will use Gazebo, a common 3D robot simulator often used in ROS (see image below).
 
-<p align="center">
-<img src="docs/images/sawyer-gazebo-1.png" width="500">
-</p>
-
-<p align="center">
-<img src="docs/images/SawyerRunCube.JPG" width="500">
+<p>
+ <table style="border: none" align="center" >
+  <tr><td><b>Gazebo simulation</b><img src="docs/images/sawyer-gazebo-1.png" width="400" style="float: left"></td>
+   <td><b>Microsoft Bot Framework</b><img src="docs/images/SawyerRunCube.JPG" width="400" style="float: left"></td>
+   <td>
+    <b>Sorting cubes video</b>
+    <a href="https://www.youtube.com/watch?v=d0KZXO4mDGo" target="_blank">
+       <img src="https://img.youtube.com/vi/d0KZXO4mDGo/0.jpg" height="170"/>
+</a>
+</td>
+   </tr>
+  </table>
 </p>
 
 ---
@@ -238,8 +244,9 @@ The main robot controllers also starts a REST server and it is listening from an
 http://localhost:5000/start
 ```
 The robot must start sorting cubes into the three trays. You can see that in the following video:
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/d0KZXO4mDGo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<a href="https://www.youtube.com/watch?v=d0KZXO4mDGo" target="_blank">
+       <img src="https://img.youtube.com/vi/d0KZXO4mDGo/0.jpg" width="400"/>
+</a>
 
 To stop the simulation press `Ctrl+C` in the terminal and wait to all process to terminate.
 
