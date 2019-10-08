@@ -182,6 +182,7 @@ echo -e ${NC}
 
 
 cd ~/AI-Robot-Challenge-Lab
+source /opt/ros/kinetic/setup.bash
 rosdep install --from-paths src --ignore-src -r -y
 catkin build
 
