@@ -69,7 +69,7 @@ echo -e ${GREEN}
 echo -e "***\n***\n***\n***\nInstall bot framework Dependencies\n***\n***\n***\n***"
 echo -e ${NC}
 
-python3.6 -m pip install --user aiohttp
+python3.6 -m pip install --user aiohttp==3.5.1
 python3.6 -m pip install --user requests
 python3.6 -m pip install --user botbuilder.schema
 python3.6 -m pip install --user botbuilder.core

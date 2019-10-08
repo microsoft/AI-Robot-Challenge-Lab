@@ -92,8 +92,6 @@
   <exec_depend>rospy_message_converter</exec_depend>
   <exec_depend>intera_interface</exec_depend>
 
-
-
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
