@@ -180,10 +180,6 @@ echo -e ${BLUE}
 echo -e "Elapsed Time: ${runtime}"
 echo -e ${NC}
 
-# Source ROS Setup
-cd ~/ros_ws
-source /opt/ros/kinetic/setup.bash
-
 
 cd ~/AI-Robot-Challenge-Lab
 rosdep install --from-paths src --ignore-src -r -y
