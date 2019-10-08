@@ -101,13 +101,18 @@ echo -e ${NC}
 
 # Install some common CLI tools
 sudo apt-get update -y
-sudo apt-get install -y wget software-properties-common 
+sudo apt-get install -y wget software-properties-common curl
+
+sudo -E apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+
+curl -sSL 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' | sudo apt-key add -
 
 # Configure Ubuntu repositories. Setup sources.list
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list'
 
 # Setup keys
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+#sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+
 
 # Install ROS Kinetic Desktop FUll
 echo -e ${GREEN}
@@ -115,7 +120,7 @@ echo -e "***\n***\n***\n***\n Install ROS Kinetic Desktop FUll \n***\n***\n***\n
 echo -e ${NC}
 
 sudo apt-get update -y
-sudo apt-get install -y ros-kinetic-desktop-full --allow-unauthenticated
+sudo apt-get install -y ros-kinetic-desktop-full
 
 # Initialize rosdep
 sudo rosdep init || echo -e "${YELLOW}ROSDep Already Exists.${NC}"
@@ -124,35 +129,6 @@ rosdep update
 # Install rosinstall
 sudo apt-get install -y python-rosinstall -y
 
-# Time it
-end=$(date +%s)
-runtime=$(python -c "print '%u:%02u' % ((${end} - ${start})/60, (${end} - ${start})%60)")
-echo -e ${BLUE}
-echo -e "Elapsed Time: ${runtime}"
-echo -e ${NC}
-
-
-#
-#
-#
-# Create Development Workspace
-echo -e ${GREEN}
-echo -e "***\n***\n***\n***\nCreate Development Workspace\n***\n***\n***\n***"
-echo -e ${NC}
-# Time it
-start=$(date +%s)
-#
-#
-#
-#Add the path to ROS
-echo "source ~/ros_ws/devel/setup.bash" >> ~/.bashrc
-
-
-# Create ROS Workspace
-mkdir -p ~/ros_ws/src
-cd ~/ros_ws
-source /opt/ros/kinetic/setup.bash
-catkin_make
 
 # Time it
 end=$(date +%s)
@@ -204,82 +180,14 @@ echo -e ${BLUE}
 echo -e "Elapsed Time: ${runtime}"
 echo -e ${NC}
 
-#
-#
-#
-# Install Intera Robot SDK
-echo -e ${GREEN}
-echo -e "***\n***\n***\n***\nInstall Intera Robot SDK\n***\n***\n***\n***"
-echo -e ${NC}
-# Time it
-start=$(date +%s)
-#
-#
-#
-
-cd ~/ros_ws/src
-wstool init .
-git clone https://github.com/RethinkRobotics/sawyer_robot.git
-wstool merge sawyer_robot/sawyer_robot.rosinstall
-wstool update
-
 # Source ROS Setup
 cd ~/ros_ws
 source /opt/ros/kinetic/setup.bash
-catkin_make
-
-# Time it
-end=$(date +%s)
-runtime=$(python -c "print '%u:%02u' % ((${end} - ${start})/60, (${end} - ${start})%60)")
-echo -e ${BLUE}
-echo -e "Elapsed Time: ${runtime}"
-echo -e ${NC}
 
 
-#
-#
-#
-# Configure Robot Communication/ROS Workspace
-echo -e ${GREEN}
-echo -e "***\n***\n***\n***\nConfigure Robot Communication/ROS Workspace\n***\n***\n***\n***"
-echo -e ${NC}
-# Time it
-start=$(date +%s)
-#
-#
-#
-
-# Copy the intera.sh script
-# The intera.sh file already exists in intera_sdk repo, 
-# copy the file into your ros workspace.
-cp ~/ros_ws/src/intera_sdk/intera.sh ~/ros_ws
-
-# Update the copy of the intera.sh file
-# cd ~/ros_ws
-# Update ROS Distribution
-sed -i 's/ros_version="indigo"/ros_version="kinetic"/' ~/ros_ws/intera.sh
-# Update the ROBOTS hostname
-sed -i 's/robot_hostname="robot_hostname.local"/robot_hostname="paule.local"/' ~/ros_ws/intera.sh
-
-# TODO:// Need to figure out the docker networking to resolve hostname
-# Update YOUR IP or Hostname. This must be resolvable to the Robot
-# Choose one. Be sure to add or remove the leading # from the right ones
-sed -i 's/your_ip="192.168.XXX.XXX"/your_ip="192.168.XXX.XXX"/' ~/ros_ws/intera.sh
-#sed -i 's/#your_hostname="my_computer.local"/your_hostname="my_computer.local"/' intera.sh
-
-# Setup and configure RVIZ
-echo -e ${GREEN}
-echo -e "***\n***\n***\n***\nSetup and configure RVIZ\n***\n***\n***\n***"
-echo -e ${NC}
-# TODO:// need to do this still
-
-# Time it
-end=$(date +%s)
-runtime=$(python -c "print '%u:%02u' % ((${end} - ${start})/60, (${end} - ${start})%60)")
-echo -e ${BLUE}
-echo -e "Elapsed Time: ${runtime}"
-echo -e ${NC}
-
+cd ~/AI-Robot-Challenge-Lab
+rosdep install --from-paths src --ignore-src -r -y
+catkin build
 
 # http://sdk.rethinkrobotics.com/intera/Gazebo_Tutorial
 #
@@ -315,41 +223,6 @@ sudo apt-get install -y \
   ros-kinetic-tf-conversions \
   ros-kinetic-kdl-parser \
   ros-kinetic-sns-ik-lib
-
-# Install Sawyer Simulator files
-echo -e ${GREEN}
-echo -e "***\n***\n***\n***\nInstall Sawyer Simulator files\n***\n***\n***\n***"
-echo -e ${NC}
-
-cd ~/ros_ws/src
-if [ ! -d src/sawyer_simulator ]
-then
-  # folder does not exist so clone the repo
-	echo -e ${YELLOW}
-  echo "~/ros_ws/src/sawyer_simulator folder does not exist, cloning now"
-  echo -e ${NC}
-  git clone https://github.com/RethinkRobotics/sawyer_simulator.git
-else
-  # folder does exist so pull to update
-	echo -e ${YELLOW}
-  echo "~/ros_ws/src/sawyer_simulator folder already exists, updating now"
-  echo -e ${NC}
-  cd ~/ros_ws/src/sawyer_simulator
-  git pull
-  cd ~/ros_ws/src
-fi
-
-source /opt/ros/kinetic/setup.bash 
-wstool merge sawyer_simulator/sawyer_simulator.rosinstall
-wstool update
-
-# Build the Sources
-echo -e ${GREEN}
-echo -e "***\n***\n***\n***\nSDK Build the Sources\n***\n***\n***\n***"
-echo -e ${NC}
-source /opt/ros/kinetic/setup.bash
-cd ~/ros_ws
-catkin_make
 
 # Time it
 end=$(date +%s)
