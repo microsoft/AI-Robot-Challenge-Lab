@@ -69,7 +69,7 @@ echo -e ${GREEN}
 echo -e "***\n***\n***\n***\nInstall bot framework Dependencies\n***\n***\n***\n***"
 echo -e ${NC}
 
-python3.6 -m pip install --user aiohttp
+python3.6 -m pip install --user aiohttp==3.5.1
 python3.6 -m pip install --user requests
 python3.6 -m pip install --user botbuilder.schema
 python3.6 -m pip install --user botbuilder.core
@@ -101,7 +101,7 @@ echo -e ${NC}
 
 # Install some common CLI tools
 sudo apt-get update -y
-sudo apt-get install -y wget software-properties-common 
+sudo apt-get install -y wget software-properties-common curl
 
 sudo -E apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
@@ -180,12 +180,9 @@ echo -e ${BLUE}
 echo -e "Elapsed Time: ${runtime}"
 echo -e ${NC}
 
-# Source ROS Setup
-cd ~/ros_ws
-source /opt/ros/kinetic/setup.bash
-
 
 cd ~/AI-Robot-Challenge-Lab
+source /opt/ros/kinetic/setup.bash
 rosdep install --from-paths src --ignore-src -r -y
 catkin build
 
