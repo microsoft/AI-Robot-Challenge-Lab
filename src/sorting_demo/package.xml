@@ -68,6 +68,8 @@
   <build_depend>python-flask</build_depend>
   <build_depend>python-catkin-tools</build_depend>
   <build_depend>intera_interface</build_depend>
+  <build_depend>timed_roslaunch</build_depend>
+
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>rospack</exec_depend>
@@ -78,6 +80,7 @@
   <exec_depend>gazebo_msgs</exec_depend>
   <exec_depend>joint_state_controller</exec_depend>
   <exec_depend>moveit</exec_depend>
+  <exec_depend>timed_roslaunch</exec_depend>
 
   <exec_depend>position_controllers</exec_depend>
   <exec_depend>velocity_controllers</exec_depend>
@@ -88,8 +91,6 @@
   <exec_depend>gripper_action_controller</exec_depend>
   <exec_depend>rospy_message_converter</exec_depend>
   <exec_depend>intera_interface</exec_depend>
-
-
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

@@ -2,6 +2,10 @@
   <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
     <arg name="electric_gripper" value="true"/>
   </include>
-
-  <include file="$(find sorting_demo)/launch/robot_sorting_demo_control.launch"/>
+  
+  <include file="$(find timed_roslaunch)/launch/timed_roslaunch.launch">
+    <arg name="time" value="5" />
+    <arg name="pkg" value="sorting_demo" />
+    <arg name="file" value="robot_sorting_demo_control.launch" />
+  </include>
 </launch>
