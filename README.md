@@ -85,7 +85,7 @@ The [Language Understanding (LUIS)](https://luis.ai/) technology enables your bo
 
 LUIS uses machine learning to allow developers to build applications that can receive user input in natural language and extract meaning from it. 
 
-For this lab, we have already created a bot configuration and you just need to configure it in Azure. If you want to know more about its internals, have a look at this [link](resources/robotics-bot-luis-app.json) to check out the contents.
+For this lab, we have already created a bot configuration and you just need to configure it in Azure. If you want to know more about its internals, have a look at this [link](resources/robotics-demo-luis-app.json.json) to check out the contents.
 
 #### Create Azure resources
 First we will create the required Azure resources for LUIS. While LUIS has a standalone portal for creating and configure the model, it uses Azure for subscription management. Here, we provide you an Azure Template to create the required Azure resources without entering into the Azure Portal.
