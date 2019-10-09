@@ -546,7 +546,8 @@ We will use Computer Vision to extract information from an image and the Intera 
 <p align="center">
 <img src="docs/images/SawyerRunCube.JPG" width="500">
 </p>
-1. Return to **Gazebo** and wait for the simulator to move the requested cube.
+
+7. Return to **Gazebo** and wait for the simulator to move the requested cube.
 1. Go back to the **Bot Framework Emulator** app.
 1. Select another image of a different color and check the simulator to verify which cube it moved.
 
