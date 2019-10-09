@@ -2,15 +2,15 @@
 
 ## Introduction
 
-In this Lab, you will learn how to use the [Microsoft Bot Framework](https://dev.botframework.com/) and [Microsoft Cognitive Services](https://azure.microsoft.com/en-us/services/cognitive-services/) to develop anintelligent chat bot that controls manipulator robot robot powered by [ROS (Robot Operating System)](https://www.ros.org/) and [Gazebo]("http://gazebosim.org/"), the robot simulator. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
+In this Lab, you will learn how to use the [Microsoft Bot Framework](https://dev.botframework.com/) and [Microsoft Cognitive Services](https://azure.microsoft.com/en-us/services/cognitive-services/) to develop an intelligent chat bot that controls manipulator robot robot powered by [ROS (Robot Operating System)](https://www.ros.org/) and [Gazebo]("http://gazebosim.org/"), the robot simulator. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
 
-The lab will focus on the development of a chat bot using the Bot Framework to control a robot that performs high complex tasks (such as sorting cubes). The Bot Framework allows us to develop chat bots in different programming languages and, by adding congnitive services to it, we are able to make our bot intelligent and include capabilities like natural language understanding, image recognition, text recognition, language translation and more. In this lab we will create a simple bot to allow users to communicate with a physical robot using natural language and computer vision.
+The lab will focus on the development of a chat bot using the Bot Framework to control a robot that performs complex tasks (such as sorting cubes). The Bot Framework allows us to develop chat bots in different programming languages and, by adding cognitive services to it, we can make our bot intelligent and include capabilities like natural language understanding, image recognition, text recognition, language translation and more. In this lab we will create a simple bot to allow users to communicate with a physical robot using natural language and computer vision.
 
-It is not required any previous knowledge on robotics or ROS. The lab  code runs on a simulated environment, so it is not required to have any sensor or physical robot in order to complete it. 
+It is not required any previous knowledge on robotics or ROS neither having any robot hardware to complete it. 
 
-We will use in the simulation the [Sawyer](https://www.rethinkrobotics.com/sawyer) robot, an integrated collaborative robot (aka cobot) solution designed with embedded vision, smart swappable grippers, and high resolution force control. The robot's purpose is to automate specific repetitive industrial tasks. It comes with an arm that has a gripper which can be easily replaced by one of the available options from the ClickSmart Gripper Kit.
+We will use in the simulation the [Sawyer](https://www.rethinkrobotics.com/sawyer) robot, an integrated collaborative robot (aka cobot) solution designed with embedded vision, smart swappable grippers, and high-resolution force control. The robot's purpose is to automate specific repetitive industrial tasks. It comes with an arm that has a gripper which can be easily replaced by one of the available options from the ClickSmart Gripper Kit.
 
-For the simulation, we will use Gazebo, a common 3D robot simulator often used in ROS (see image below).
+For the simulation, we will use Gazebo, a 3D robot simulator often used in ROS (see image below).
 
 <p>
  <table style="border: none" align="center" >
@@ -49,7 +49,7 @@ For the simulation, we will use Gazebo, a common 3D robot simulator often used i
 ## Requirements and Setup
 
 ### Host Machine Requirements
-This lab requires a computer with GPU and [Ubuntu Linux 16.04](http://releases.ubuntu.com/16.04/). The main technologies that will be used locally are ROS and the bot framework. The rest of cognitive funcionality will be located in the cloud. 
+This lab requires a computer with GPU and [Ubuntu Linux 16.04](http://releases.ubuntu.com/16.04/). The main technologies that will be used locally are ROS and the bot framework. The rest of cognitive functionality will be located in the cloud. 
 
 The setup stage has three main steps that will be described in more detail in the following sections:
  - Setup Lab Repository & ROS
@@ -65,7 +65,7 @@ Open a command terminal and type the following command:
 sudo apt-get install -y git python
 ```
 
-Navigate to your home folder and clone the Lab repository with its submodule dependencies by runnning the following commands on the terminal: 
+Navigate to your home folder and clone the Lab repository with its submodule dependencies by running the following commands on the terminal: 
 ```
 cd $HOME
 git clone https://github.com/Microsoft/AI-Robot-Challenge-Lab.git --recurse-submodules
@@ -76,7 +76,7 @@ Now, it is time to install the rest of dependencies and build the solution. We h
 cd ~/AI-Robot-Challenge-Lab/setup
 ./robot-challenge-setup.sh
 ```
-During the installation you might be required to introduce your sudo credentials. Please be patient, the installation will take around 30 minutes. Once completed, close the terminal as you need to refresh environment variables from the installation. 
+During the installation you might be required to introduce your sudo credentials. Please be patient; the installation will take around 30 minutes. Once completed, close the terminal as you need to refresh environment variables from the installation. 
 
 
 ### Setup Language Understanding
@@ -85,10 +85,10 @@ The [Language Understanding (LUIS)](https://luis.ai/) technology enables your bo
 
 LUIS uses machine learning to allow developers to build applications that can receive user input in natural language and extract meaning from it. 
 
-For this lab, we have already created a bot configuration and you just need to configure it in Azure. If you want to know more about its internals, have a look to this [link](resources/robotics-bot-luis-app.json) to check out the contents.
+For this lab, we have already created a bot configuration and you just need to configure it in Azure. If you want to know more about its internals, have a look at this [link](resources/robotics-bot-luis-app.json) to check out the contents.
 
 #### Create Azure resources
-First we will create the required azure resources for LUIS. While LUIS has a standalone portal for creating and configure the model, it uses Azure for subscription management. Here, we provide you an Azure Template to create the required Azure resources without entering into the Azure Portal.
+First we will create the required Azure resources for LUIS. While LUIS has a standalone portal for creating and configure the model, it uses Azure for subscription management. Here, we provide you an Azure Template to create the required Azure resources without entering into the Azure Portal.
 <p>
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fpabloinigoblasco%2FAI-Robot-Challenge-Lab%2Fmaster%2Fresources%2Fluis_azure_template.json" target="_blank">
 </a>
@@ -115,7 +115,7 @@ In the next steps we will show you how you can configure the LUIS service it wil
 
 2. After that, we will get into the  `My Apps` dashboard. Now, we will import a LUIS App we have provided for this lab. 
     * Select your subscription from the subscription combo box. 
-    * Select also the authoring resource you created in previous steps. If you used the azure template, select `robotics-luis-Authoring`. 
+    * Select also the authoring resource you created in previous steps. If you used the Azure template, select `robotics-luis-Authoring`. 
     * Click `Import new app` to open the import dialog.
 
 <p align="center">
@@ -143,7 +143,7 @@ In the next steps we will show you how you can configure the LUIS service it wil
 <img src="docs/images/LUIS-TrainingResults-11.JPG" width="600">
 </p>
 
-6. Now let's do a quick funcionality check for the LUIS Service directly from the dashboard page.    
+6. Now let's do a quick functionality check for the LUIS Service directly from the dashboard page.    
     * Click the **Test** button to open the test panel. 
     * Then **Type** `move arm` and press enter.
 
@@ -154,7 +154,7 @@ In the next steps we will show you how you can configure the LUIS service it wil
 </p>
 
 
-7. Now, lets handle the application keys.
+7. Now, we will handle the application keys.
     * Click on the **Manage** option.
     * Copy the LUIS `Application ID` (See image below) to Notepad . We'll need this App ID later on.
 
@@ -163,7 +163,7 @@ In the next steps we will show you how you can configure the LUIS service it wil
 </p>
     
 
-8. Finally, let's create the prediction resource and publish it.
+8. Finally, let's create a prediction resource and publish it.
     * Click the **Azure Resources** option.
     * Click on **Add prediction resource**. You might need to scroll down to find the option.
     * Select the only **tenant**.
@@ -185,12 +185,12 @@ In the next steps we will show you how you can configure the LUIS service it wil
 <img src="docs/images/LUIS-Publish-14.JPG" width="600">
 </p>
 
-Congratilations! You have your LUIS service ready to be used. We will do that in the `Hands On Lab` section.
+Congratulations! You have your LUIS service ready to be used. We will do that in the `Hands On Lab` section.
 
 
 ### Setup Computer Vision
 
-The cloud-based Computer Vision service provides developers with access to advanced machine learning models for analyzing images. Computer Vision algorithms can analyze the content of an image in different ways, depending on the visual features you're interested in. For instance, in this lab we will be analyzing images to identify a dominant color for our robot to process. Specifically for this lab, we will use Computer Vision cognitive service to detect cube colors. 
+The cloud-based Computer Vision service provides developers with access to advanced machine learning models for analyzing images. Computer Vision algorithms can analyze the content of an image in different ways, depending on the visual features you're interested in. For instance, in this lab we will be analyzing images to identify a dominant color for our robot to process. Precisely for this lab, we will use Computer Vision cognitive service to detect cube colors. 
 
 The Computer Vision API requires a subscription key from the Azure portal. This key needs to be either passed through a query string parameter or specified in the request header.Here, we give you an Azure Template to create the required resources.
 
@@ -207,7 +207,7 @@ Alternatively, you can create these resources manually for this lab following th
 
 ### Run Robot Simulation
 
-Now the repository is downloaded and built we can launch the simulator. First enter into the intera-sdk command line. To do that, type the following commands:
+Now the repository is downloaded and built we can launch the simulator. First enter into the intera SDK command line. To do that, type the following commands:
 
 ```
 cd ~/AI-Robot-Challenge-Lab
@@ -220,7 +220,7 @@ Launch the robot simulation. Type in the intera command line the following:
 source devel/setup.bash
 roslaunch sorting_demo sorting_demo.launch
 ```
-Wait until the Sawyer robot simulation starts. If it is the first time you open gazebo it may need to download some models and take a while. Eventually, two windows must open: 
+Wait until the Sawyer robot simulation starts. If it is the first time you open Gazebo it may need to download some models and take a while. Eventually, two windows must open: 
  * Gazebo simulator
  * Rviz visualizer
 
@@ -228,7 +228,7 @@ Wait until the Sawyer robot simulation starts. If it is the first time you open 
 <img src="docs/images/sawyer-gazebo-2.png" width="500">
 </p>
 
-[Rviz]("http://wiki.ros.org/rviz") is an open source 3D visualizer for the Robot Operating System (ROS) framework. It uses sensors data and custom visualization markers to develop robot capabilities in a 3D environment. For this lab, we will see the estimated robot pose based on the information received from joint sensors.
+[Rviz]("http://wiki.ros.org/rviz") is an open-source 3D visualizer for the Robot Operating System (ROS) framework. It uses sensors data and custom visualization markers to develop robot capabilities in a 3D environment. For this lab, we will see the estimated robot pose based on the information received from joint sensors.
 
 <p align="center">
 <img src="docs/images/sawyer-rviz.png" width="500">
@@ -238,7 +238,7 @@ Wait until the Sawyer robot simulation starts. If it is the first time you open 
 
 The code provided implements with ROS a complete robot application (from perception, to arm motion planning and control) with the Sawyer Robot. Feel free to have a look go the code in [src/sorting_demo](src/sorting_demo).
 
-The main robot controllers also starts a REST server and it is listening from any action request. For example, to see how the robot sort all the cubes on the trays, open a web browser and put the following url:
+The main robot controllers also starts a REST server and it is listening from any action request. For example, to see how the robot sort all the cubes on the trays, open a web browser and put the following URL:
 
 ```
 http://localhost:5000/start
@@ -248,7 +248,7 @@ The robot must start sorting cubes into the three trays. You can see that in the
        <img src="https://img.youtube.com/vi/d0KZXO4mDGo/0.jpg" width="400"/>
 </a>
 
-To stop the simulation press `Ctrl+C` in the terminal and wait to all process to terminate.
+To stop the simulation press `Ctrl+C` in the terminal and wait for the entire process to terminate.
 
 ### Add support for Language Understanding
 
@@ -321,7 +321,7 @@ Let's add language understanding support to the bot.
 The bot emulator provides a convenient way to interact and debug your bot locally. Let's use the emulator to send requests to our bot:
 
 1. Review the Explorer from the left pane in **VS Code**. Find the **CHATBOT** folder and expand it. 
-2. Right click the `talk-to-my-robot.py` file.
+2. Right-click the `talk-to-my-robot.py` file.
 3. Select **Run Python File in Terminal** to execute the bot script. Install the **VS Code** Python extension if that option is not available
 
     > NOTE: Dismiss the alert: `Linter pylint is not installed` if prompted. If you get compilation errors, ensure you have selected the correct interpreter in step 1 of the previous section and your indentation is correct.
@@ -398,7 +398,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test 'make the grippers move' command
 
-1. Right click the `talk-to-my-robot.py` file from the Explorer in **VS Code**.
+1. Right-click the `talk-to-my-robot.py` file from the Explorer in **VS Code**.
 1. Select **Run Python File in Terminal** to execute the bot script.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
@@ -447,7 +447,7 @@ The bot emulator provides a convenient way to interact and debug your bot locall
 
 ### Test 'show robot statistics' command
 
-1. Right click the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
+1. **Right-click** the `talk-to-my-robot.py` file from the Explorer in **VSCode**.
 1. Select **Run Python File in Terminal** to execute the bot script.
 1. Return to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
@@ -537,7 +537,7 @@ We will use Computer Vision to extract information from an image and the Intera 
 
 ### Test the 'move cube' command
 
-1. Right click the `talk-to-my-robot.py` file from the Explorer in **VS Code**.
+1. **Right-click** the `talk-to-my-robot.py` file from the Explorer in **VS Code**.
 1. Select **Run Python File in Terminal** to execute the bot script.
 1. Go back to the **Bot Framework Emulator** app.
 1. Click **Start Over** to start a new conversation.
