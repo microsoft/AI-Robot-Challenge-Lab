@@ -91,7 +91,6 @@ For this lab, we have already created a bot configuration and you just need to c
 First we will create the required Azure resources for LUIS. While LUIS has a standalone portal for creating and configure the model, it uses Azure for subscription management. Here, we provide you an Azure Template to create the required Azure resources without entering into the Azure Portal.
 <p>
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fpabloinigoblasco%2FAI-Robot-Challenge-Lab%2Fmaster%2Fresources%2Fluis_azure_template.json" target="_blank">
-</a>
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 </p> 
@@ -196,7 +195,6 @@ The Computer Vision API requires a subscription key from the Azure portal. This 
 
 <p>
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fpabloinigoblasco%2FAI-Robot-Challenge-Lab%2Fmaster%2Fresources%2Fazure_cv_template.json" target="_blank">
-</a>
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 </p>
