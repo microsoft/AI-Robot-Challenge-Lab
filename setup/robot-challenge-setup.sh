@@ -43,6 +43,7 @@ sudo apt-get -f install libindicator7 -y
 sudo apt-get -f install libappindicator1 -y
 # install any unmet dependencies
 sudo apt-get -f install -y
+sudo apt-get install -y wget
 
 TEMP_DEB="$(mktemp)"
 wget -O "$TEMP_DEB" 'https://roboticslabstorage.blob.core.windows.net/github-assets/botframework-emulator_4.0.15-alpha_amd64.deb'
@@ -101,7 +102,7 @@ echo -e ${NC}
 
 # Install some common CLI tools
 sudo apt-get update -y
-sudo apt-get install -y wget software-properties-common curl
+sudo apt-get install -y software-properties-common curl
 
 sudo -E apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
