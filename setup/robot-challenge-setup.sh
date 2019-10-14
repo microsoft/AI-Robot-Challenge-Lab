@@ -43,7 +43,7 @@ sudo apt-get -f install libindicator7 -y
 sudo apt-get -f install libappindicator1 -y
 # install any unmet dependencies
 sudo apt-get -f install -y
-sudo apt-get install -y wget
+sudo apt-get install -y wget gconf-service
 
 TEMP_DEB="$(mktemp)"
 wget -O "$TEMP_DEB" 'https://roboticslabstorage.blob.core.windows.net/github-assets/botframework-emulator_4.0.15-alpha_amd64.deb'
@@ -257,7 +257,7 @@ wget -O "$TEMP_DEB" 'https://dl.google.com/linux/linux_signing_key.pub'
 sudo apt-key add "$TEMP_DEB"
 rm -f "$TEMP_DEB"
 sudo apt-get update
-sudo apt-get install google-chrome-stable
+sudo apt-get install -y google-chrome-stable
 
 
 # Time it
@@ -285,7 +285,7 @@ sudo su -c "echo 'deb [arch=amd64] http://packages.microsoft.com/repos/vscode st
 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
 sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
 sudo apt-get update
-sudo apt-get install code
+sudo apt-get install -y code
 
 # Time it
 end=$(date +%s)
