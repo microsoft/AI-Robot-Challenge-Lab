@@ -13,6 +13,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y git pyth
 RUN bash -c 'cd $HOME; git clone https://github.com/pabloinigoblasco/AI-Robot-Challenge-Lab.git --recurse-submodules'
 
 RUN bash -c 'export DEBIAN_FRONTEND=noninteractive; $HOME/AI-Robot-Challenge-Lab/setup/robot-challenge-setup.sh'
+RUN bash -c 'cd $HOME/AI-Robot-Challenge-Lab; git pull'
+RUN bash -c 'cd $HOME/AI-Robot-Challenge-Lab; git submodule init; git submodule update --recursive'
+RUN bash -c 'cd $HOME/AI-Robot-Challenge-Lab; catkin build'
 
-ENTRYPOINT bash -c 'source /opt/ros/kinetic/setup.bash; source /root/AI-Robot-Challenge-Lab/devel/setup.bash; roslaunch sorting_demo sorting_demo.launch'
+COPY intera.sh /root/AI-Robot-Challenge-Lab
+COPY run.sh /root/AI-Robot-Challenge-Lab/run.sh
+#ENTRYPOINT bash
+#ENTRYPOINT bash -c 'cd /root/AI-Robot-Challenge-Lab; source /opt/ros/kinetic/setup.bash; ./intera.sh sim ./run.sh'
 
