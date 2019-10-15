@@ -1,4 +1,6 @@
 <launch>
+  <arg name="visualization" default="true"/>
+  
   <!-- Start the Sawyer pick and place demo -->
   <node pkg="sorting_demo" type="program.py" name="sorting_demo" >
     <remap from="/joint_states" to="/robot/joint_states"/>
@@ -11,7 +13,8 @@
     <node pkg="sorting_demo" type="trajectory_action_server.py" name="trajectory_action_server"/>
     <node pkg="sorting_demo" type="gripper_action_server.py" name="gripper_action_server"/>
 
-    <include file="$(find sawyer_moveit_config)/launch/sawyer_moveit.launch">
+    <include file="$(find sorting_demo)/launch/sawyer_moveit.launch">
         <arg name="electric_gripper" value="true"/>
+        <arg name="visualization" value="$(arg visualization)"/>
     </include>
 </launch>
