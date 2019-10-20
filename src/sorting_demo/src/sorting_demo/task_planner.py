@@ -860,7 +860,6 @@ class TaskPlanner:
         """
 
         try:
-
             self.moveit_tabletop_pick(target_block).result()
 
             rospy.sleep(0.1)

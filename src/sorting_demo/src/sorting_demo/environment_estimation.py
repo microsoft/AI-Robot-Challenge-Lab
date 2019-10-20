@@ -14,7 +14,6 @@ from concepts.block import BlockState
 from concepts.tray import TrayState
 from concepts.table import Table
 
-
 from cv_detection_head import CameraHelper, get_blobs_info
 
 from cv_detection_right_hand import get_cubes_z_rotation
@@ -22,7 +21,6 @@ from utils.mathutils import *
 import demo_constants
 from threading import RLock
 import cv2
-
 
 class EnvironmentEstimation:
     def __init__(self):
@@ -175,13 +173,13 @@ class EnvironmentEstimation:
             # cv2.imshow("cube detection", cv_image)
             # cv2.waitKey(0)
 
-            position = closest_block.gazebo_pose.position
-            orientation = closest_block.gazebo_pose.orientation
+            #position = closest_block.gazebo_pose.position
+            #orientation = closest_block.gazebo_pose.orientation
 
             return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
                         orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])), graspA or graspB
         except Exception as ex:
-            rospy.logwarn("erroneous cube detection")
+            rospy.logwarn("erroneous cube detection:  " + str(ex))
             # cv2.imshow("erroneus cube detection", cv_image)
             # cv2.waitKey(0)
             return None, False
