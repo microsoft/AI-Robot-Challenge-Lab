@@ -6,9 +6,11 @@ import rospy
 from task_planner import TaskPlanner
 import demo_constants
 import gazebo_models
+from task_planner import TaskPlanner
 
 
 def main():
+
     rospy.init_node("sorting_demo")
     rospy.logwarn("Hello world")
 
