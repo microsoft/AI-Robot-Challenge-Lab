@@ -25,6 +25,10 @@ ADAPTER = BotFrameworkAdapter(SETTINGS)
 
 SIM_API_HOST = 'http://localhost:5000'
 
+import os
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.join(SCRIPT_DIR, "..", "..")
+
 
 class ComputerVisionApiService:
     @staticmethod
@@ -192,7 +196,7 @@ class BotCommandHandler:
         print('Moving arm... do something cool')
         # launch your python2 script using bash
 
-        python2_command = "bash -c 'source ~/AI-Robot-Challenge-Lab/devel/setup.bash; python2.7 ~/AI-Robot-Challenge-Lab/src/chatbot/bot-wave-arm-node.py'"
+        python2_command = "bash -c 'source "+ ROOT_DIR + "/devel/setup.bash; python2.7 " + ROOT_DIR +"/src/chatbot/bot-move-grippers.py -a {}'".format(action)
         process = subprocess.Popen(
             python2_command, stdout=subprocess.PIPE, shell=True)
         output, error = process.communicate()  # receive output from the python2 script
@@ -206,7 +210,7 @@ class BotCommandHandler:
         # print(f'{action} grippers... wait a few seconds')
         # # launch your python2 script using bash
         #
-        # python2_command = "bash -c 'source ~/AI-Robot-Challenge-Lab/devel/setup.bash; python2.7 ~/AI-Robot-Challenge-Lab/src/chatbot/bot-move-grippers.py -a {}'".format(action)
+        # python2_command = "bash -c 'source "+ ROOT_DIR + "/devel/setup.bash; python2.7 " + ROOT_DIR +"/src/chatbot/bot-move-grippers.py -a {}'".format(action)
         # process = subprocess.Popen(python2_command, stdout=subprocess.PIPE, shell=True)
         # output, error = process.communicate()  # receive output from the python2 script
 
@@ -220,7 +224,7 @@ class BotCommandHandler:
         # Implement Show Stats Command (do not uncomment this line)
         # print('Showing stats... do something')
         # # launch your python2 script using bash
-        # python2_command = "bash -c 'source ~/AI-Robot-Challenge-Lab/devel/setup.bash; python2.7 ~/AI-Robot-Challenge-Lab/src/chatbot/bot-stats-node.py'"
+        # python2_command = "bash -c 'source "+ ROOT_DIR + "/devel/setup.bash; python2.7 " + ROOT_DIR +"/src/chatbot/bot-stats-node.py'"
 
         # process = subprocess.Popen(python2_command, stdout=subprocess.PIPE, shell=True)
         # output, error = process.communicate()  # receive output from the python2 script

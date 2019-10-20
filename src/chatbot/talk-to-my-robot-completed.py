@@ -11,11 +11,10 @@ from botbuilder.core import (
     BotFrameworkAdapter, BotFrameworkAdapterSettings, TurnContext)
 from botbuilder.schema import (Activity, ActivityTypes)
 
-
 # Settings
-LUIS_APP_ID = 'UPDATE_THIS_KEY'
-LUIS_SUBSCRIPTION_KEY = 'UPDATE_THIS_KEY'
-COMPUTER_VISION_SUBSCRIPTION_KEY = "UPDATE_THIS_KEY"
+LUIS_APP_ID = '701ff9a6-2cfe-4633-bac9-4f4a00d9201f'
+LUIS_SUBSCRIPTION_KEY = '9d16c42bd871492e9d069bbc14f16416'
+COMPUTER_VISION_SUBSCRIPTION_KEY = "7556d3e29b40428580f03ec9028272fe"
 
 COMPUTER_VISION_ANALYZE_URL = "https://westus.api.cognitive.microsoft.com/vision/v2.0/analyze"
 BOT_APP_ID = ''
@@ -25,6 +24,9 @@ ADAPTER = BotFrameworkAdapter(SETTINGS)
 
 SIM_API_HOST = 'http://localhost:5000'
 
+import os
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.join(SCRIPT_DIR, "..", "..")
 
 class ComputerVisionApiService:
     @staticmethod
@@ -191,7 +193,7 @@ class BotCommandHandler:
         print('Moving arm... do something cool')
         # launch your python2 script using bash
 
-        python2_command = "bash -c 'source ~/AI-Robot-Challenge-Lab/devel/setup.bash; python2.7 ~/AI-Robot-Challenge-Lab/src/chatbot/bot-wave-arm-node.py'"
+        python2_command = "bash -c 'source "+ ROOT_DIR + "/devel/setup.bash; python2.7 " + ROOT_DIR +"/src/chatbot/bot-wave-arm-node.py'"
         process = subprocess.Popen(
             python2_command, stdout=subprocess.PIPE, shell=True)
         output, error = process.communicate()  # receive output from the python2 script
@@ -205,7 +207,7 @@ class BotCommandHandler:
         print(f'{action} grippers... wait a few seconds')
         # launch your python2 script using bash
 
-        python2_command = "bash -c 'source ~/AI-Robot-Challenge-Lab/devel/setup.bash; python2.7 ~/AI-Robot-Challenge-Lab/src/chatbot/bot-move-grippers.py -a {}'".format(
+        python2_command = "bash -c 'source "+ ROOT_DIR + "/devel/setup.bash; python2.7 " + ROOT_DIR +"/src/chatbot/bot-move-grippers.py -a {}'".format(
             action)
         process = subprocess.Popen(
             python2_command, stdout=subprocess.PIPE, shell=True)
@@ -221,7 +223,7 @@ class BotCommandHandler:
         # Implement Show Stats Command (do not uncomment this line)
         print('Showing stats... do something')
         # launch your python2 script using bash
-        python2_command = "bash -c 'source ~/AI-Robot-Challenge-Lab/devel/setup.bash; python2.7 ~/AI-Robot-Challenge-Lab/src/chatbot/bot-stats-node.py'"
+        python2_command = "bash -c 'source "+ ROOT_DIR + "/devel/setup.bash; python2.7 " + ROOT_DIR +"/src/chatbot/bot-stats-node.py'"
 
         process = subprocess.Popen(
             python2_command, stdout=subprocess.PIPE, shell=True)
