@@ -13,4 +13,4 @@ steps:
   inputs:
     repository: $(imageName)
     command: build
-    Dockerfile: docker/ubuntu-xenial-kineteic/Dockerfile
+    Dockerfile: docker/ubuntu-xenial-kinetic/Dockerfile
