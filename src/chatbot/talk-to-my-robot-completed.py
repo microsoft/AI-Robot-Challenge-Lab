@@ -12,9 +12,9 @@ from botbuilder.core import (
 from botbuilder.schema import (Activity, ActivityTypes)
 
 # Settings
-LUIS_APP_ID = '701ff9a6-2cfe-4633-bac9-4f4a00d9201f'
-LUIS_SUBSCRIPTION_KEY = '9d16c42bd871492e9d069bbc14f16416'
-COMPUTER_VISION_SUBSCRIPTION_KEY = "7556d3e29b40428580f03ec9028272fe"
+LUIS_APP_ID = 'UPDATE_THIS_KEY'
+LUIS_SUBSCRIPTION_KEY = 'UPDATE_THIS_KEY'
+COMPUTER_VISION_SUBSCRIPTION_KEY = "UPDATE_THIS_KEY"
 
 COMPUTER_VISION_ANALYZE_URL = "https://westus.api.cognitive.microsoft.com/vision/v2.0/analyze"
 BOT_APP_ID = ''
