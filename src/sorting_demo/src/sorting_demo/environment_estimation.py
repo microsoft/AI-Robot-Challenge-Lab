@@ -14,9 +14,10 @@ from concepts.block import BlockState
 from concepts.tray import TrayState
 from concepts.table import Table
 
-from cv_detection_head import CameraHelper, get_blobs_info
-
+from cv_detection_camera_helper import CameraHelper
+from cv_detection_head import get_blobs_info
 from cv_detection_right_hand import get_cubes_z_rotation
+
 from utils.mathutils import *
 import demo_constants
 from threading import RLock
@@ -30,7 +31,6 @@ class EnvironmentEstimation:
         self.gazebo_blocks = []
 
         self.trays = []
-        self.blocks = []
 
         self.tf_broacaster = tf.TransformBroadcaster()
         self.tf_listener = tf.TransformListener()
@@ -42,14 +42,41 @@ class EnvironmentEstimation:
         self.original_blocks_poses_ = None
         self.mutex = RLock()
 
-        TABLE_HEIGHT = -0.12
-        self.head_camera_helper = CameraHelper("head_camera", "base", TABLE_HEIGHT)
+        self.head_camera_helper = CameraHelper("head_camera", "base")
         self.bridge = CvBridge()
         self.block_pose_estimation_head_camera = None
         self.table = Table()
 
-        self.hand_camera_helper = CameraHelper("right_hand_camera", "base", TABLE_HEIGHT)
+        self.hand_camera_helper = CameraHelper("right_hand_camera", "base")
 
+        if demo_constants.is_real_robot():
+            self.blocks = None
+
+            """
+            tray_poses = [Pose(position=Point(x=0.56, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.48, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.4, y=0.6, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1))]
+            """
+
+            tray_poses = [Pose(position=Point(x=0.35, y=0.74, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.25, y=0.74, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                          Pose(position=Point(x=0.15, y=0.74, z=demo_constants.TABLE_HEIGHT_FOR_PICKING),
+                               orientation=Quaternion(x=0, y=0, z=0, w=1))]
+
+            colors = ["Red", "Blue", "Green"]
+
+            for i, p in enumerate(tray_poses):
+                tray = TrayState(i, p, 0.0)
+                tray.color = colors[i]
+                self.trays.append(tray)
+
+        # CREATE MANUALLY BLOCKS FOR REAL CASE
+        """
         if demo_constants.is_real_robot():
             k = 3
             for i in xrange(k):
@@ -64,7 +91,8 @@ class EnvironmentEstimation:
                                                                 z=0.7725),
                                                  orientation=Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])))
 
-                    self.gazebo_blocks.append(block)
+                    self.blocks.append(block)
+        """
 
     def identify_block_from_aproximated_point(self, projected):
         """
@@ -91,11 +119,23 @@ class EnvironmentEstimation:
         else:
             return None
 
-    def compute_block_pose_estimation_from_arm_camera(self, CUBE_SIZE=150):
+    def set_cognex_strobe(self, value):
+        self.hand_camera_helper.set_cognex_strobe(value)
+
+    def compute_block_pose_estimation_from_arm_camera(self):
         # get latest image from topic
         rospy.sleep(0.3)
         # Take picture
+        self.hand_camera_helper.set_exposure(5)
+        self.hand_camera_helper.set_gain(255)
+
+        self.hand_camera_helper.set_cognex_strobe(True)
+        rospy.sleep(0.05)
         img_data = self.hand_camera_helper.take_single_picture()
+        self.hand_camera_helper.set_cognex_strobe(False)
+
+        rospy.logwarn("COMPUTE BLOCK POSE ESTIMATION")
+        rospy.logwarn("GETTING IMAGE FROM ARM CAMERA")
 
         # Convert to OpenCV format
         cv_image = self.bridge.imgmsg_to_cv2(img_data, "bgr8")
@@ -103,11 +143,14 @@ class EnvironmentEstimation:
         camwtrans = None
         camwrot = None
 
+        rospy.logwarn("LOOKUP ARM CAMERA POSITION FRAME")
+
         try:
             (camwtrans, camwrot) = self.tf_listener.lookupTransform('/right_hand_camera_optical', '/base',
                                                                     rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
             rospy.logerr(ex.message)
+            return None, False
 
         rotmat = tf.transformations.quaternion_matrix(camwrot)
         transmat = tf.transformations.translation_matrix((camwtrans))
@@ -123,10 +166,10 @@ class EnvironmentEstimation:
         rospy.logwarn("camera rot:" + str(rotmat))
         rospy.logwarn("zaxis camera vector:" + str(zaxis))
         # Save for debugging
-        # cv2.imwrite("/tmp/debug.png", cv_image)
+        cv2.imwrite("/tmp/debug.png", cv_image)
 
         # Get cube rotation
-        detected_cubes_info = get_cubes_z_rotation(cv_image, CUBE_SIZE=CUBE_SIZE)
+        detected_cubes_info = get_cubes_z_rotation(cv_image)
         center = (cv_image.shape[1] / 2, cv_image.shape[0] / 2)
 
         def cubedistToCenter(cube):
@@ -139,11 +182,13 @@ class EnvironmentEstimation:
         sorted_center_cubes = sorted(detected_cubes_info, key=cubedistToCenter)
 
         try:
-            cube = sorted_center_cubes[0]
+            cube_result = sorted_center_cubes[0]
 
-            image_cube_angle = cube[1] * (math.pi / 180.0)
-            graspA = cube[2]
-            graspB = cube[3]
+            image_cube_angle = cube_result[1] * (math.pi / 180.0)
+            graspA = cube_result[2]
+            graspB = cube_result[3]
+
+            graspA = True
 
             rospy.logwarn("image detected cube angle: " + str(image_cube_angle))
 
@@ -163,7 +208,7 @@ class EnvironmentEstimation:
                 else:
                     final_cube_yaw_angle += math.pi / 2
 
-            projected = self.hand_camera_helper.project_point_on_table(cube[0])
+            projected = self.hand_camera_helper.project_point_on_table(cube_result[0], demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
             poseq = tf.transformations.quaternion_from_euler(0, 0, final_cube_yaw_angle)
 
             rospy.logwarn("quaternion angle:" + str(poseq))
@@ -184,6 +229,17 @@ class EnvironmentEstimation:
             # cv2.waitKey(0)
             return None, False
 
+    def nearest_color(self, huevalue):
+        known_colors = [("Red", 0), ("Blue", 120), ("Green", 60)]
+
+        distances = []
+
+        for k, value in known_colors:
+            distances.append((k, math.fabs(value - huevalue)))
+
+        if len(distances) > 0:
+            return sorted(distances, key=lambda tup: tup[1])[0][0]
+
     def compute_block_pose_estimations_from_head_camera(self):
         """
         For each block updates:
@@ -193,6 +249,9 @@ class EnvironmentEstimation:
         """
         try:
             self.mutex.acquire()
+
+            self.head_camera_helper.set_exposure(100)
+            self.head_camera_helper.set_gain(30)
             img_data = self.head_camera_helper.take_single_picture()
 
             # Convert to OpenCV format
@@ -213,13 +272,27 @@ class EnvironmentEstimation:
 
             detected_blocks = []
 
+            first_time_blocks = []
+
+            rospy.logwarn("bricks database: " + str(self.blocks))
             for huekey, point2d in ptinfos:
-                projected = self.head_camera_helper.project_point_on_table(point2d)
+                projected = self.head_camera_helper.project_point_on_table(point2d, demo_constants.TABLE_HEIGHT_FOR_PROJECTION)
                 rospy.logwarn("projected: %s" % str(projected))
 
-                block = self.identify_block_from_aproximated_point(projected)
+                if self.blocks is not None:
+                    # match from previous state
+                    block = self.identify_block_from_aproximated_point(projected)
+                else:
+                    # create for very first time
+                    block = BlockState(id=str(len(first_time_blocks)), pose=Pose())
+                    first_time_blocks.append(block)
+
                 if block is None:
+                    rospy.logerr("CUBE DETECTED BUT NOT IDENTIFIED TROUGH TABLE INTERSECTION PROJECTION")
+                    rospy.logerr("current blocks in the world: %s" % (str(self.blocks)))
                     continue
+
+                block.color = self.nearest_color(huekey)
 
                 detected_blocks.append(block)
 
@@ -232,6 +305,10 @@ class EnvironmentEstimation:
                     orientation=Quaternion(x=0, y=0, z=0, w=1))
 
                 rospy.logwarn("blob identified: " + str(block))
+
+            # blocks database created by this initial detection
+            if self.blocks is None:
+                self.blocks = first_time_blocks
 
             rospy.logwarn("Table blocks:")
             self.table.blocks = detected_blocks
@@ -305,7 +382,7 @@ class EnvironmentEstimation:
                     item = self.get_tray_by_gazebo_id(name)
                     # item = None
                     if item is None:
-                        item = TrayState(gazebo_id=name, pose=pose,
+                        item = TrayState(id=name, pose=pose,
                                          TRAY_SURFACE_THICKNESS=demo_constants.TRAY_SURFACE_THICKNESS)
                         item.color = demo_constants.TRAY_COLORS[item.num].replace("Gazebo/", "")
                     else:
@@ -439,7 +516,11 @@ class EnvironmentEstimation:
         :param id:
         :return:
         """
+<<<<<<< HEAD:src/sorting_demo/src/sorting_demo/environment_estimation.py
 
+=======
+        rospy.logwarn("Color: " + str(color))
+>>>>>>> aruco_on_real_robot:sorting_demo/src/sorting_demo/environment_estimation.py
         color = color.replace("Gazebo/", "")
         rospy.logwarn("by color: " + str(color))
         rospy.logwarn("by color: " + str(self.trays))

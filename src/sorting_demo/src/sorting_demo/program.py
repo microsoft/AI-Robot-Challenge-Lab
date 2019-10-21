@@ -30,13 +30,20 @@ def main():
 
     task_planner = TaskPlanner()
 
-    rospy.logwarn("Hello world")
-
-    task_planner.create_go_home_task(check_obstacles=False).result()
+    task_planner.robot_say("Hello world").result()
+    #rospy.spin()
+    if not demo_constants.is_real_robot():
+        task_planner.create_go_home_task(check_obstacles=False).result()
 
     task_facade = task_planner.get_task_facade()
 
+<<<<<<< HEAD:src/sorting_demo/src/sorting_demo/program.py
     #task_facade.start()
+=======
+
+    if not demo_constants.is_real_robot():
+        task_facade.start()
+>>>>>>> aruco_on_real_robot:sorting_demo/src/sorting_demo/program.py
 
     task_facade.run_rest_server()
 

@@ -52,7 +52,7 @@ void getParameters()
 	string tip_link_name;
 	if(!nh.getParam("tip_link_name", tip_link_name))
 	{
-    tip_link_name = "right_hand_camera_optical";
+        tip_link_name = "right_hand_camera_optical";
 		ROS_WARN("Parameter not set: %s/tip_link_name, default value -> %s", nh.getNamespace().c_str(), tip_link_name.c_str());
 		//exit(-1);
 	}

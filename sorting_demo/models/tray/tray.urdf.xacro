@@ -1,0 +1,72 @@
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="tray">
+
+  <xacro:property name="tray_width" value="0.2" />
+  <xacro:property name="tray_length" value="0.32" />
+  <xacro:property name="tray_height" value="0.05" />
+  <xacro:property name="tray_thickness" value="0.015" />
+  <xacro:property name="tray_density" value="100" />
+  <xacro:property name="tray_base_name" value="tray_base" />
+
+  <xacro:macro name="tray_part" params="name width length height mass material xPos:=0 yPos:=0">
+    <link name="${name}">
+      <inertial>
+        <mass value="${tray_density * width * length * height}" />
+
+        <inertia  ixx="${(1/12) * tray_density * width * length * height * (length**2 + height**2)}" ixy="0.0"  ixz="0.0"
+                  iyy="${(1/12) * tray_density * width * length * height * (width**2 + height**2)}"  iyz="0.0"
+                  izz="${(1/12) * tray_density * width * length * height * (width**2 + length**2)}" />
+      </inertial>
+
+      <visual>
+        <geometry>
+          <box size="${width} ${length} ${height}" />
+        </geometry>
+      </visual>
+
+      <collision>
+        <geometry>
+          <box size="${width} ${length} ${height}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <gazebo reference="${name}">
+      <material>${material}</material>
+       <mu1>1000</mu1>
+       <mu2>1000</mu2>
+
+      <collision>
+          <surface>
+            <friction>
+              <torsional>
+                <coefficient>0.456</coefficient>
+                <use_patch_radius>true</use_patch_radius>
+                <patch_radius>0.05</patch_radius>
+              </torsional>
+            </friction>
+          </surface>
+        </collision>
+    </gazebo>
+
+
+    <gazebo>
+        <static>true</static>
+    </gazebo>
+
+    <xacro:if value="${xPos != 0 or yPos != 0}">
+      <joint name="joint_${name}" type="fixed">
+        <origin xyz="${xPos * (tray_width - tray_thickness) / 2} ${yPos * (tray_length - tray_thickness) / 2} ${(tray_height + tray_thickness) / 2}" />
+        <parent link="${tray_base_name}" />
+        <child link="${name}" />
+      </joint>
+    </xacro:if>
+
+  </xacro:macro>
+
+  <xacro:tray_part name="${tray_base_name}" width="${tray_width}" length="${tray_length}" height="${tray_thickness}" mass="0.01" material="Gazebo/White" />
+  <xacro:tray_part name="tray_wall0" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/White" yPos="-1" />
+  <xacro:tray_part name="tray_wall1" width="${tray_width - 2 * tray_thickness}" length="${tray_thickness}" height="${tray_height}" mass="0.01" material="Gazebo/White" yPos="1" />
+  <xacro:tray_part name="tray_wall2" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/White" xPos="-1" />
+  <xacro:tray_part name="tray_wall3" width="${tray_thickness}" length="${tray_length}" height="${tray_height}" mass="0.01" material="Gazebo/White" xPos="1" />
+
+</robot>
