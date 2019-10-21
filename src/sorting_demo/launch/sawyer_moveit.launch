@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="true"/>
+  <arg name="rviz_config" default="$(find sawyer_moveit_config)/launch/moveit.rviz" />
+  <arg name="visualization" default="true"/>
+
+  <!-- By default, we do not start a database (it can be large) -->
+  <arg name="db" default="false" />
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+
+  <!-- By default we do not overwrite the URDF. Change the following to true to change the default behavior -->
+  <arg name="load_robot_description" default="false"/>
+  <!-- Add controller box collision shape to check for link collisions if set to true-->
+  <arg name="controller_box" default="true"/>
+  <!-- Left and electric gripper arg. Set to true to check for collisions for their links -->
+  <arg name="electric_gripper" default="false"/>
+  <!-- Set the kinematic tip for the right_arm move_group -->
+  <arg name="tip_name"     if="$(arg electric_gripper)" default="right_gripper_tip"/>
+  <arg name="tip_name" unless="$(arg electric_gripper)" default="right_hand"/>
+  <!-- Add planning context launch file -->
+  <include file="$(find sawyer_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="$(arg load_robot_description)"/>
+    <arg name="electric_gripper" value="$(arg electric_gripper)"/>
+    <arg name="tip_name" value="$(arg tip_name)"/>
+    <arg name="controller_box" value="$(arg controller_box)"/>
+  </include>
+
+  <arg name="kinect" default="false" />
+  <arg name="xtion" default="false" />
+  <arg name="camera_link_pose" default="0.15 0.075 0.5 0.0 0.7854 0.0"/>
+  <include file="$(find sawyer_moveit_config)/launch/move_group.launch">
+    <arg name="kinect" value="$(arg kinect)" />
+    <arg name="xtion" value="$(arg xtion)" />
+    <arg name="camera_link_pose" default="$(arg camera_link_pose)"/>
+    <arg name="allow_trajectory_execution" value="true"/>
+    <arg name="fake_execution" value="false"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="pipeline" value="ompl" />
+  </include>
+
+  <include file="$(find sawyer_moveit_config)/launch/moveit_rviz.launch" if="$(arg visualization)">
+    <arg name="config" value="$(arg config)" />
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="rviz_config" value="$(arg rviz_config)" />
+  </include>
+
+  <!-- If database loading was enabled, start mongodb as well -->
+  <include file="$(find sawyer_moveit_config)/launch/default_warehouse_db.launch" if="$(arg db)"/>
+
+</launch>

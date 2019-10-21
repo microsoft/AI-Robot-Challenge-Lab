@@ -22,7 +22,6 @@ import demo_constants
 from threading import RLock
 import cv2
 
-
 class EnvironmentEstimation:
     def __init__(self):
         """
@@ -174,11 +173,13 @@ class EnvironmentEstimation:
             # cv2.imshow("cube detection", cv_image)
             # cv2.waitKey(0)
 
+            #position = closest_block.gazebo_pose.position
+            #orientation = closest_block.gazebo_pose.orientation
 
             return Pose(position=Point(x=projected[0], y=projected[1], z=projected[1]),
                         orientation=Quaternion(x=poseq[0], y=poseq[1], z=poseq[2], w=poseq[3])), graspA or graspB
         except Exception as ex:
-            rospy.logwarn("erroneous cube detection")
+            rospy.logwarn("erroneous cube detection:  " + str(ex))
             # cv2.imshow("erroneus cube detection", cv_image)
             # cv2.waitKey(0)
             return None, False
@@ -438,6 +439,7 @@ class EnvironmentEstimation:
         :param id:
         :return:
         """
+
         color = color.replace("Gazebo/", "")
         rospy.logwarn("by color: " + str(color))
         rospy.logwarn("by color: " + str(self.trays))
