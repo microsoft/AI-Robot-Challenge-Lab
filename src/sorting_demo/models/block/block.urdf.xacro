@@ -1,0 +1,47 @@
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+       name="block">
+
+  <xacro:arg name="material" default="Gazebo/Black" />
+  <xacro:arg name="edge_length" default="0.04" />
+
+  <xacro:property name="block_density" value="3900" />
+
+  <link name="block">
+    <inertial>
+      <mass value="${block_density * $(arg edge_length)**3}" />
+      <inertia  ixx="${(1/12) * block_density * $(arg edge_length)**3 * (2 * $(arg edge_length)**2)}" ixy="0.0" ixz="0.0"
+                iyy="${(1/12) * block_density * $(arg edge_length)**3 * (2 * $(arg edge_length)**2)}" iyz="0.0"
+                izz="${(1/12) * block_density * $(arg edge_length)**3 * (2 * $(arg edge_length)**2)}" />
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="$(arg edge_length) $(arg edge_length) $(arg edge_length)" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="$(arg edge_length) $(arg edge_length) $(arg edge_length)" />
+      </geometry>
+    </collision>
+  </link>
+
+  <gazebo reference="block">
+     <material>$(arg material)</material>
+     <mu1>10000</mu1>
+     <mu2>10000</mu2>
+
+  <collision>
+      <surface>
+        <friction>
+          <torsional>
+            <coefficient>0.456</coefficient>
+            <use_patch_radius>true</use_patch_radius>
+            <patch_radius>0.05</patch_radius>
+          </torsional>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+
+</robot>
