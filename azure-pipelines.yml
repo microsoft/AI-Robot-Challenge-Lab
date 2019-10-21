@@ -1,0 +1,16 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageName: 'sawyer-ubuntu-xenial-kinetic'
+
+steps:
+- task: Docker@2
+  displayName: Build docker Image
+  inputs:
+    repository: $(imageName)
+    command: build
+    Dockerfile: docker/ubuntu-xenial-kinetic/Dockerfile
