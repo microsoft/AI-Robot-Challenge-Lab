@@ -244,8 +244,10 @@ The main robot controllers also starts a REST server and it is listening from an
 http://localhost:5000/start
 ```
 The robot must start sorting cubes into the three trays. You can see that in the following video:
+<p align="center"/>
 <a href="https://www.youtube.com/watch?v=d0KZXO4mDGo" target="_blank">
        <img src="https://img.youtube.com/vi/d0KZXO4mDGo/0.jpg" width="400"/>
+</a>
 </a>
 
 To stop the simulation press `Ctrl+C` in the terminal and wait for the entire process to terminate.
