@@ -1,5 +1,7 @@
 # Robot control through Microsoft Bot Framework and Cognitive Services
 
+[![Build Status](https://dev.azure.com/pibgeus0400/GithubRepos/_apis/build/status/pabloinigoblasco.AI-Robot-Challenge-Lab?branchName=master)](https://dev.azure.com/pibgeus0400/GithubRepos/_build/latest?definitionId=4&branchName=master)
+
 ## Introduction
 
 In this Lab, you will learn how to use the [Microsoft Bot Framework](https://dev.botframework.com/) and [Microsoft Cognitive Services](https://azure.microsoft.com/en-us/services/cognitive-services/) to develop an intelligent chat bot that controls manipulator robot robot powered by [ROS (Robot Operating System)](https://www.ros.org/) and [Gazebo]("http://gazebosim.org/"), the robot simulator. This lab will give you the confidence to start your journey with intelligent collaborative robotics.
