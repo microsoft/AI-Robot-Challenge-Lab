@@ -1,4 +1,5 @@
 # Robot control through Microsoft Bot Framework and Cognitive Services
+[![Build Status](https://dev.azure.com/AISchoolRepositories/GithubRepos/_apis/build/status/microsoft.AI-Robot-Challenge-Lab?branchName=master)](https://dev.azure.com/AISchoolRepositories/GithubRepos/_build/latest?definitionId=8&branchName=master)
 
 ## Introduction
 
