@@ -26,7 +26,6 @@ robot_hostname="paule.local"
 # your_ip="127.0.XXX.XXX"
 your_hostname=`hostname`
 
-
 # Specify ROS distribution (e.g. indigo, hydro, etc.)
 ros_version="kinetic"
 #-----------------------------------------------------------------------------#
@@ -174,12 +173,18 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 		export PS1="[intera - \${ROS_MASTER_URI}] \${PS1}"
 	fi
 
+source /opt/ros/kinetic/setup.bash
+source devel/setup.bash
+
+roslaunch sorting_demo sorting_demo.launch &
+
+python ./runtime_test.py
+exit
+
 EOF
 
-${SHELL} --rcfile ${tf} $2
+echo "1" > result.txt
+${SHELL} --rcfile ${tf}
+exit `cat result.txt`
 
 
-rm -f -- "${tf}"
-trap - EXIT
-
-# vim: noet
