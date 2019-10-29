@@ -5,6 +5,16 @@ pool:
   name: 'nvidia-docker-pool'
 
 steps:
-- task: Docker@1
+- task: Bash@3
   inputs:
-    script: 'cd docker/ubuntu-xenial-kinetic; build.sh'
+    workingDirectory: 'docker/ubuntu-xenial-kinetic'
+    targetType: 'inline'
+    script: './build.sh'
+
+- task: Bash@3
+  inputs:
+    workingDirectory: 'docker/ubuntu-xenial-kinetic'
+    targetType: 'inline'
+    script: './run-docker-container.sh'
+  env:
+    DISPLAY: :1.0
