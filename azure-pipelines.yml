@@ -15,6 +15,6 @@ steps:
   inputs:
     workingDirectory: 'docker/ubuntu-xenial-kinetic'
     targetType: 'inline'
-    script: './run-docker-container.sh'
+    script: './run_docker_container.sh'
   env:
     DISPLAY: :1.0
