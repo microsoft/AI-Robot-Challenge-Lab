@@ -3,15 +3,8 @@ trigger:
 
 pool:
   name: 'nvidia-docker-pool'
-  #vmImage: 'ubuntu-latest'
-
-variables:
-  imageName: 'sawyer-ubuntu-xenial-kinetic'
 
 steps:
-- task: Docker@2
-  displayName: Build docker Image
+- task: Docker@1
   inputs:
-    repository: $(imageName)
-    command: build
-    Dockerfile: docker/ubuntu-xenial-kinetic/Dockerfile
+    script: 'cd docker/ubuntu-xenial-kinetic; build.sh'
