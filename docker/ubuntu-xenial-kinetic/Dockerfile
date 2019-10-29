@@ -31,7 +31,9 @@ RUN git pull
 RUN git submodule init; git submodule update --recursive
 RUN bash -c 'catkin build'
 
-RUN sudo apt-get install -y x11-apps
+RUN sudo apt-get install -y x11-apps python-pip
+RUN python -m pip install requests --user
+
 COPY runtime_test.sh runtime_test.sh
 COPY runtime_test.py runtime_test.py
 
