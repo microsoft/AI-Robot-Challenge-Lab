@@ -173,12 +173,12 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 		export PS1="[intera - \${ROS_MASTER_URI}] \${PS1}"
 	fi
 
+export SVGA_VGPU10=0
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
-
 roslaunch sorting_demo sorting_demo.launch &
-
 python ./runtime_test.py
+
 exit
 
 EOF
