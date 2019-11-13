@@ -6,12 +6,14 @@ pool:
 
 steps:
 - task: Bash@3
+  timeoutInMinutes: 120
   inputs:
     workingDirectory: 'docker/ubuntu-xenial-kinetic'
     targetType: 'inline'
     script: './build.sh'
 
 - task: Bash@3
+  timeoutInMinutes: 10
   inputs:
     workingDirectory: 'docker/ubuntu-xenial-kinetic'
     targetType: 'inline'
