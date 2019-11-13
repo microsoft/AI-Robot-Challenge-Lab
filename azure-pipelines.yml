@@ -17,4 +17,4 @@ steps:
     targetType: 'inline'
     script: './run_docker_container.sh'
   env:
-    DISPLAY: :1.0
+    DISPLAY: :0.0
