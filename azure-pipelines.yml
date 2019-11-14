@@ -1,22 +1,23 @@
 trigger:
-- master
+    - master
 
-pool:
-  name: 'nvidia-docker-pool'
+jobs:
+ - job: Sawyer
+   timeoutInMinutes: 120
+   pool:
+     name: 'nvidia-docker-pool'
 
-steps:
-- task: Bash@3
-  timeoutInMinutes: 120
-  inputs:
-    workingDirectory: 'docker/ubuntu-xenial-kinetic'
-    targetType: 'inline'
-    script: './build.sh'
-
-- task: Bash@3
-  timeoutInMinutes: 10
-  inputs:
-    workingDirectory: 'docker/ubuntu-xenial-kinetic'
-    targetType: 'inline'
-    script: './run_docker_container.sh'
-  env:
-    DISPLAY: :0.0
+   steps:
+   - task: Bash@3
+     inputs:
+       workingDirectory: 'docker/ubuntu-xenial-kinetic'
+       targetType: 'inline'
+       script: './build.sh'
+   - task: Bash@3
+     timeoutInMinutes: 10
+     inputs:
+       workingDirectory: 'docker/ubuntu-xenial-kinetic'
+       targetType: 'inline'
+       script: './run_docker_container.sh'
+     env:
+       DISPLAY: :0.0
