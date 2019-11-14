@@ -23,4 +23,5 @@ jobs:
        DISPLAY: :0.0
    - task: Bash@3
      inputs:
+       targetType: 'inline'
        script: docker rmi ubuntu1604_sawyer
