@@ -21,3 +21,6 @@ jobs:
        script: './run_docker_container.sh'
      env:
        DISPLAY: :0.0
+   - task: Bash@3
+     inputs:
+       script: docker rmi ubuntu1604_sawyer
